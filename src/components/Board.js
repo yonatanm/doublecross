@@ -1,6 +1,6 @@
 export default function Board(props) {
   const { cols, rows, table, result } = props.layout;
-  console.log(`** layout ${cols}X${rows} **`, props.layout.result);
+  console.log(`** layout ${cols}X${rows} **`, props.layout.result, props.layout.table);
   const onChange = (event) => {
     return;
   };
@@ -10,13 +10,12 @@ export default function Board(props) {
     return (
       <div>
         <div className="crossword-board">
-          {Object.keys(line).map((r) => {
-            return Object.keys(line)
-              .reverse()
+          {Object.values(line).map((r) => {
+            return Object.values(line)
+              // .reverse()
               .map((c) => {
                 let cc = parseInt(c) + 1;
                 let id = `item${r + 1}-${cc}`;
-                // console.log(`id`, id);
                 if (c >= cols || r >= rows || table[r][c] === "-") {
                   return (
                     <span
@@ -47,24 +46,14 @@ export default function Board(props) {
         <div className="crossword-board crossword-board--labels">
           {Object.keys(result).map((i) => {
             const d = result[i];
-            let id = `lable-${parseInt(i)}`;
-            console.log(
-              "label-id:",
-              id,
-              "position:",
-              d.position,
-              "x:",
-              d.startx,
-              " y:",
-              d.starty
-            );
+            let id = `lable-${parseInt(i)}`;            
             return (
               <span
                 id={id}
                 key={id}
                 className="crossword-board__item-label"
                 style={{
-                  gridColumn: `${14 - d.startx}/${14 - d.startx}`,
+                  gridColumn: `${d.startx}/${d.startx}`,
                   gridRow: `${d.starty}/${d.starty}`,
                 }}
               >
