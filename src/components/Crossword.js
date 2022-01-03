@@ -10,69 +10,122 @@ export default function Crossword() {
   let params = useParams();
 
   const theId = params.id;
-  console.log("theId ", theId);
-  const [layout, setLayout] = useState();
+  const [model, setModel] = useState();
   const [defs, setDefs] = useState();
+
+  console.log("theId ", theId, " model", model);
 
   useEffect(() => {
     (async () => {
       console.log("@@@@@@@@");
       if (theId) {
         const record = await getCrossword(theId);
-        const model = record.model;
-        const d = textToDefs(model.textInput);
-        console.log("d ", d);
+        const m = JSON.parse(JSON.stringify(record.model));
+        m.table = resultToTable(
+          record.model.result,
+          record.model.cols,
+          record.model.rows
+        );
+        console.log('model is about ot be',m)
+        setModel(m);
+        const d = textToDefs(record.model.textInput);
         setDefs(d);
-
-        // console.log("model text Input", model.textInput);
-        setLayout({
-          cols: model.layout.cols,
-          rows: model.layout.rows,
-          table: JSON.parse(model.layout.table),
-          result: model.layout.result,
-        });
       }
     })();
   }, [theId]);
 
   function build() {
-    const _layout = clg.generateLayout(defs);
-    _layout.table = _layout.table.map((r) => r.reverse());
+    const d = defs || textToDefs(model.textInput);
+    console.log("in build, defs", defs);
+    const _layout = clg.generateLayout(d);
+    // _layout.table = _layout.table.map((r) => r.reverse());
     _layout.result = _layout.result.map((d) => ({
       ...d,
       startx: _layout.cols + 1 - d.startx,
     }));
+    const t = resultToTable(_layout.result, _layout.cols, _layout.rows);
+    console.log("t", t);
 
-    setLayout(_layout);
-  }
+    const m = JSON.parse(JSON.stringify(model));
+    m.result = JSON.parse(JSON.stringify(_layout.result));
+    m.table = t;
+    m.cols = _layout.cols;
+    m.rows = _layout.rows;
 
-  function onDefsChange(d) {
-    console.log("defs ", d);
+    console.log("now m is ", m);
     setDefs(d);
+    setModel(m);
   }
 
-  // async function save() {
-  //   const model = {};
-  //   model.textInput = defsToText(defs);
-  //   model.layout = {
-  //     cols: layout.cols,
-  //     rows: layout.rows,
-  //     table: JSON.stringify(layout.table),
-  //     result: layout.result,
-  //   };
-  //   await saveNewCrossword(model);
-  // }
+  const resultToTable = (result, cols, rows) => {
+    console.log(`cols ${cols} rows ${rows}`);
+    const row = [];
+    for (let i = 0; i < cols; i++) {
+      row.push("-");
+    }
+    const t = [];
+    for (let i = 0; i < rows; i++) {
+      t.push([...row]);
+    }
+    result.forEach((d) => {
+      if (d.orientation === "across") {
+        for (let i = 0; i < d.answer.length; i++) {
+          t[d.starty - 1][d.startx - 1 - i] = d.answer.charAt(i);
+        }
+      }
+      if (d.orientation === "down") {
+        for (let i = 0; i < d.answer.length; i++) {
+          t[d.starty - 1 + i][d.startx - 1] = d.answer.charAt(i);
+        }
+      }
+    });
+    return t;
+  };
+
+  function onDefsChange(d, text) {
+    console.log("defs d:", d, " text:", text);
+    setDefs(d);
+    const m = JSON.parse(JSON.stringify(model || {}));
+    m.textInput = text;
+    console.log("model m is ", m);
+    setModel(m);
+  }
+
+  async function save() {
+    const m = JSON.parse(JSON.stringify(model))
+    m.table={}
+    m.table_string=''
+    console.log("model to save", m);
+    await saveNewCrossword(m);
+  }
+
   function showBoard() {
-    if (layout) {
-      return <Board layout={layout}></Board>;
+    if (model && model.result) {
+      console.log(`YAYAYY`, model);
+      return (
+        <Board
+          cols={model.cols}
+          rows={model.rows}
+          result={model.result}
+          table={model.table}
+        ></Board>
+      );
     } else {
-      return <h1>not Yet....</h1>;
+      console.log("@@@ NO BOARD");
+      return <h1>no board</h1>;
     }
   }
+  // } else {
+  //   console.log(`BBOOOIIII ${model && model.result}`)
+  //   return (<h1>not Yettttt....</h1>);
+  // }
+  // }
 
   function showMissing() {
-    if (!layout) return <></>;
-    const missings = layout.result.filter((d) => d.orientation === "none");
+    if (!model || !model.layout) return <></>;
+    const missings = model.layout.result.filter(
+      (d) => d.orientation === "none"
+    );
     if (missings.length === 0) {
       return <></>;
     }
@@ -89,18 +142,24 @@ export default function Crossword() {
     );
   }
   const showDefinitions = () => {
-    if (!theId || layout) {
-      return <Definitions defs={defs} onChange={onDefsChange}></Definitions>;
-    } else {
+    if (theId && !model) {
       return <></>;
+    } else {
+      return (
+        <Definitions
+          text={model?.textInput}
+          defs={defs}
+          onChange={onDefsChange}
+        ></Definitions>
+      );
     }
   };
   return (
     <div>
       {showDefinitions()}
-      <button onClick={build}>Build it!</button>
-      {/* <button onClick={save}>Save</button> */}
       {showMissing()}
+      <button onClick={build}>Build it!</button>
+      <button onClick={save}>Save</button>
       {showBoard()}
     </div>
   );

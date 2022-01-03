@@ -11,13 +11,20 @@ CLUE8 - שקד
 CLUE9 - גורי`;
 
 function Definitions(params) {
-  console.log(`in DDD def=[${!!params.defs}]`)
-  const [text, setText] = useState(DEFAULT_TEXT);
+  console.log(`in DDD text=[${params.text}] def=[${!!params.defs}]`)
+  const [text, setText] = useState(params.text || defsToText(params.defs) || DEFAULT_TEXT);
+
 
   useEffect(() => {
-    console.log('update....')
-    setText(defsToText(params.defs))
-  },[params]);
+    console.log('update 1st!!!....')
+    params.onChange(textToDefs(text), text);
+  },[]);
+
+  // useEffect(() => {
+  //   console.log('update....')
+  //   setText(defsToText(params.defs) || DEFAULT_TEXT)
+  // },[]);
+
 
   const onTextAreaChange = (event) => {
     handleChange(event.target.value);
@@ -26,10 +33,10 @@ function Definitions(params) {
   const handleChange = (newText) => {
     const defsBefore = textToDefs(text);
     const defsAfter = textToDefs(newText);
-    // setText(newText);
+    setText(newText);
     if (JSON.stringify(defsBefore) !== JSON.stringify(defsAfter)) {
       console.log("there is a chnage in defs");
-      params.onChange(defsAfter);
+      params.onChange(defsAfter, newText);
     }
   };
 
@@ -37,14 +44,14 @@ function Definitions(params) {
 }
 
 const defsToText = (defs) => {
-  let s = "__";
+  let s = "";
   if (defs) {
     s = defs
       .map((d) => `${d.clue} - ${d.answer}`)
       .join("\n")
       .trim();
   }
-  console.log(`defs To TExt [${!!defs}] !!!! ${s} !!`);
+  console.log(`defs To TExt [${!!defs}] !!!! [${s}] !!`);
   return s;
 };
 
