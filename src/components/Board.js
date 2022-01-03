@@ -1,3 +1,4 @@
+//https://codepen.io/adrianroworth/pen/OpeyZq
 export default function Board(props) {
   const { cols, rows, table, result } = props.layout;
   console.log(`** layout ${cols}X${rows} **`, props.layout.result, props.layout.table);

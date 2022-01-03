@@ -2,39 +2,46 @@ import "./App.scss";
 
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
-import { db, getCrosswords } from "./Firebase";
+import { getCrosswords } from "./Firebase";
 
 import Crossword from "./components/Crossword";
 import { useEffect } from "react";
 
- function App() {
+function App() {
   useEffect(() => {
     (async () => {
-      await getCrosswords(db);
+      await getCrosswords();
     })();
   }, []);
 
   return (
     <Router>
       <div>
-          <nav>
-            <ul>
-              <li>
-                <Link to="/">Home</Link>
-              </li>
-              <li>
-                <Link to="/crossword">News</Link>
-              </li>
-              <li>
-                <Link to="/crosswords">all</Link>
-              </li>
-            </ul>
-          </nav>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/crossword">New</Link>
+            </li>
+            <li>
+              <Link to="/crosswords/FqgiYHGm4XuRnznxYoFr">
+                FqgiYHGm4XuRnznxYoFr
+              </Link>
+            </li>
+            <li>
+              <Link to="/crosswords">all</Link>
+            </li>
+          </ul>
+        </nav>
 
         {/* A <Switch> looks through its children <Route>s and
           renders the first one that matches the current URL. */}
         <Routes>
-          <Route exact path="/crossword" element={<Crossword />} />
+          <Route path="/crossword" element={<Crossword />} />
+          <Route exact path="/crosswords" element={<Home />} />
+          <Route path="/crosswords/:id" element={<Crossword />} />
           <Route exact path="/" element={<Home />} />
         </Routes>
       </div>
@@ -43,6 +50,11 @@ import { useEffect } from "react";
 }
 
 function Home() {
-  return <h1>DoubleCrossברוך הבא ל</h1>;
+  return (
+    <div>
+      <h1>DoubleCrossברוך הבא ל</h1>
+      {/* <Outlet/> */}
+    </div>
+  );
 }
 export default App;

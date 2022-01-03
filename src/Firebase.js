@@ -1,5 +1,15 @@
+//https://firebase.google.com/docs/firestore/manage-data/add-data
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs } from "firebase/firestore/lite";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  getDoc,
+  doc,
+  addDoc,
+  Timestamp,
+} from "firebase/firestore/lite";
+// import { doc, Timestamp } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAeccL_SuxKvZipxrTCQGoGsu9yo58SoHY",
@@ -13,7 +23,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function getCrosswords(db) {
+async function saveNewCrossword(crosswordModel) {
+  const r = await addDoc(collection(db, "crossword"), {
+    model: crosswordModel,
+  });
+  console.log("save", r.id);
+  return r.id;
+}
+
+async function getCrossword(id) {
+  const docRef = doc(db, "crossword", id);
+  console.log('docRef', docRef)
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const res = { id: docSnap.id, ...docSnap.data() };
+    console.log("res", res);
+    return res;
+  } else {
+    // doc.data() will be undefined in this case
+    console.log("No such document!");
+    return;
+  }
+}
+async function getCrosswords() {
   const crosswordCol = collection(db, "crossword");
   const crosswordSnapshot = await getDocs(crosswordCol);
   const crosswordList = crosswordSnapshot.docs.map((doc) => ({
@@ -24,4 +56,4 @@ async function getCrosswords(db) {
   return crosswordList;
 }
 
-export { app, db, getCrosswords };
+export { app, getCrosswords, getCrossword, saveNewCrossword };
