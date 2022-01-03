@@ -26,8 +26,8 @@ function App() {
               <Link to="/crossword">New</Link>
             </li>
             <li>
-              <Link to="/crosswords/FqgiYHGm4XuRnznxYoFr">
-                FqgiYHGm4XuRnznxYoFr
+              <Link to="/crosswords/UhS5X9m8CkUWd1c0ZIx5">              
+UhS5X9m8CkUWd1c0ZIx5
               </Link>
             </li>
             <li>
