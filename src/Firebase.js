@@ -5,6 +5,7 @@ import {
   collection,
   getDocs,
   getDoc,
+  setDoc,
   doc,
   addDoc,
   Timestamp,
@@ -22,6 +23,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+async function updateCrossword(theId, crosswordModel) {
+  const r = await setDoc(doc(db, "crossword", theId), crosswordModel);
+  console.log("update", r);
+  return r;
+}
 
 async function saveNewCrossword(crosswordModel) {
   const r = await addDoc(collection(db, "crossword"), {
@@ -56,4 +63,4 @@ async function getCrosswords() {
   return crosswordList;
 }
 
-export { app, getCrosswords, getCrossword, saveNewCrossword };
+export { app, getCrosswords, getCrossword, saveNewCrossword, updateCrossword };

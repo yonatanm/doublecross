@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
+
+import { useNavigate } from "react-router-dom";
+
 import Board from "./Board";
 import { Definitions, defsToText, textToDefs } from "./Definitions";
-import { saveNewCrossword, getCrossword } from "../Firebase";
+import { saveNewCrossword, getCrossword, updateCrossword } from "../Firebase";
 import { useParams } from "react-router-dom";
 
 const clg = require("crossword-layout-generator");
 
 export default function Crossword() {
+  const navigate = useNavigate();
+  
   let params = useParams();
 
   const theId = params.id;
@@ -20,15 +25,16 @@ export default function Crossword() {
       console.log("@@@@@@@@");
       if (theId) {
         const record = await getCrossword(theId);
-        const m = JSON.parse(JSON.stringify(record.model));
+        console.log('record', record)
+        const m = JSON.parse(JSON.stringify(record));
         m.table = resultToTable(
-          record.model.result,
-          record.model.cols,
-          record.model.rows
+          record.result,
+          record.cols,
+          record.rows
         );
-        console.log('model is about ot be',m)
+        console.log("model is about ot be", m);
         setModel(m);
-        const d = textToDefs(record.model.textInput);
+        const d = textToDefs(record.textInput);
         setDefs(d);
       }
     })();
@@ -92,11 +98,21 @@ export default function Crossword() {
   }
 
   async function save() {
-    const m = JSON.parse(JSON.stringify(model))
-    m.table={}
-    m.table_string=''
-    console.log("model to save", m);
-    await saveNewCrossword(m);
+    if (!theId) {
+      const m = JSON.parse(JSON.stringify(model));
+      m.table = {};
+      m.table_string = "";
+      console.log("model to save", m);
+      const newRecId = await saveNewCrossword(m);
+      console.log("new recId", newRecId);
+      navigate(`/crosswords/${newRecId}`)
+    } else {
+      const m = JSON.parse(JSON.stringify(model));
+      m.table = {};
+      m.table_string = "";
+      console.log("model to save", m);
+      await updateCrossword(theId, m);
+    }
   }
 
   function showBoard() {
