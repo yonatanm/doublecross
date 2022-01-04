@@ -98,7 +98,6 @@ export default function Crossword() {
     const m = JSON.parse(JSON.stringify(model));
     m.table = {};
     m.table_string = "";
-    m.createDate = Date.now();
     console.log("model to save", m);
     if (!theId) {
       const newRecId = await saveNewCrossword(m);
@@ -165,16 +164,19 @@ export default function Crossword() {
     }
   };
 
-
   const showInfo = () => {
     if (theId && model?.result) {
-      const created = formatDate(new Date(model.createDate))
-      const update = formatDate(new Date(model.updatedDate || Date.now()))
+      const created = formatDate(new Date(model.createdAt.seconds*1000 ));
+      const update = formatDate(new Date(model.updatedAt.seconds*1000 || Date.now()));
 
       return (
         <div>
-          <h1 dir='rtl'>נוצר ב-{created}</h1>
-          {(model.updatedDate)?(<h1 dir='rtl'>עודכן לאחרונה ב-{update}</h1>):(<></>)}
+          <h1 dir="rtl">נוצר ב-{created}</h1>
+          {model.updatedAt ? (
+            <h1 dir="rtl">עודכן לאחרונה ב-{update}</h1>
+          ) : (
+            <></>
+          )}
         </div>
       );
     }
