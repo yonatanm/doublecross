@@ -139,22 +139,22 @@ export default function Crossword() {
   }
 
   async function save() {
-    const m = JSON.parse(JSON.stringify(crossword));
-    m.table = {};
-    m.table_string = "";
-    console.log("model to save", m);
+    const model = JSON.parse(JSON.stringify(crossword));
+    delete model.table
+    delete model.table_string
+    delete model.leftOut
+    console.log("model to save", model);
     if (!theId) {
-      const newRecId = await saveNewCrossword(m);
+      const newRecId = await saveNewCrossword(model);
       console.log("new recId", newRecId);
       navigate(`/crosswords/${newRecId}`);
     } else {
-      await updateCrossword(theId, m);
+      await updateCrossword(theId, model);
     }
   }
 
   function showBoard() {
     if (crossword && crossword.result) {
-      console.log(`YAYAYY`, crossword);
       return (
         <Board
           cols={crossword.cols}
@@ -164,27 +164,15 @@ export default function Crossword() {
         ></Board>
       );
     } else {
-      console.log("@@@ NO BOARD");
       return <h1>no board</h1>;
     }
   }
-  // } else {
-  //   console.log(`BBOOOIIII ${model && model.result}`)
-  //   return (<h1>not Yettttt....</h1>);
-  // }
-  // }
 
   function showMissing() {
-    if (!crossword || !crossword.layout) return <></>;
-    const missings = crossword.layout.result.filter(
-      (d) => d.orientation === "none"
-    );
-    if (missings.length === 0) {
-      return <></>;
-    }
+    if (!crossword?.leftOut || crossword?.leftOut.length===0) return <></>;
     return (
       <div>
-        {missings.map((d, i) => {
+        {crossword.leftOut.map((d, i) => {
           return (
             <div key={i}>
               {d.clue} {d.answer}
