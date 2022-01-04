@@ -27,7 +27,7 @@ export default function Crossword() {
       if (theId) {
         const record = await getCrossword(theId);
         console.log("record", record);
-        const cw = modelToCrossword(record)
+        const cw = modelToCrossword(record);
         setCrossword(cw);
         const d = textToDefs(cw.textInput);
         setDefs(d);
@@ -35,18 +35,18 @@ export default function Crossword() {
     })();
   }, [theId]);
 
-  const modelToCrossword = (model)=>{
+  const modelToCrossword = (model) => {
     const cw = JSON.parse(JSON.stringify(model));
     cw.table = resultToTable(model.result, model.cols, model.rows);
     console.log("cw is about ot be", cw);
-    return cw;    
-  }
-  
+    return cw;
+  };
+
   function build() {
     const d = defs || textToDefs(crossword.textInput);
     const _layout = clg.generateLayout(d);
-    console.log('##### result', _layout.result)
-    console.log('##### table', _layout.table)
+    console.log("##### result", _layout.result);
+    console.log("##### table", _layout.table);
     const leftOut = _layout.result.filter(
       (d) =>
         d.startx < 1 ||
@@ -62,15 +62,14 @@ export default function Crossword() {
       origStartx: d.startx,
       startx: _layout.cols + 1 - d.startx,
     }));
-    console.log('@@@@ result', _layout.result)
-
+    console.log("@@@@ result", _layout.result);
 
     _layout.result.sort((a, b) => {
       let diff = 0;
-      if (a.startx !== b.startx) {
-        diff = a.startx - b.startx;
-      } else {
+      if (a.starty !== b.starty) {
         diff = a.starty - b.starty;
+      } else {
+        diff = -(a.startx - b.startx);
       }
       return diff;
     });
@@ -138,9 +137,9 @@ export default function Crossword() {
 
   async function save() {
     const model = JSON.parse(JSON.stringify(crossword));
-    delete model.table
-    delete model.table_string
-    delete model.leftOut
+    delete model.table;
+    delete model.table_string;
+    delete model.leftOut;
     console.log("model to save", model);
     if (!theId) {
       const newRecId = await saveNewCrossword(model);
@@ -167,7 +166,7 @@ export default function Crossword() {
   }
 
   function showMissing() {
-    if (!crossword?.leftOut || crossword?.leftOut.length===0) return <></>;
+    if (!crossword?.leftOut || crossword?.leftOut.length === 0) return <></>;
     return (
       <div>
         {crossword.leftOut.map((d, i) => {

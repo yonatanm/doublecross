@@ -1,79 +1,82 @@
 //https://codepen.io/adrianroworth/pen/OpeyZq
 
-const LINE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-
 export default function Board(props) {
   console.log("@@@@ in Board, props", props);
   const { cols, rows, table, result } = props;
   console.log("result", result);
   console.log("table", table);
-  console.log('cols,rows', cols, rows)
+  console.log("cols,rows", cols, rows);
+
+  const ROWS = [];
+  for (let i = 0; i < rows; i++) {
+    ROWS.push(i);
+  }
+
+  const COLS = [];
+  for (let i = 0; i < cols; i++) {
+    COLS.push(i);
+  }
+
   const renderBoard = () => {
     return (
       <div>
         <div
-          className="crossword-board"
+          className="crossword-grid"
           style={{
-            gridTemplate: `repeat(${13},7.6923076923076925%) /  repeat(${13},7.6923076923076925%)`,
+            gridTemplateColumns: `repeat(${cols}, 50px)`,
+            width: `${50*cols}px`,
+            height: `${50*rows}px`
+
           }}
         >
-          {Object.values(LINE).map((r) => {
-            return Object.values(LINE)
+          {Object.values(ROWS).map((r) => {
+            return Object.values(COLS)
               .reverse()
               .map((c) => {
-                let cc = parseInt(c) + 1;
-                let id = `item${r + 1}-${cc}`;
+                const key = `item-${r}-${c}`;
                 if (c >= cols || r >= rows || table[r][c] === "-") {
-                  return (
-                    // <></>
-                    <span
-                      id={id}
-                      key={id}
-                      className="crossword-board__item--blank"
-                    ></span>
-                  );
+                  return <span key={key} className="blank"></span>;
                 } else {
                   return (
                     <input
-                      id={id}
-                      key={id}
-                      className="crossword-board__item"
-                      type="text"
+                      key={key}
+                      className="item"
                       minLength="1"
                       maxLength="1"
-                      required="required"
+                      readOnly
                       value={table[r][c]}
-                      onChange={() => {}}
                     />
                   );
                 }
               });
           })}
-        </div>
 
-        <div className="crossword-board crossword-board--labels">
-          {Object.keys(result).map((i) => {
-            const d = result[i];
-            let id = `lable-${parseInt(i)}`;
-            const x = cols + 5 - d.startx;
-            // const x = d.origStartx
-            return (
-              <span
-                id={id}
-                key={id}
-                className="crossword-board__item-label"
-                style={{
-                  gridColumn: `${x}/${x}`,
-                  gridRow: `${d.starty}/${d.starty}`,
-                }}
-              >
-                {" "}
-                <span className="crossword-board__item-label-text">
-                  {d.position}
+          <div
+            className="crossword-grid labels-container"
+            style={{
+              width: `${50*cols}px`,
+              height: `${50*rows}px`,
+              gridTemplateColumns: `repeat(${cols}, 50px)`,
+              gridTemplateRows: `repeat(${rows}, 50px)`,
+            }}
+          >
+            {Object.keys(result).map((i) => {
+              const d = result[i];
+              let key = `lable-${i}`;
+              const x = d.origStartx;
+              return (
+                <span
+                  key={key}
+                  className="label"
+                  style={{
+                    gridArea: `${d.starty}/${x}`,
+                  }}
+                >
+                  <span className="text">{d.position}</span>
                 </span>
-              </span>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     );

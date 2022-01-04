@@ -5,14 +5,13 @@
         position: relative;
         background: #ffffff;
       }
-      .the-grid {
-        grid-template-columns: repeat(3, 40px);
+      .crossword-grid {
+        grid-template-columns: repeat(3, 50px);
         position: absolute;
         z-index: 1;
         background: transparent;
-        border: 1 px solid #000000;
-        width: 650 px;
-        height: 650 px;
+        width: 150px;
+        height: 100px;
         display: grid;
         list-style-type: none;
         padding: 0;
@@ -38,10 +37,13 @@
         position: relative;
         color: red;
       }
+      .label-1 {
+        grid-area: 1/2;
+      }
       .text {
         position: absolute;
-        top: 2 px;
-        left: 2 px;
+        top: 2px;
+        left: 2px;
         font-size: 14px;
         line-height: 1;
       }
@@ -53,17 +55,7 @@
   </head>
   <body>
     <div class="container">
-      <div class="the-grid">
-
-
-        <div class="labels-container">
-          <span class="label" style="grid-area: 2 / 10 / 2 / 10">
-            <span class="text">1</span>
-          </span>
-        </div>
-
-
-
+      <div class="crossword-grid"> <!--grid-->
         <input
           class="item"
           type="text"
@@ -72,7 +64,7 @@
           required=""
           value="A"
         />
-        <span class="blank">B</span>
+        <span class="blank"></span>
         <input
           class="item"
           type="text"
@@ -81,7 +73,7 @@
           required=""
           value="B"
         />
-        <span class="blank">D</span>
+        <span class="blank"></span>
         <input
           class="item"
           type="text"
@@ -90,7 +82,13 @@
           required=""
           value="C"
         />
-        <span class="blank">F</span>
+        <span class="blank"></span>
+
+        <div class="labels-container crossword-grid">
+          <span class="label label-1">
+            <span class="text">1</span>
+          </span>
+        </div>
       </div>
     </div>
   </body>
