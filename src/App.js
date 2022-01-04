@@ -2,21 +2,16 @@ import "./App.scss";
 
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
-import { getCrosswords } from "./Firebase";
 
 import Crossword from "./components/Crossword";
-import { useEffect } from "react";
+import AllCrosswords from "./components/AllCrosswords";
 
 function App() {
-  useEffect(() => {
-    (async () => {
-      await getCrosswords();
-    })();
-  }, []);
+  
 
   return (
     <Router>
-      <div>
+      <div dir='rtl'>
         <nav>
           <ul>
             <li>
@@ -24,10 +19,7 @@ function App() {
             </li>
             <li>
               <Link to="/crossword">New</Link>
-            </li>
-            <li>
-              <Link to="/crosswords/9LP3FFDJK6BNmTpgRgOh">9LP3FFDJK6BNmTpgRgOh</Link>
-            </li>
+            </li>            
             <li>
               <Link to="/crosswords">all</Link>
             </li>
@@ -38,7 +30,7 @@ function App() {
           renders the first one that matches the current URL. */}
         <Routes>
           <Route path="/crossword" element={<Crossword />} />
-          <Route exact path="/crosswords" element={<Home />} />
+          <Route exact path="/crosswords" element={<AllCrosswords />} />
           <Route path="/crosswords/:id" element={<Crossword />} />
           <Route exact path="/" element={<Home />} />
         </Routes>

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import Board from "./Board";
 import { formatDate } from "../utils";
-import { Definitions, defsToText, textToDefs } from "./Definitions";
+import { Definitions, textToDefs } from "./Definitions";
 import { saveNewCrossword, getCrossword, updateCrossword } from "../Firebase";
 import { useParams } from "react-router-dom";
 
@@ -41,11 +41,50 @@ export default function Crossword() {
     const d = defs || textToDefs(model.textInput);
     console.log("in build, defs", defs);
     const _layout = clg.generateLayout(d);
-    // _layout.table = _layout.table.map((r) => r.reverse());
+    const leftOut = _layout.result.filter(
+      (d) =>
+        d.startx < 1 ||
+        d.starty < 1 ||
+        !d.orientation ||
+        d.orientation === "none"
+    );
+    _layout.result = _layout.result.filter(
+      (d) => d.startx > 0 && d.starty > 0 && d.orientation !== "none"
+    );
     _layout.result = _layout.result.map((d) => ({
       ...d,
+      origStartx: d.startx,
       startx: _layout.cols + 1 - d.startx,
     }));
+
+    _layout.result.sort((a, b) => {
+      let diff = 0;
+      if (a.startx !== b.startx) {
+        diff = a.startx - b.startx;
+      } else {
+        diff = a.starty - b.starty;
+      }
+      console.log(
+        `sorting diff: ${diff}, a:(${a.startx},${a.starty}) b:(${b.startx},${b.starty})`
+      );
+
+      return diff;
+    });
+
+    console.log("result after sort", _layout.result);
+    let i = 0;
+    let x = 0;
+    let y = 0;
+    _layout.result.forEach((v, index) => {
+      let d = _layout.result[index];
+      if (d.startx !== x || d.starty !== y) {
+        x = d.startx;
+        y = d.starty;
+        i++;
+      }
+      d.position = i;
+    });
+
     const t = resultToTable(_layout.result, _layout.cols, _layout.rows);
     console.log("t", t);
 
@@ -54,6 +93,7 @@ export default function Crossword() {
     m.table = t;
     m.cols = _layout.cols;
     m.rows = _layout.rows;
+    m.leftOut = JSON.parse(JSON.stringify(leftOut));
 
     console.log("now m is ", m);
     setDefs(d);
@@ -166,8 +206,10 @@ export default function Crossword() {
 
   const showInfo = () => {
     if (theId && model?.result) {
-      const created = formatDate(new Date(model.createdAt.seconds*1000 ));
-      const update = formatDate(new Date(model.updatedAt.seconds*1000 || Date.now()));
+      const created = formatDate(new Date(model.createdAt.seconds * 1000));
+      const update = formatDate(
+        new Date(model.updatedAt.seconds * 1000 || Date.now())
+      );
 
       return (
         <div>

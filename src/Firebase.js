@@ -9,6 +9,9 @@ import {
   doc,
   addDoc,
   Timestamp,
+  query,
+  orderBy,
+  where
 } from "firebase/firestore/lite";
 // import { doc, Timestamp } from "firebase/firestore";
 
@@ -53,9 +56,12 @@ async function getCrossword(id) {
     return;
   }
 }
-async function getCrosswords() {
+async function getAllCrosswords() {
   const crosswordCol = collection(db, "crossword");
-  const crosswordSnapshot = await getDocs(crosswordCol);
+  const q = query(crosswordCol, 
+    orderBy('createdAt', 'desc'));
+  const crosswordSnapshot = await getDocs(q);
+
   const crosswordList = crosswordSnapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
@@ -64,4 +70,4 @@ async function getCrosswords() {
   return crosswordList;
 }
 
-export { app, getCrosswords, getCrossword, saveNewCrossword, updateCrossword };
+export { app, getAllCrosswords, getCrossword, saveNewCrossword, updateCrossword };
