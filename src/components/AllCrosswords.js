@@ -2,10 +2,46 @@ import { formatDate } from "../utils";
 import { getAllCrosswords } from "../Firebase";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { DataGrid, GridRowsProp, GridColDef } from "@mui/x-data-grid";
+
+const columns = [
+  {
+    field: "id",
+    headerName: "מספר",
+    width: 150,
+    renderCell: (params) => {
+      return <Link to={"/crosswords/" + params.row.id}>{params.value}</Link>;
+    },
+  },
+  {
+    field: "name",
+    headerName: "שם",
+    width: 150,
+    renderCell: (params) => {
+      return <Link to={"/crosswords/" + params.row.id}>{params.value}</Link>;
+    },
+  },
+  {
+    field: "text",
+    headerName: "תוכן",
+    width: 150,
+    renderCell: (params) => {
+      return <Link to={"/crosswords/" + params.row.id}>{params.value}</Link>;
+    },
+  },
+  { field: "createdAt", headerName: "תאריך יצירה", width: 300, 
+  renderCell: (params) => {
+    return (<Link to={"/crosswords/" + params.row.id}>{params.value}</Link>)
+  }, },
+  { field: "updatedAt", headerName: "תאריך עדכון", width: 300, 
+  renderCell: (params) => {
+    return (<Link to={"/crosswords/" + params.row.id}>{params.value}</Link>)
+  }, },
+];
 
 export default function AllCrosswords() {
   const [allCrosswords, setAllCrosswords] = useState();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -41,7 +77,6 @@ export default function AllCrosswords() {
   const applyFilter = (item) => {
     if (!search || search?.trim().length === 0) return true;
     return item.text.indexOf(search.trim()) >= 0;
-    
   };
 
   const showGrid = () => {
@@ -49,22 +84,21 @@ export default function AllCrosswords() {
       return <></>;
     }
     return (
-      <div>
+      <div style={{ height: 400, width: "100%" }}>
         {showFilter()}
-        <ul>
-          {allCrosswords
-            .map((model) => modelToItem(model))
-            .filter((item) => applyFilter(item))
-            .map((item) => {
-              return (
-                <li key={item.id}>
-                  <Link to={"/crosswords/" + item.id}>
-                    {item.id} - {item.createdAt} ({item.updatedAt}) 
-                  </Link>
-                </li>
-              );
-            })}
-        </ul>
+
+        <div style={{ display: "flex", height: "100%" }}>
+          <div style={{ flexGrow: 1 }}>
+            <DataGrid
+              rowLength={5}
+              maxColumns={6}
+              rows={allCrosswords
+                .map((model) => modelToItem(model))
+                .filter((item) => applyFilter(item))}
+              columns={columns}
+            />
+          </div>
+        </div>
       </div>
     );
   };

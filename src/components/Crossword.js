@@ -44,8 +44,9 @@ export default function Crossword() {
   
   function build() {
     const d = defs || textToDefs(crossword.textInput);
-    console.log("in build, defs", defs);
     const _layout = clg.generateLayout(d);
+    console.log('##### result', _layout.result)
+    console.log('##### table', _layout.table)
     const leftOut = _layout.result.filter(
       (d) =>
         d.startx < 1 ||
@@ -61,6 +62,8 @@ export default function Crossword() {
       origStartx: d.startx,
       startx: _layout.cols + 1 - d.startx,
     }));
+    console.log('@@@@ result', _layout.result)
+
 
     _layout.result.sort((a, b) => {
       let diff = 0;
@@ -69,14 +72,9 @@ export default function Crossword() {
       } else {
         diff = a.starty - b.starty;
       }
-      console.log(
-        `sorting diff: ${diff}, a:(${a.startx},${a.starty}) b:(${b.startx},${b.starty})`
-      );
-
       return diff;
     });
 
-    console.log("result after sort", _layout.result);
     let i = 0;
     let x = 0;
     let y = 0;
@@ -91,7 +89,7 @@ export default function Crossword() {
     });
 
     const t = resultToTable(_layout.result, _layout.cols, _layout.rows);
-    console.log("t", t);
+    console.log("@@@@ t", t);
 
     const m = JSON.parse(JSON.stringify(crossword));
     m.result = JSON.parse(JSON.stringify(_layout.result));

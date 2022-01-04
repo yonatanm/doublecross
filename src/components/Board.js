@@ -1,43 +1,53 @@
 //https://codepen.io/adrianroworth/pen/OpeyZq
 
-const LINE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+const LINE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 export default function Board(props) {
   console.log("@@@@ in Board, props", props);
   const { cols, rows, table, result } = props;
-console.log("result", result)
+  console.log("result", result);
+  console.log("table", table);
+  console.log('cols,rows', cols, rows)
   const renderBoard = () => {
     return (
       <div>
-        <div className="crossword-board">
+        <div
+          className="crossword-board"
+          style={{
+            gridTemplate: `repeat(${13},7.6923076923076925%) /  repeat(${13},7.6923076923076925%)`,
+          }}
+        >
           {Object.values(LINE).map((r) => {
-            return Object.values(LINE).reverse().map((c) => {
-              let cc = parseInt(c) + 1;
-              let id = `item${r + 1}-${cc}`;
-              if (c >= cols || r >= rows || table[r][c] === "-") {
-                return (
-                  <span
-                    id={id}
-                    key={id}
-                    className="crossword-board__item--blank"
-                  ></span>
-                );
-              } else {
-                return (
-                  <input
-                    id={id}
-                    key={id}
-                    className="crossword-board__item"
-                    type="text"
-                    minLength="1"
-                    maxLength="1"
-                    required="required"
-                    value={table[r][c]}
-                    onChange={()=>{}}
-                  />
-                );
-              }
-            });
+            return Object.values(LINE)
+              .reverse()
+              .map((c) => {
+                let cc = parseInt(c) + 1;
+                let id = `item${r + 1}-${cc}`;
+                if (c >= cols || r >= rows || table[r][c] === "-") {
+                  return (
+                    // <></>
+                    <span
+                      id={id}
+                      key={id}
+                      className="crossword-board__item--blank"
+                    ></span>
+                  );
+                } else {
+                  return (
+                    <input
+                      id={id}
+                      key={id}
+                      className="crossword-board__item"
+                      type="text"
+                      minLength="1"
+                      maxLength="1"
+                      required="required"
+                      value={table[r][c]}
+                      onChange={() => {}}
+                    />
+                  );
+                }
+              });
           })}
         </div>
 
@@ -45,7 +55,7 @@ console.log("result", result)
           {Object.keys(result).map((i) => {
             const d = result[i];
             let id = `lable-${parseInt(i)}`;
-            const x = cols+5-d.startx
+            const x = cols + 5 - d.startx;
             // const x = d.origStartx
             return (
               <span
