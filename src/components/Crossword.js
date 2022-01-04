@@ -16,10 +16,10 @@ export default function Crossword() {
   let params = useParams();
 
   const theId = params.id;
-  const [model, setModel] = useState();
+  const [crossword, setCrossword] = useState();
   const [defs, setDefs] = useState();
 
-  console.log("theId ", theId, " model", model);
+  console.log("theId ", theId, " crossword", crossword);
 
   useEffect(() => {
     (async () => {
@@ -27,18 +27,23 @@ export default function Crossword() {
       if (theId) {
         const record = await getCrossword(theId);
         console.log("record", record);
-        const m = JSON.parse(JSON.stringify(record));
-        m.table = resultToTable(record.result, record.cols, record.rows);
-        console.log("model is about ot be", m);
-        setModel(m);
-        const d = textToDefs(record.textInput);
+        const cw = modelToCrossword(record)
+        setCrossword(cw);
+        const d = textToDefs(cw.textInput);
         setDefs(d);
       }
     })();
   }, [theId]);
 
+  const modelToCrossword = (model)=>{
+    const cw = JSON.parse(JSON.stringify(model));
+    cw.table = resultToTable(model.result, model.cols, model.rows);
+    console.log("cw is about ot be", cw);
+    return cw;    
+  }
+  
   function build() {
-    const d = defs || textToDefs(model.textInput);
+    const d = defs || textToDefs(crossword.textInput);
     console.log("in build, defs", defs);
     const _layout = clg.generateLayout(d);
     const leftOut = _layout.result.filter(
@@ -88,7 +93,7 @@ export default function Crossword() {
     const t = resultToTable(_layout.result, _layout.cols, _layout.rows);
     console.log("t", t);
 
-    const m = JSON.parse(JSON.stringify(model));
+    const m = JSON.parse(JSON.stringify(crossword));
     m.result = JSON.parse(JSON.stringify(_layout.result));
     m.table = t;
     m.cols = _layout.cols;
@@ -97,7 +102,7 @@ export default function Crossword() {
 
     console.log("now m is ", m);
     setDefs(d);
-    setModel(m);
+    setCrossword(m);
   }
 
   const resultToTable = (result, cols, rows) => {
@@ -128,14 +133,13 @@ export default function Crossword() {
   function onDefsChange(d, text) {
     console.log("defs d:", d, " text:", text);
     setDefs(d);
-    const m = JSON.parse(JSON.stringify(model || {}));
-    m.textInput = text;
-    console.log("model m is ", m);
-    setModel(m);
+    const cw = JSON.parse(JSON.stringify(crossword || {}));
+    cw.textInput = text;
+    setCrossword(cw);
   }
 
   async function save() {
-    const m = JSON.parse(JSON.stringify(model));
+    const m = JSON.parse(JSON.stringify(crossword));
     m.table = {};
     m.table_string = "";
     console.log("model to save", m);
@@ -149,14 +153,14 @@ export default function Crossword() {
   }
 
   function showBoard() {
-    if (model && model.result) {
-      console.log(`YAYAYY`, model);
+    if (crossword && crossword.result) {
+      console.log(`YAYAYY`, crossword);
       return (
         <Board
-          cols={model.cols}
-          rows={model.rows}
-          result={model.result}
-          table={model.table}
+          cols={crossword.cols}
+          rows={crossword.rows}
+          result={crossword.result}
+          table={crossword.table}
         ></Board>
       );
     } else {
@@ -171,8 +175,8 @@ export default function Crossword() {
   // }
 
   function showMissing() {
-    if (!model || !model.layout) return <></>;
-    const missings = model.layout.result.filter(
+    if (!crossword || !crossword.layout) return <></>;
+    const missings = crossword.layout.result.filter(
       (d) => d.orientation === "none"
     );
     if (missings.length === 0) {
@@ -191,12 +195,12 @@ export default function Crossword() {
     );
   }
   const showDefinitions = () => {
-    if (theId && !model) {
+    if (theId && !crossword) {
       return <></>;
     } else {
       return (
         <Definitions
-          text={model?.textInput}
+          text={crossword?.textInput}
           defs={defs}
           onChange={onDefsChange}
         ></Definitions>
@@ -205,16 +209,16 @@ export default function Crossword() {
   };
 
   const showInfo = () => {
-    if (theId && model?.result) {
-      const created = formatDate(new Date(model.createdAt.seconds * 1000));
+    if (theId && crossword?.result) {
+      const created = formatDate(new Date(crossword.createdAt.seconds * 1000));
       const update = formatDate(
-        new Date(model.updatedAt.seconds * 1000 || Date.now())
+        new Date(crossword.updatedAt.seconds * 1000 || Date.now())
       );
 
       return (
         <div>
           <h1 dir="rtl">נוצר ב-{created}</h1>
-          {model.updatedAt ? (
+          {crossword.updatedAt ? (
             <h1 dir="rtl">עודכן לאחרונה ב-{update}</h1>
           ) : (
             <></>
