@@ -25,22 +25,23 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function updateCrossword(theId, crosswordModel) {
+  crosswordModel.updatedAt = Timestamp.now();
   const r = await setDoc(doc(db, "crossword", theId), crosswordModel);
   console.log("update", r);
   return r;
 }
 
 async function saveNewCrossword(crosswordModel) {
-  const r = await addDoc(collection(db, "crossword"), {
-    model: crosswordModel,
-  });
+  crosswordModel.createdAt = Timestamp.now();
+  crosswordModel.updatedAt = Timestamp.now();
+  const r = await addDoc(collection(db, "crossword"), crosswordModel);
   console.log("save", r.id);
   return r.id;
 }
 
 async function getCrossword(id) {
   const docRef = doc(db, "crossword", id);
-  console.log('docRef', docRef)
+  console.log("docRef", docRef);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
     const res = { id: docSnap.id, ...docSnap.data() };

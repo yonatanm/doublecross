@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Board from "./Board";
+import { formatDate } from "../utils";
 import { Definitions, defsToText, textToDefs } from "./Definitions";
 import { saveNewCrossword, getCrossword, updateCrossword } from "../Firebase";
 import { useParams } from "react-router-dom";
@@ -11,7 +12,7 @@ const clg = require("crossword-layout-generator");
 
 export default function Crossword() {
   const navigate = useNavigate();
-  
+
   let params = useParams();
 
   const theId = params.id;
@@ -25,13 +26,9 @@ export default function Crossword() {
       console.log("@@@@@@@@");
       if (theId) {
         const record = await getCrossword(theId);
-        console.log('record', record)
+        console.log("record", record);
         const m = JSON.parse(JSON.stringify(record));
-        m.table = resultToTable(
-          record.result,
-          record.cols,
-          record.rows
-        );
+        m.table = resultToTable(record.result, record.cols, record.rows);
         console.log("model is about ot be", m);
         setModel(m);
         const d = textToDefs(record.textInput);
@@ -98,19 +95,16 @@ export default function Crossword() {
   }
 
   async function save() {
+    const m = JSON.parse(JSON.stringify(model));
+    m.table = {};
+    m.table_string = "";
+    m.createDate = Date.now();
+    console.log("model to save", m);
     if (!theId) {
-      const m = JSON.parse(JSON.stringify(model));
-      m.table = {};
-      m.table_string = "";
-      console.log("model to save", m);
       const newRecId = await saveNewCrossword(m);
       console.log("new recId", newRecId);
-      navigate(`/crosswords/${newRecId}`)
+      navigate(`/crosswords/${newRecId}`);
     } else {
-      const m = JSON.parse(JSON.stringify(model));
-      m.table = {};
-      m.table_string = "";
-      console.log("model to save", m);
       await updateCrossword(theId, m);
     }
   }
@@ -170,8 +164,25 @@ export default function Crossword() {
       );
     }
   };
+
+
+  const showInfo = () => {
+    if (theId && model?.result) {
+      const created = formatDate(new Date(model.createDate))
+      const update = formatDate(new Date(model.updatedDate || Date.now()))
+
+      return (
+        <div>
+          <h1 dir='rtl'>נוצר ב-{created}</h1>
+          {(model.updatedDate)?(<h1 dir='rtl'>עודכן לאחרונה ב-{update}</h1>):(<></>)}
+        </div>
+      );
+    }
+  };
+
   return (
     <div>
+      {showInfo()}
       {showDefinitions()}
       {showMissing()}
       <button onClick={build}>Build it!</button>
