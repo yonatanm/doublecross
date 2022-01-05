@@ -58,7 +58,7 @@ const defsToText = (defs) => {
 const textToDefs = (t) => {
   if (!t) return [];
   var wordList = t
-    .replace(/[ \r\n,;:-]+/g, ",")
+    .replace(/[\r\n:-]+/g, ",")
     .split(",")
     .map((x) => x.trim())
     .filter((x) => x.length > 0);
