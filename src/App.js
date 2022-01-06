@@ -55,8 +55,6 @@ function Home() {
       <Fab color="primary" aria-label="add" onClick={gotoNew}>
         <AddIcon />
       </Fab>
-
-      <h1>DoubleCrossברוך הבא ל</h1>
       {/* <Outlet/> */}
     </div>
   );

@@ -83,15 +83,15 @@ export default function SearchAppBar() {
                 </IconButton>
 
                 <Menu {...bindMenu(popupState)}>
-                  <MenuItem onClick={() => onClick(popupState, '/')}>
-                    עמוד הבית
-                  </MenuItem>
-                  <MenuItem onClick={() => onClick(popupState, '/crosswords')}>
+                <MenuItem onClick={() => onClick(popupState, '/crosswords')}>
                     התשבצים שלי
                   </MenuItem>
                   <MenuItem onClick={() => onClick(popupState, '/crossword')}>
                     תשבץ חדש
                   </MenuItem>
+                  {/* <MenuItem onClick={() => onClick(popupState, '/')}>
+                    עמוד הבית
+                  </MenuItem> */}
                 </Menu>
               </React.Fragment>
             )}
@@ -103,7 +103,7 @@ export default function SearchAppBar() {
             component="div"
             sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }}
           >
-            MUI
+            1 מאזון
           </Typography>
           <Search>
             <SearchIconWrapper>

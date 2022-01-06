@@ -1,45 +1,68 @@
 import { formatDate } from "../utils";
 import { getAllCrosswords } from "../Firebase";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { DataGrid, GridRowsProp, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import { useNavigate , Link} from "react-router-dom";
 
-const columns = [
-  {
-    field: "id",
-    headerName: "מספר",
-    width: 150,
-    renderCell: (params) => {
-      return <Link to={"/crosswords/" + params.row.id}>{params.value}</Link>;
-    },
-  },
-  {
-    field: "name",
-    headerName: "שם",
-    width: 150,
-    renderCell: (params) => {
-      return <Link to={"/crosswords/" + params.row.id}>{params.value}</Link>;
-    },
-  },
-  {
-    field: "text",
-    headerName: "תוכן",
-    width: 150,
-    renderCell: (params) => {
-      return <Link to={"/crosswords/" + params.row.id}>{params.value}</Link>;
-    },
-  },
-  { field: "createdAt", headerName: "תאריך יצירה", width: 300, 
-  renderCell: (params) => {
-    return (<Link to={"/crosswords/" + params.row.id}>{params.value}</Link>)
-  }, },
-  { field: "updatedAt", headerName: "תאריך עדכון", width: 300, 
-  renderCell: (params) => {
-    return (<Link to={"/crosswords/" + params.row.id}>{params.value}</Link>)
-  }, },
-];
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function AllCrosswords() {
+  const navigate = useNavigate();
+  const columns = [
+    // {
+    //   field: "id",
+    //   headerName: "מספר",
+    //   width: 150,      
+    // },
+    {
+      field: "name",
+      headerName: "שם",
+      width: 150,     
+    },
+    {
+      field: "text",
+      headerName: "תוכן",
+      width: 150,      
+    },
+    {
+      field: "createdAt",
+      headerName: "תאריך יצירה",
+      width: 300,
+      valueFormatter: ({ value }) => formatDate(new Date(value)),
+    },
+    {
+      field: "updatedAt",
+      headerName: "תאריך עדכון",
+      width: 300,
+      valueFormatter: ({ value }) => formatDate(new Date(value)),
+    },
+    {
+      field: "act-ions",
+      type: "actions",
+      width: 100,
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          component={Link}
+          to={`/crosswords/${params.id}`}
+          label="Edit"
+        />,
+        <GridActionsCellItem icon={<DeleteIcon />} label="Delete" />,
+      ],
+    },
+  ];
+
+  const onClick = (p, e) => {
+    console.log("onClick", p, e);
+  };
+  const [sortModel, setSortModel] = useState([
+    {
+      field: "updatedAt",
+      sort: "desc",
+    },
+  ]);
+
   const [allCrosswords, setAllCrosswords] = useState();
   const [search, setSearch] = useState("");
 
@@ -51,14 +74,12 @@ export default function AllCrosswords() {
     })();
   }, []);
 
-  const modelToItem = (model) => {
-    const item = {}; //JSON.parse(JSON.stringify(model))
-    item.id = model.id;
-    item.createdAt = formatDate(new Date(model.createdAt.seconds * 1000));
-    item.updatedAt = formatDate(new Date(model.updatedAt.seconds * 1000));
-    item.text = model.textInput;
-    return item;
-  };
+  const modelToItem = (model) => ({
+    id: model.id,
+    createdAt: model.createdAt.seconds * 1000,
+    updatedAt: model.updatedAt.seconds * 1000,
+    text: model.textInput,
+  });
 
   const showFilter = () => {
     return (
@@ -90,7 +111,12 @@ export default function AllCrosswords() {
         <div style={{ display: "flex", height: "100%" }}>
           <div style={{ flexGrow: 1 }}>
             <DataGrid
+              onRowClick={(params) => {
+                navigate(`/crosswords/${params.id}`)                
+              }}
+              sortModel={sortModel}
               rowLength={5}
+              disableColumnMenu={true}
               maxColumns={6}
               rows={allCrosswords
                 .map((model) => modelToItem(model))
