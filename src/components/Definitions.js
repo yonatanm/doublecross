@@ -11,20 +11,20 @@ CLUE8 - שקד
 CLUE9 - גורי`;
 
 function Definitions(params) {
-  console.log(`in DDD text=[${params.text}] def=[${!!params.defs}]`)
-  const [text, setText] = useState(params.text || defsToText(params.defs) || DEFAULT_TEXT);
-
+  console.log(`in DDD text=[${params.text}] def=[${!!params.defs}]`);
+  const [text, setText] = useState(
+    params.text || defsToText(params.defs) || DEFAULT_TEXT
+  );
 
   useEffect(() => {
-    console.log('update 1st!!!....')
+    console.log("update 1st!!!....");
     params.onChange(textToDefs(text), text);
-  },[]);
+  }, []);
 
   // useEffect(() => {
   //   console.log('update....')
   //   setText(defsToText(params.defs) || DEFAULT_TEXT)
   // },[]);
-
 
   const onTextAreaChange = (event) => {
     handleChange(event.target.value);
@@ -58,14 +58,25 @@ const defsToText = (defs) => {
 const textToDefs = (t) => {
   if (!t) return [];
   var wordList = t
-    .replace(/[\r\n:-]+/g, ",")
-    .split(",")
-    .map((x) => x.trim())
-    .filter((x) => x.length > 0);
+    .replace(/[\r\n:-]+/g, "~").split("~").map((x) => x.trim()).filter((x) => x.length > 0);
   const defs = [];
   for (let i = 0; i < wordList.length; i += 2) {
-    defs.push({ clue: wordList[i], answer: wordList[i + 1] });
+    const answer = cleanAnswer(wordList[i]);
+    console.log('cleaning', wordList[i], answer)
+    defs.push({ clue: wordList[i+1], answer });
   }
+  console.log('in textToDefs', t, defs)
   return defs;
+};
+
+const cleanAnswer = (a) => {
+  const noDblSpaces = (a||'').split(" ").map(x=>x.trim()).filter(x=>x.length>0).join(" ")
+  const noLastLetters = noDblSpaces.split('')
+    .map((x) => (x === "ם" ? "מ" : x))
+    .map((x) => (x === "ן" ? "מ" : x))
+    .map((x) => (x === "ך" ? "כ" : x))
+    .map((x) => (x === "ף" ? "פ" : x))
+    .map((x) => (x === "ץ" ? "צ" : x)).join('')
+  return noLastLetters;
 };
 export { Definitions, defsToText, textToDefs };

@@ -7,6 +7,7 @@ import { formatDate } from "../utils";
 import { Definitions, textToDefs } from "./Definitions";
 import { saveNewCrossword, getCrossword, updateCrossword } from "../Firebase";
 import { useParams } from "react-router-dom";
+import { rankCrossword } from "../Ranker";
 
 const clg = require("crossword-layout-generator");
 
@@ -44,9 +45,18 @@ export default function Crossword() {
 
   function build() {
     const d = defs || textToDefs(crossword.textInput);
-    const _layout = clg.generateLayout(d);
-    console.log("##### result", _layout.result);
-    console.log("##### table", _layout.table);
+    console.log("initial d is ", d);
+
+    const { candidate, r } = getBestLayout(d);
+    const _layout = clg.generateLayout(candidate);
+    console.log(
+      "@@@@@ defs is",
+      candidate,
+      "the winning has rank ",
+      r,
+      " def is ",
+      _layout.result
+    );
     const leftOut = _layout.result.filter(
       (d) =>
         d.startx < 1 ||
@@ -54,9 +64,11 @@ export default function Crossword() {
         !d.orientation ||
         d.orientation === "none"
     );
+
     _layout.result = _layout.result.filter(
       (d) => d.startx > 0 && d.starty > 0 && d.orientation !== "none"
     );
+
     _layout.result = _layout.result.map((d) => ({
       ...d,
       origStartx: d.startx,
@@ -102,6 +114,95 @@ export default function Crossword() {
     setCrossword(m);
   }
 
+  const makeDefsSpaceAware = (d) => {
+    const defs = JSON.parse(JSON.stringify(d));
+    for (let i = 0; i < defs.length; i++) {
+      const answer = defs[i].answer;
+      const clue = defs[i].clue;
+      const words = answer.split(" ");
+      if (words.length > 1) {
+        for (let j = 1; j < words.length; j++) {
+          defs.push({ clue, answer: words[j] });
+        }
+        defs[i].answer = words[0];
+      }
+    }
+    console.log("w/o spaces it looks like ", defs);
+
+    return defs;
+  };
+
+  const getBestLayout = (defs) => {
+    let ll = 0;
+    let ranking = 0;
+    const doGetBestLayout = (d, defIndx, charIndx, type, spaces, lvl) => {
+      if (spaces === 0) {
+        ranking++;
+
+        const defSpaceAware = makeDefsSpaceAware(d);
+        const l = clg.generateLayout(defSpaceAware);
+
+        const r = rankCrossword(l.result, l.table);
+        console.log(lvl.join("") + "  -- &&& RANKING "+ranking+" and rank is ", r);
+        if (r > candidateRank) {
+          console.log(
+            lvl.join("") + "  -- &&& found something intersing with new rank ",
+            r
+          );
+          candidateRank = r;
+          candidate = defSpaceAware; //JSON.parse(JSON.stringify(defSpaceAware));
+        }
+      }
+      console.log(
+        lvl.join("") + "&&& in doGetBestLayout type ",
+        type,
+        defIndx,
+        charIndx,
+        ll
+      );
+      ll++;
+      for (; defIndx < d.length; defIndx++) {
+        for (; charIndx < d[defIndx].answer.length; charIndx++) {
+          // console.log('&&& defIndx,charIndx', defIndx, charIndx)
+          if (d[defIndx].answer.charAt(charIndx) !== " ") continue;
+          lvl.push("   ");
+          doGetBestLayout(d, defIndx, charIndx + 1, "SPACE", spaces - 1, lvl);
+          lvl.pop();
+          const withoutSpace = JSON.parse(JSON.stringify(d));
+
+          withoutSpace[defIndx].answer =
+            withoutSpace[defIndx].answer.slice(0, charIndx) +
+            withoutSpace[defIndx].answer.slice(charIndx + 1);
+
+          lvl.push("   ");
+          doGetBestLayout(
+            withoutSpace,
+            defIndx,
+            charIndx + 1,
+            "JOIN",
+            spaces - 1,
+            lvl
+          );
+          lvl.pop();
+        }
+        charIndx = 0;
+        // console.log('&&& new line')
+      }
+    };
+    const numOfSpaces = defs
+      .map((d) => d.answer.split(" ").length - 1)
+      .reduce((acc, n) => {
+        return acc + n;
+      }, 0);
+    console.log("numOfSpaces", numOfSpaces);
+    let candidate = JSON.parse(JSON.stringify(defs));
+    let candidateRank = -1;
+    console.log("start with candidate", candidate);
+
+    doGetBestLayout(candidate, 0, 0, "NATURAL", numOfSpaces, []);
+    return { candidate, r: candidateRank };
+  };
+
   const resultToTable = (result, cols, rows) => {
     console.log(`cols ${cols} rows ${rows}`);
     const row = [];
@@ -112,7 +213,7 @@ export default function Crossword() {
     for (let i = 0; i < rows; i++) {
       t.push([...row]);
     }
-    result.forEach((d) => {
+    (result || []).forEach((d) => {
       if (d.orientation === "across") {
         for (let i = 0; i < d.answer.length; i++) {
           t[d.starty - 1][d.startx - 1 - i] = d.answer.charAt(i);

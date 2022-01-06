@@ -10,18 +10,8 @@ import SearchAppBar from "./components/Menu";
 import rtlPlugin from "stylis-plugin-rtl";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
-// import { create } from 'jss';
-// import rtl from 'jss-rtl';
-// import { StylesProvider, jssPreset } from '@mui/styles';
-import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-const theme = createTheme({
-  direction: "rtl",
-});
-
-// const jss = create({
-//   plugins: [...jssPreset().plugins, rtl()],
-// });
+import { createTheme } from "@mui/material/styles";
 
 // Create rtl cache
 const cacheRtl = createCache({
@@ -31,12 +21,7 @@ const cacheRtl = createCache({
 
 function RTL(props) {
   return <CacheProvider value={cacheRtl}>{props.children}</CacheProvider>;
-  // return <></>
 }
-
-// function RTL(props) {
-//   return <StylesProvider jss={jss}>{props.children}</StylesProvider>;
-// }
 
 function App() {
   return (
