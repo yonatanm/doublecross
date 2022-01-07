@@ -56,15 +56,17 @@ const defsToText = (defs) => {
 };
 
 const textToDefs = (t) => {
+  console.log("textToDefs t=", t)
   if (!t) return [];
-  var wordList = t
-    .replace(/[\r\n:-]+/g, "~").split("~").map((x) => x.trim()).filter((x) => x.length > 0);
-  const defs = [];
-  for (let i = 0; i < wordList.length; i += 2) {
-    const answer = cleanAnswer(wordList[i]);
-    console.log('cleaning', wordList[i], answer)
-    defs.push({ clue: wordList[i+1], answer });
-  }
+  var lines = t
+    .replace(/[\r\n:]+/g, "~").split("~").map((x) => x.trim()).filter((x) => x.length > 0);
+
+  const defs = lines.map(l=>{
+    const index = l.indexOf('-')
+    const answer = cleanAnswer(l.substring(0, index).trim())
+    const clue = l.substring(index+1).trim()
+    return({ clue, answer });
+  })
   console.log('in textToDefs', t, defs)
   return defs;
 };

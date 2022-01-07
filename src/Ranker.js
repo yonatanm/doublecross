@@ -1,6 +1,5 @@
-
-const WEIGHTS = [1, 0.2, 0.2, 0.5]
-const SUM_WEIGHTS=WEIGHTS.reduce(((acc,v)=>acc+v),0)
+const WEIGHTS = [2, 100, 0.2, 0.2];
+const SUM_WEIGHTS = WEIGHTS.reduce((acc, v) => acc + v, 0);
 
 const rankCrossword = (result, table) => {
   function calcInteraction() {
@@ -30,15 +29,20 @@ const rankCrossword = (result, table) => {
   const fillRatio = numOfLetters / (rows * cols);
   const dimRatio = Math.min(rows, cols) / Math.max(rows, cols, 1);
   const numOfIntersections = calcInteraction();
-   
-  const noZombies= result.filter((d) => d.orientation === "none").every((d)=>result.filter(otherD=>otherD.clue===d.clue).length===1)
-  
 
-  const intersectionsRatio = numOfIntersections /  result.length;
-  const factors = [wordsRatio , fillRatio , dimRatio , intersectionsRatio]
+  const noZombies = result
+    .filter((d) => d.orientation === "none")
+    .every(
+      (d) => result.filter((otherD) => otherD.clue === d.clue).length === 1
+    );
 
-  const rank = (noZombies?1:0) * factors.reduce(((acc, val, i)=>acc+val*WEIGHTS[i]), 0)/SUM_WEIGHTS
+  const intersectionsRatio = numOfIntersections / result.length;
+  const factors = [wordsRatio, intersectionsRatio, fillRatio, dimRatio];
 
+  const rank =
+    ((noZombies ? 1 : 0) *
+      factors.reduce((acc, val, i) => acc + val * WEIGHTS[i], 0)) /
+    SUM_WEIGHTS;
 
   return rank;
 };

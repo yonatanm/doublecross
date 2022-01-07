@@ -8,6 +8,7 @@ import { Definitions, textToDefs } from "./Definitions";
 import { saveNewCrossword, getCrossword, updateCrossword } from "../Firebase";
 import { useParams } from "react-router-dom";
 import { rankCrossword } from "../Ranker";
+import Meuzan from "./Meuzan";
 
 const clg = require("crossword-layout-generator");
 
@@ -135,7 +136,7 @@ export default function Crossword() {
   const getBestLayout = (defs) => {
     let ll = 0;
     let ranking = 0;
-    const doGetBestLayout = (d, defIndx, charIndx, type, spaces, lvl) => {
+    const doGetBestLayout = (d, defIndx, charIndx, type, spaces) => {
       if (spaces === 0) {
         ranking++;
 
@@ -143,50 +144,46 @@ export default function Crossword() {
         const l = clg.generateLayout(defSpaceAware);
 
         const r = rankCrossword(l.result, l.table);
-        console.log(lvl.join("") + "  -- &&& RANKING "+ranking+" and rank is ", r);
+        console.log("  -- &&& RANKING " + ranking + " and rank is ", r);
         if (r > candidateRank) {
-          console.log(
-            lvl.join("") + "  -- &&& found something intersing with new rank ",
-            r
-          );
+          console.log("  -- &&& found something intersing with new rank ", r);
           candidateRank = r;
-          candidate = defSpaceAware; //JSON.parse(JSON.stringify(defSpaceAware));
+          candidate = defSpaceAware;
         }
       }
-      console.log(
-        lvl.join("") + "&&& in doGetBestLayout type ",
-        type,
-        defIndx,
-        charIndx,
-        ll
-      );
+      console.log("&&& in doGetBestLayout type ", type, defIndx, charIndx, ll);
       ll++;
       for (; defIndx < d.length; defIndx++) {
         for (; charIndx < d[defIndx].answer.length; charIndx++) {
-          // console.log('&&& defIndx,charIndx', defIndx, charIndx)
           if (d[defIndx].answer.charAt(charIndx) !== " ") continue;
-          lvl.push("   ");
-          doGetBestLayout(d, defIndx, charIndx + 1, "SPACE", spaces - 1, lvl);
-          lvl.pop();
+          doGetBestLayout(d, defIndx, charIndx + 1, "SPACE", spaces - 1);
           const withoutSpace = JSON.parse(JSON.stringify(d));
 
+          // let answer = d[defIndx].answer;
+
+          // answer = answer.slice(0, charIndx) + answer.slice(charIndx + 1);        
+          // doGetBestLayout(
+          //   withoutSpace,
+          //   defIndx,
+          //   charIndx + 1,
+          //   "JOIN",
+          //   spaces - 1
+          // );
+          // d[defIndx].answer = answer.slice(0, charIndx) +" "+answer.slice(charIndx + 1);
+          
           withoutSpace[defIndx].answer =
             withoutSpace[defIndx].answer.slice(0, charIndx) +
             withoutSpace[defIndx].answer.slice(charIndx + 1);
 
-          lvl.push("   ");
           doGetBestLayout(
             withoutSpace,
             defIndx,
             charIndx + 1,
             "JOIN",
             spaces - 1,
-            lvl
           );
-          lvl.pop();
         }
         charIndx = 0;
-        // console.log('&&& new line')
       }
     };
     const numOfSpaces = defs
@@ -314,11 +311,19 @@ export default function Crossword() {
     }
   };
 
+  const showClues = () => {
+    if (crossword?.result) {
+      return <Meuzan result={crossword.result}></Meuzan>;
+    }
+    return <></>;
+  };
+
   return (
     <div>
       {showInfo()}
       {showDefinitions()}
-      {showMissing()}
+      {/* {showMissing()} */}
+      {showClues()}
       <button onClick={build}>Build it!</button>
       <button onClick={save}>Save</button>
       {showBoard()}
