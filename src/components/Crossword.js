@@ -116,19 +116,42 @@ export default function Crossword() {
   }
 
   const makeDefsSpaceAware = (d) => {
-    const defs = JSON.parse(JSON.stringify(d));
+    let defs = JSON.parse(JSON.stringify(d));
+    console.log("!@!@ input", JSON.stringify(d));
+    const additionalDefs = [];
     for (let i = 0; i < defs.length; i++) {
       const answer = defs[i].answer;
       const clue = defs[i].clue;
+      defs[i].identifier = i;
+      defs[i].subId = 0;
+      if (answer.indexOf("~") >= 0) {
+        defs[i].origAnswer = answer.replace("~", " ");
+        defs[i].answer = answer.replace("~", "");
+      } else {
+        if (answer.indexOf("^") >= 0) {
+          defs[i].origAnswer = answer.replace("^", " ");
+          defs[i].answer = answer.replace("^", "");
+        } else {
+          defs[i].origAnswer = answer;
+        }
+      }
       const words = answer.split(" ");
       if (words.length > 1) {
         for (let j = 1; j < words.length; j++) {
-          defs.push({ clue, answer: words[j] });
+          additionalDefs.push({
+            clue,
+            answer: words[j],
+            identifier: i,
+            origAnswer: answer,
+            subId: j,
+          });
         }
         defs[i].answer = words[0];
+        defs[i].identifier = i;
       }
     }
-    console.log("w/o spaces it looks like ", defs);
+    defs = defs.concat(additionalDefs);
+    console.log("!@!@ w/o spaces it looks like ", defs);
 
     return defs;
   };
@@ -156,12 +179,14 @@ export default function Crossword() {
       for (; defIndx < d.length; defIndx++) {
         for (; charIndx < d[defIndx].answer.length; charIndx++) {
           if (d[defIndx].answer.charAt(charIndx) !== " ") continue;
+
           doGetBestLayout(d, defIndx, charIndx + 1, "SPACE", spaces - 1);
+
           const withoutSpace = JSON.parse(JSON.stringify(d));
 
           // let answer = d[defIndx].answer;
 
-          // answer = answer.slice(0, charIndx) + answer.slice(charIndx + 1);        
+          // answer = answer.slice(0, charIndx) + answer.slice(charIndx + 1);
           // doGetBestLayout(
           //   withoutSpace,
           //   defIndx,
@@ -170,9 +195,10 @@ export default function Crossword() {
           //   spaces - 1
           // );
           // d[defIndx].answer = answer.slice(0, charIndx) +" "+answer.slice(charIndx + 1);
-          
+
           withoutSpace[defIndx].answer =
             withoutSpace[defIndx].answer.slice(0, charIndx) +
+            "~" +
             withoutSpace[defIndx].answer.slice(charIndx + 1);
 
           doGetBestLayout(
@@ -180,7 +206,7 @@ export default function Crossword() {
             defIndx,
             charIndx + 1,
             "JOIN",
-            spaces - 1,
+            spaces - 1
           );
         }
         charIndx = 0;

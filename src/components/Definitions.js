@@ -61,6 +61,7 @@ const textToDefs = (t) => {
   var lines = t
     .replace(/[\r\n:]+/g, "~").split("~").map((x) => x.trim()).filter((x) => x.length > 0);
 
+    
   const defs = lines.map(l=>{
     const index = l.indexOf('-')
     const answer = cleanAnswer(l.substring(0, index).trim())
