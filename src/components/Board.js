@@ -21,12 +21,11 @@ export default function Board(props) {
     return (
       <div>
         <div
-          className="crossword-grid"
+          className="crossword-grid" id='crossword-grid-id'
           style={{
             gridTemplateColumns: `repeat(${cols}, 50px)`,
-            width: `${50*cols}px`,
-            height: `${50*rows}px`
-
+            width: `${50 * cols}px`,
+            height: `${50 * rows}px`,
           }}
         >
           {Object.values(ROWS).map((r) => {
@@ -54,8 +53,8 @@ export default function Board(props) {
           <div
             className="crossword-grid labels-container"
             style={{
-              width: `${50*cols}px`,
-              height: `${50*rows}px`,
+              width: `${50 * cols}px`,
+              height: `${50 * rows}px`,
               gridTemplateColumns: `repeat(${cols}, 50px)`,
               gridTemplateRows: `repeat(${rows}, 50px)`,
             }}
@@ -82,5 +81,9 @@ export default function Board(props) {
     );
   };
 
-  return <div className="crossword-board-container">{renderBoard()}</div>;
+  return (
+    <div className="crossword-board-container">
+      {renderBoard()}
+    </div>
+  );
 }

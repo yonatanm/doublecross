@@ -348,7 +348,6 @@ export default function Crossword() {
     <div>
       {showInfo()}
       {showDefinitions()}
-      {/* {showMissing()} */}
       {showClues()}
       <button onClick={build}>Build it!</button>
       <button onClick={save}>Save</button>

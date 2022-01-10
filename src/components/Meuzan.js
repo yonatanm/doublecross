@@ -1,4 +1,3 @@
-import { TripOriginSharp } from "@material-ui/icons";
 
 export default function Meuzan(params) {
   const result = params.result;
@@ -17,8 +16,8 @@ export default function Meuzan(params) {
 
   const renerReference = (r) => {
     return (
-      <span >
-        {r.position} {r.orientation !== "across" ? "מאוזן" : "מאונך"}
+      <span>
+        {r.position} {r.orientation === "across" ? "מאוזן" : "מאונך"}
       </span>
     );
   };
@@ -37,22 +36,22 @@ export default function Meuzan(params) {
     }
     if (d.subId === 0) {
       return (
-        
         <span>
-          {d.clue} {`{`} {renderSize(d)} יחד עם{" "}
+          {d.clue} {renderSize(d)}
           {siblings
             .filter((s) => s.subId > 0)
             .map((s, i) => {
-              return (<span key={s.subId}>{i>0?"ו":""}{renerReference(s)}</span>)
-            })} {`}`}
+              return (
+                <span key={s.subId}>
+                  {i >= 0 ? " + " : ""}
+                  {renerReference(s)}
+                </span>
+              );
+            })}
         </span>
       );
     }
-    return (
-      <span>
-        ראה {renerReference(theOrigin)}
-      </span>
-    );
+    return <span>ראה {renerReference(theOrigin)}</span>;
   };
   function renderHor(orient) {
     if (!result) return <></>;

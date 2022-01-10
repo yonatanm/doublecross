@@ -25,23 +25,27 @@ function RTL(props) {
 
 function App() {
   return (
-    <RTL>
-      {/* <ThemeProvider theme={theme}> */}
-      <Router>
-        <SearchAppBar> </SearchAppBar>
-        <div>
-          {/* A <Switch> looks through its children <Route>s and
+    <>
+      <div id="image-placeholder"></div>
+
+      <RTL>
+        {/* <ThemeProvider theme={theme}> */}
+        <Router>
+          <SearchAppBar> </SearchAppBar>
+          <div>
+            {/* A <Switch> looks through its children <Route>s and
           renders the first one that matches the current URL. */}
-          <Routes>
-            <Route path="/crossword" element={<Crossword />} />
-            <Route exact path="/crosswords" element={<AllCrosswords />} />
-            <Route path="/crosswords/:id" element={<Crossword />} />
-            <Route exact path="/" element={<Home />} />
-          </Routes>
-        </div>
-      </Router>
-      {/* </ThemeProvider> */}
-    </RTL>
+            <Routes>
+              <Route path="/crossword" element={<Crossword />} />
+              <Route exact path="/crosswords" element={<AllCrosswords />} />
+              <Route path="/crosswords/:id" element={<Crossword />} />
+              <Route exact path="/" element={<Home />} />
+            </Routes>
+          </div>
+        </Router>
+        {/* </ThemeProvider> */}
+      </RTL>
+    </>
   );
 }
 
@@ -52,9 +56,9 @@ function Home() {
   };
   return (
     <div>
-      <Fab color="primary" aria-label="add" onClick={gotoNew}>
+      {/* <Fab color="primary" aria-label="add" onClick={gotoNew}>
         <AddIcon />
-      </Fab>
+      </Fab> */}
       {/* <Outlet/> */}
     </div>
   );
