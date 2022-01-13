@@ -20,7 +20,7 @@ export default function Crossword() {
   const theId = params.id;
   const [crossword, setCrossword] = useState();
   const [defs, setDefs] = useState();
-  const [hints, setHints] = useState([])
+
   console.log("theId ", theId, " crossword", crossword);
 
   useEffect(() => {
@@ -40,11 +40,16 @@ export default function Crossword() {
   const modelToCrossword = (model) => {
     const cw = JSON.parse(JSON.stringify(model));
     cw.table = resultToTable(model.result, model.cols, model.rows);
+    cw.hints = cw.hints||[]
     console.log("cw is about ot be", cw);
     return cw;
   };
 
   function build() {
+    const c = JSON.parse(JSON.stringify(crossword))
+    c.hints=[]
+    setCrossword(c)
+
     const d = defs || textToDefs(crossword.textInput);
     console.log("initial d is ", d);
 
@@ -275,11 +280,13 @@ export default function Crossword() {
   }
 
   const updateHints = (pos) => {
-    if (hints.includes(pos)) {
-      setHints(hints.filter(p=>p!==pos))
+    const c = JSON.parse(JSON.stringify(crossword));
+    if (crossword.hints.includes(pos)) {
+      c.hints = crossword.hints.filter(p=>p!==pos)
     } else { 
-      setHints(hints.concat(pos))
+      c.hints = crossword.hints.concat(pos)
     }
+    setCrossword(c)
   }
   function showBoard() {
     if (crossword && crossword.result) {
@@ -289,7 +296,7 @@ export default function Crossword() {
           rows={crossword.rows}
           result={crossword.result}
           table={crossword.table}
-          letters={hints}
+          letters={crossword.hints}
           onLetter={(pos)=>updateHints(pos)}
         ></Board>
       );
