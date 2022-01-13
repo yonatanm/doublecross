@@ -64,7 +64,7 @@ export default function AllCrosswords() {
   ]);
 
   const [allCrosswords, setAllCrosswords] = useState();
-  const [search, setSearch] = useState("");
+  // const [search, setSearch] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -81,24 +81,24 @@ export default function AllCrosswords() {
     text: model.textInput,
   });
 
-  const showFilter = () => {
-    return (
-      <div>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-          }}
-        ></input>
-      </div>
-    );
-  };
+  // const showFilter = () => {
+  //   return (
+  //     <div>
+  //       <input
+  //         type="text"
+  //         value={search}
+  //         onChange={(e) => {
+  //           setSearch(e.target.value);
+  //         }}
+  //       ></input>
+  //     </div>
+  //   );
+  // };
 
-  const applyFilter = (item) => {
-    if (!search || search?.trim().length === 0) return true;
-    return item.text.indexOf(search.trim()) >= 0;
-  };
+  // const applyFilter = (item) => {
+  //   if (!search || search?.trim().length === 0) return true;
+  //   return item.text.indexOf(search.trim()) >= 0;
+  // };
 
   const showGrid = () => {
     if (!allCrosswords) {
@@ -106,7 +106,7 @@ export default function AllCrosswords() {
     }
     return (
       <div style={{ height: 400, width: "100%" }}>
-        {showFilter()}
+        {/* {showFilter()} */}
 
         <div style={{ display: "flex", height: "100%" }}>
           <div style={{ flexGrow: 1 }}>
@@ -120,7 +120,8 @@ export default function AllCrosswords() {
               maxColumns={6}
               rows={allCrosswords
                 .map((model) => modelToItem(model))
-                .filter((item) => applyFilter(item))}
+                // .filter((item) => applyFilter(item))
+              }
               columns={columns}
             />
           </div>

@@ -20,7 +20,7 @@ export default function Crossword() {
   const theId = params.id;
   const [crossword, setCrossword] = useState();
   const [defs, setDefs] = useState();
-
+  const [hints, setHints] = useState([])
   console.log("theId ", theId, " crossword", crossword);
 
   useEffect(() => {
@@ -274,6 +274,13 @@ export default function Crossword() {
     }
   }
 
+  const updateHints = (pos) => {
+    if (hints.includes(pos)) {
+      setHints(hints.filter(p=>p!==pos))
+    } else { 
+      setHints(hints.concat(pos))
+    }
+  }
   function showBoard() {
     if (crossword && crossword.result) {
       return (
@@ -282,6 +289,8 @@ export default function Crossword() {
           rows={crossword.rows}
           result={crossword.result}
           table={crossword.table}
+          letters={hints}
+          onLetter={(pos)=>updateHints(pos)}
         ></Board>
       );
     } else {

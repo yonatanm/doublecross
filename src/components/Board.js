@@ -2,7 +2,7 @@
 
 export default function Board(props) {
   console.log("@@@@ in Board, props", props);
-  const { cols, rows, table, result } = props;
+  const { cols, rows, table, result, letters, onLetter } = props;
   console.log("result", result);
   console.log("table", table);
   console.log("cols,rows", cols, rows);
@@ -28,29 +28,8 @@ export default function Board(props) {
             height: `${50 * rows}px`,
           }}
         >
-          {Object.values(ROWS).map((r) => {
-            return Object.values(COLS)
-              .reverse()
-              .map((c) => {
-                const key = `item-${r}-${c}`;
-                if (c >= cols || r >= rows || table[r][c] === "-") {
-                  return <span key={key} className="blank"></span>;
-                } else {
-                  return (
-                    <input
-                      key={key}
-                      className="item"
-                      minLength="1"
-                      maxLength="1"
-                      readOnly
-                      value={table[r][c]}
-                    />
-                  );
-                }
-              });
-          })}
 
-          <div
+<div
             className="crossword-grid labels-container"
             style={{
               width: `${50 * cols}px`,
@@ -76,6 +55,33 @@ export default function Board(props) {
               );
             })}
           </div>
+
+          {Object.values(ROWS).map((r) => {
+            return Object.values(COLS)
+              .reverse()
+              .map((c) => {
+                const pos = `${r}-${c}`
+                const key = `item-${pos}`;
+                if (c >= cols || r >= rows || table[r][c] === "-") {
+                  return <span key={key} className="blank"></span>;
+                } else {
+                  const isHint = letters.includes(pos)
+                  return (
+                    <input
+                      key={key}
+                      className={`item ${isHint? "hint" :""}`}
+                      minLength="1"
+                      maxLength="1"
+                      onClick={()=>onLetter(pos)}
+                      readOnly
+                      value={table[r][c]}
+                    />
+                  );
+                }
+              });
+          })}
+
+         
         </div>
       </div>
     );
