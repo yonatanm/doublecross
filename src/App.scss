@@ -74,3 +74,17 @@ textarea {
 .labels-container {
   position: absolute;
 }
+
+.main-panel {
+  display: flex;
+  padding-top: 50px;
+}
+
+.board-panel {
+  flex: 25%;
+  padding-left: 200px;
+}
+
+.def-panel {
+  flex: 75%;
+}

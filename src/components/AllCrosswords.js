@@ -53,9 +53,6 @@ export default function AllCrosswords() {
     },
   ];
 
-  const onClick = (p, e) => {
-    console.log("onClick", p, e);
-  };
   const [sortModel, setSortModel] = useState([
     {
       field: "updatedAt",
@@ -76,6 +73,7 @@ export default function AllCrosswords() {
 
   const modelToItem = (model) => ({
     id: model.id,
+    name: model.name,
     createdAt: model.createdAt.seconds * 1000,
     updatedAt: model.updatedAt.seconds * 1000,
     text: model.textInput,

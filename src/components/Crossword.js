@@ -9,6 +9,7 @@ import { saveNewCrossword, getCrossword, updateCrossword } from "../Firebase";
 import { useParams } from "react-router-dom";
 import { rankCrossword } from "../Ranker";
 import Meuzan from "./Meuzan";
+import TextField from "@mui/material/TextField";
 
 const clg = require("crossword-layout-generator");
 
@@ -40,15 +41,16 @@ export default function Crossword() {
   const modelToCrossword = (model) => {
     const cw = JSON.parse(JSON.stringify(model));
     cw.table = resultToTable(model.result, model.cols, model.rows);
-    cw.hints = cw.hints||[]
+    cw.hints = cw.hints || [];
+    cw.name = cw.name || formatDate(new Date(cw.createdAt.seconds * 1000));
     console.log("cw is about ot be", cw);
     return cw;
   };
 
   function build() {
-    const c = JSON.parse(JSON.stringify(crossword))
-    c.hints=[]
-    setCrossword(c)
+    const c = JSON.parse(JSON.stringify(crossword));
+    c.hints = [];
+    setCrossword(c);
 
     const d = defs || textToDefs(crossword.textInput);
     console.log("initial d is ", d);
@@ -282,12 +284,12 @@ export default function Crossword() {
   const updateHints = (pos) => {
     const c = JSON.parse(JSON.stringify(crossword));
     if (crossword.hints.includes(pos)) {
-      c.hints = crossword.hints.filter(p=>p!==pos)
-    } else { 
-      c.hints = crossword.hints.concat(pos)
+      c.hints = crossword.hints.filter((p) => p !== pos);
+    } else {
+      c.hints = crossword.hints.concat(pos);
     }
-    setCrossword(c)
-  }
+    setCrossword(c);
+  };
   function showBoard() {
     if (crossword && crossword.result) {
       return (
@@ -297,7 +299,7 @@ export default function Crossword() {
           result={crossword.result}
           table={crossword.table}
           letters={crossword.hints}
-          onLetter={(pos)=>updateHints(pos)}
+          onLetter={(pos) => updateHints(pos)}
         ></Board>
       );
     } else {
@@ -335,21 +337,40 @@ export default function Crossword() {
 
   const showInfo = () => {
     if (theId && crossword?.result) {
-      const created = formatDate(new Date(crossword.createdAt.seconds * 1000));
-      const update = formatDate(
-        new Date(crossword.updatedAt.seconds * 1000 || Date.now())
-      );
-
+   
       return (
         <div>
-          <h1 dir="rtl">נוצר ב-{created}</h1>
-          {crossword.updatedAt ? (
-            <h1 dir="rtl">עודכן לאחרונה ב-{update}</h1>
-          ) : (
-            <></>
-          )}
+          <TextField
+            inputProps={{
+              size: 50,
+            }}
+            size="small"
+            label="שם"
+            variant="standard"
+            onChange={(x) => {
+              const c = JSON.parse(JSON.stringify(crossword));
+              c.name = x.target.value;
+              setCrossword(c);
+            }}
+            value={crossword.name}
+          />
+           <TextField              
+            label="תאריך עדכון"
+            variant="standard"
+            disabled
+            value={formatDate(new Date(crossword.updatedAt.seconds * 1000))}
+          />
+
+           <TextField              
+            label="תאריך יצירה"
+            variant="standard"
+            disabled
+            value={formatDate(new Date(crossword.createdAt.seconds * 1000))}
+          />
         </div>
-      );
+      )
+    } else { 
+      return (<></>)
     }
   };
 
@@ -361,13 +382,16 @@ export default function Crossword() {
   };
 
   return (
-    <div>
-      {showInfo()}
-      {showDefinitions()}
-      {showClues()}
-      <button onClick={build}>Build it!</button>
-      <button onClick={save}>Save</button>
-      {showBoard()}
+    <div className="main-panel">
+      <div className="def-panel">
+        {showInfo()}
+        <div>
+          <button onClick={build}>Build it!</button>
+          <button onClick={save}>Save</button>
+        </div>
+        {showDefinitions()}
+      </div>
+      <div className="board-panel">{showBoard()}</div>
     </div>
   );
 }
