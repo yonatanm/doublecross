@@ -3,16 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
 import Crossword from "./components/Crossword";
 import AllCrosswords from "./components/AllCrosswords";
-import Fab from "@mui/material/Fab";
-import AddIcon from "@material-ui/icons/Add";
 import { useNavigate } from "react-router-dom";
-import ResponsiveAppBar from "./components/Menu2"
+import ResponsiveAppBar from "./components/Menu"
 
 import rtlPlugin from "stylis-plugin-rtl";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
 
-import { createTheme } from "@mui/material/styles";
 
 // Create rtl cache
 const cacheRtl = createCache({
