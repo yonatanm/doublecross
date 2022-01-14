@@ -10,6 +10,10 @@ import { useParams } from "react-router-dom";
 import { rankCrossword } from "../Ranker";
 import Meuzan from "./Meuzan";
 import TextField from "@mui/material/TextField";
+import SaveIcon from "@mui/icons-material/Save";
+import PsychologyIcon from "@mui/icons-material/Psychology";
+
+import Fab from "@mui/material/Fab";
 
 const clg = require("crossword-layout-generator");
 
@@ -338,35 +342,43 @@ export default function Crossword() {
   const showInfo = () => {
     if (theId && crossword?.result) {
       return (
-        <div>
-          <TextField
-            inputProps={{
-              size: 50,
-            }}
-            size="small"
-            label="שם"
-            variant="standard"
-            onChange={(x) => {
-              const c = JSON.parse(JSON.stringify(crossword));
-              c.name = x.target.value;
-              setCrossword(c);
-            }}
-            value={crossword.name}
-          />
-          <TextField
-            label="תאריך עדכון"
-            variant="standard"
-            disabled
-            value={formatDate(new Date(crossword.updatedAt.seconds * 1000))}
-          />
+        <>
+          <div>
+            <TextField
+              inputProps={{
+                size: 50,
+              }}
+              size="small"
+              label="שם"
+              variant="standard"
+              onChange={(x) => {
+                const c = JSON.parse(JSON.stringify(crossword));
+                c.name = x.target.value;
+                setCrossword(c);
+              }}
+              value={crossword.name}
+            />
+            <TextField
+              label="תאריך עדכון"
+              variant="standard"
+              disabled
+              value={formatDate(new Date(crossword.updatedAt.seconds * 1000))}
+            />
 
-          <TextField
-            label="תאריך יצירה"
-            variant="standard"
-            disabled
-            value={formatDate(new Date(crossword.createdAt.seconds * 1000))}
-          />
-        </div>
+            <TextField
+              label="תאריך יצירה"
+              variant="standard"
+              disabled
+              value={formatDate(new Date(crossword.createdAt.seconds * 1000))}
+            />
+            <Fab color="primary" aria-label="שמור">
+              <SaveIcon onClick={save} />
+            </Fab>
+            <Fab color="secondary" aria-label="בנה">
+              <PsychologyIcon onClick={build} />
+            </Fab>
+          </div>
+        </>
       );
     } else {
       return <></>;
@@ -381,19 +393,21 @@ export default function Crossword() {
   };
 
   return (
-    <div className="main-panel">
-      <div className="def-panel">
+    <>
+      <div class="info-panel">
         {showInfo()}
-        <div>
-          <button onClick={build}>Build it!</button>
-          <button onClick={save}>Save</button>
+        <hr></hr>
+      </div>
+
+      <div className="main-panel">
+        <div className="def-panel">
+          {showDefinitions()}
         </div>
-        {showDefinitions()}
+        <div className="board-panel">
+          {showBoard()}
+          {showClues()}
+        </div>
       </div>
-      <div className="board-panel">
-        {showBoard()}
-        {showClues()}
-      </div>
-    </div>
+    </>
   );
 }

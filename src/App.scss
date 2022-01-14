@@ -76,10 +76,14 @@ textarea {
   position: absolute;
 }
 
-.main-panel {
-  display: flex;
+.info-panel { 
   padding-top: 50px;
 }
+
+.main-panel {
+  display: flex;
+}
+
 
 .board-panel {
   flex: 45%;
