@@ -2,7 +2,8 @@
 
 export default function Board(props) {
   console.log("@@@@ in Board, props", props);
-  const { cols, rows, table, result, letters, onLetter } = props;
+  const { cols, rows, table, result, onLetter } = props;
+  const letters = props.letters||[]
   console.log("result", result);
   console.log("table", table);
   console.log("cols,rows", cols, rows);

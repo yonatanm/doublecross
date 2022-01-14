@@ -30,12 +30,13 @@ textarea {
 }
 
 .crossword-grid {
-  position: absolute;
+  // position: absolute;
   background: transparent;
   display: grid;
   list-style-type: none;
   padding: 0;
-  margin: 0 auto;
+  // margin: 0 auto;
+  
 }
 .blank {
   background: #000000;
@@ -81,10 +82,17 @@ textarea {
 }
 
 .board-panel {
-  flex: 25%;
-  padding-left: 200px;
+  flex: 45%;
+  // padding-left: 50px;
 }
 
 .def-panel {
-  flex: 75%;
+  flex: 55%;
+}
+
+.rendered-definitions {
+  display: flex;
+}
+.across-def, .down-def {
+  flex: 50%;
 }

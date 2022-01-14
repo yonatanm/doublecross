@@ -47,12 +47,12 @@ export default function Crossword() {
     return cw;
   };
 
-  function build(cc, ddd) {
-    const c = JSON.parse(JSON.stringify(cc|| crossword));
+  function build() {
+    const c = JSON.parse(JSON.stringify(crossword));
     c.hints = [];
     setCrossword(c);
 
-    const d = ddd || defs || textToDefs(crossword.textInput);
+    const d = defs || textToDefs(crossword.textInput);
     console.log("initial d is ", d);
 
     const { candidate, r } = getBestLayout(d);
@@ -264,7 +264,6 @@ export default function Crossword() {
     const cw = JSON.parse(JSON.stringify(crossword || {}));
     cw.textInput = text;
     setCrossword(cw);
-    build(cw, d)
   }
 
   async function save() {
@@ -338,7 +337,6 @@ export default function Crossword() {
 
   const showInfo = () => {
     if (theId && crossword?.result) {
-   
       return (
         <div>
           <TextField
@@ -355,23 +353,23 @@ export default function Crossword() {
             }}
             value={crossword.name}
           />
-           <TextField              
+          <TextField
             label="תאריך עדכון"
             variant="standard"
             disabled
             value={formatDate(new Date(crossword.updatedAt.seconds * 1000))}
           />
 
-           <TextField              
+          <TextField
             label="תאריך יצירה"
             variant="standard"
             disabled
             value={formatDate(new Date(crossword.createdAt.seconds * 1000))}
           />
         </div>
-      )
-    } else { 
-      return (<></>)
+      );
+    } else {
+      return <></>;
     }
   };
 
@@ -392,7 +390,10 @@ export default function Crossword() {
         </div>
         {showDefinitions()}
       </div>
-      <div className="board-panel">{showBoard()}</div>
+      <div className="board-panel">
+        {showBoard()}
+        {showClues()}
+      </div>
     </div>
   );
 }

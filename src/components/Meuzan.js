@@ -1,4 +1,3 @@
-
 export default function Meuzan(params) {
   const result = params.result;
   console.log("!@ Meuzan with result", result);
@@ -70,11 +69,15 @@ export default function Meuzan(params) {
   }
 
   return (
-    <div>
-      <h1>מאוזן</h1>
-      <div>{renderHor("across")}</div>
-      <h1>מאונך</h1>
-      <div>{renderHor("down")}</div>
+    <div class="rendered-definitions">
+      <div class="across-def">
+        <h3>מאוזן</h3>
+        {renderHor("across")}
+      </div>
+      <div class="down-def">
+        <h3>מאונך</h3>
+        {renderHor("down")}
+      </div>
     </div>
   );
 }

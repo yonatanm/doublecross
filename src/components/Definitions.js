@@ -1,4 +1,6 @@
+import { map } from "@firebase/util";
 import { useState, useEffect } from "react";
+import TextField from "@mui/material/TextField";
 
 const DEFAULT_TEXT = `CLUE1 - איתמר
 CLUE2 - רותמ
@@ -35,7 +37,37 @@ function Definitions(params) {
     }
   };
 
-  return <textarea value={text} onChange={onTextAreaChange}></textarea>;
+  const renderDefs = (t) => {
+    const defs = textToDefs(t);
+    return defs.map((d, i) => {
+      return (
+        <div key={i}>
+          <TextField key='answer'
+            label="תשובה"
+            variant="standard"
+            disabled
+            value={d.answer}
+          />
+
+          <TextField key='clue'
+            label="הגדרה"
+            inputProps={{
+              size: d.clue.length,
+            }}
+            variant="standard"
+            disabled
+            value={d.clue}
+          />
+        </div>
+      );
+    });
+  };
+  return (
+    <>
+      <textarea value={text} onChange={onTextAreaChange}></textarea>
+      {renderDefs(text)}
+    </>
+  );
 }
 
 const defsToText = (defs) => {
@@ -51,30 +83,38 @@ const defsToText = (defs) => {
 };
 
 const textToDefs = (t) => {
-  console.log("textToDefs t=", t)
+  console.log("textToDefs t=", t);
   if (!t) return [];
   var lines = t
-    .replace(/[\r\n:]+/g, "~").split("~").map((x) => x.trim()).filter((x) => x.length > 0);
+    .replace(/[\r\n:]+/g, "~")
+    .split("~")
+    .map((x) => x.trim())
+    .filter((x) => x.length > 0);
 
-    
-  const defs = lines.map(l=>{
-    const index = l.indexOf('-')
-    const answer = cleanAnswer(l.substring(0, index).trim())
-    const clue = l.substring(index+1).trim()
-    return({ clue, answer });
-  })
-  console.log('in textToDefs', t, defs)
+  const defs = lines.map((l) => {
+    const index = l.indexOf("-");
+    const answer = cleanAnswer(l.substring(0, index).trim());
+    const clue = l.substring(index + 1).trim();
+    return { clue, answer };
+  });
+  console.log("in textToDefs", t, defs);
   return defs;
 };
 
 const cleanAnswer = (a) => {
-  const noDblSpaces = (a||'').split(" ").map(x=>x.trim()).filter(x=>x.length>0).join(" ")
-  const noLastLetters = noDblSpaces.split('')
+  const noDblSpaces = (a || "")
+    .split(" ")
+    .map((x) => x.trim())
+    .filter((x) => x.length > 0)
+    .join(" ");
+  const noLastLetters = noDblSpaces
+    .split("")
     .map((x) => (x === "ם" ? "מ" : x))
     .map((x) => (x === "ן" ? "מ" : x))
     .map((x) => (x === "ך" ? "כ" : x))
     .map((x) => (x === "ף" ? "פ" : x))
-    .map((x) => (x === "ץ" ? "צ" : x)).join('')
+    .map((x) => (x === "ץ" ? "צ" : x))
+    .join("");
   return noLastLetters;
 };
 export { Definitions, defsToText, textToDefs };
