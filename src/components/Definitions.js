@@ -21,11 +21,6 @@ function Definitions(params) {
     params.onChange(textToDefs(text), text);
   }, []);
 
-  // useEffect(() => {
-  //   console.log('update....')
-  //   setText(defsToText(params.defs) || DEFAULT_TEXT)
-  // },[]);
-
   const onTextAreaChange = (event) => {
     handleChange(event.target.value);
   };

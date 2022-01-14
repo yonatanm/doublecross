@@ -47,12 +47,12 @@ export default function Crossword() {
     return cw;
   };
 
-  function build() {
-    const c = JSON.parse(JSON.stringify(crossword));
+  function build(cc, ddd) {
+    const c = JSON.parse(JSON.stringify(cc|| crossword));
     c.hints = [];
     setCrossword(c);
 
-    const d = defs || textToDefs(crossword.textInput);
+    const d = ddd || defs || textToDefs(crossword.textInput);
     console.log("initial d is ", d);
 
     const { candidate, r } = getBestLayout(d);
@@ -259,11 +259,12 @@ export default function Crossword() {
   };
 
   function onDefsChange(d, text) {
-    console.log("defs d:", d, " text:", text);
+    console.log("!@# defs d:", d, " text:", text);
     setDefs(d);
     const cw = JSON.parse(JSON.stringify(crossword || {}));
     cw.textInput = text;
     setCrossword(cw);
+    build(cw, d)
   }
 
   async function save() {
