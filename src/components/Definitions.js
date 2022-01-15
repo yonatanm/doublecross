@@ -5,50 +5,62 @@ import AddIcon from "@mui/icons-material/Add";
 import Fab from "@mui/material/Fab";
 
 function Definitions(params) {
-  
   console.log(`DDD <Definitions> params?.defs?.length`, params?.defs?.length);
 
   const [theDefs, setTheDefs] = useState();
+  const [newAns, setNewAns] = useState()
+  const [newClue, setNewClue] = useState()
   // const [text, setText] = useState(
   //   params.text || defsToText(params.defs) || DEFAULT_TEXT
   // );
 
   useEffect(() => {
-    if (params?.defs?.length >0) {
-      setTheDefs(params.defs)
+    if (params?.defs?.length > 0) {
+      setTheDefs(params.defs);
     }
   }, [params.defs]);
 
   const updatedAnswer = (e, d) => {
     console.log("updatedAnswer ", e.target.value);
-    
-    d.answer = (e.target.value || "");
+
+    d.answer = e.target.value || "";
     const defs = JSON.parse(JSON.stringify(theDefs));
     // console.log(theDefs)
-    setTheDefs(defs)
+    setTheDefs(defs);
   };
 
   const updatedClue = (e, d) => {
-    console.log("updatedClue ",e.target.value);
+    console.log("updatedClue ", e.target.value);
     // const defs = JSON.parse(JSON.stringify(theDefs));
-    d.clue = (e.target.value || "");
+    d.clue = e.target.value || "";
     const defs = JSON.parse(JSON.stringify(theDefs));
     // console.log(theDefs)
-    setTheDefs(defs)
+    setTheDefs(defs);
   };
 
   const add = () => {
-
+    let defs = JSON.parse(JSON.stringify(theDefs));
+    defs = [{clue:newClue, answer: newAns}].concat(defs)
+    setTheDefs(defs)
+    setNewClue('')
+    setNewAns('')
   };
 
+  const updateNewAns = (v)=>{
+    setNewAns(v)
+  }
+  const updateNewClue = (v)=>{
+    setNewClue(v)
+  }
+
   const renderDefs = () => {
-    console.log("DDD theDefs.length", 
-    theDefs?.length);
+    console.log("DDD theDefs.length", theDefs?.length);
     if (!theDefs?.length) return <></>;
     const existings = theDefs.map((d, i) => {
       return (
         <div key={i}>
           <TextField
+            autoComplete="off"
             key="answer"
             label="תשובה"
             variant="standard"
@@ -57,6 +69,7 @@ function Definitions(params) {
           />
 
           <TextField
+            autoComplete="off"
             key="clue"
             label="הגדרה"
             inputProps={{
@@ -72,15 +85,25 @@ function Definitions(params) {
 
     const newDefs = [
       <div key="empty-def" className="empty-def">
-        <TextField key="new-answer" label="תשובה" variant="standard" />
+        <TextField
+          autoComplete="off"
+          key="new-answer"
+          label="תשובה"
+          variant="standard"
+          onChange={(e) => updateNewAns(e?.target?.value)}
+          value={newAns||''}
+        />
 
         <TextField
+          autoComplete="off"
           key="new-clue"
           label="הגדרה"
           inputProps={{
             size: 20,
           }}
           variant="standard"
+          onChange={(e) => updateNewClue(e?.target?.value)}
+          value={newClue||''}
         />
 
         <Fab color="primary" aria-label="שמור">
