@@ -1,73 +1,97 @@
-import { map } from "@firebase/util";
 import { useState, useEffect } from "react";
 import TextField from "@mui/material/TextField";
+import AddIcon from "@mui/icons-material/Add";
 
-const DEFAULT_TEXT = `CLUE1 - איתמר
-CLUE2 - רותמ
-CLUE3 - גוני
-CLUE4 - ענבר 
-CLUE5 - אולי
-CLUE6 - לוטמ
-CLUE7 - סיני
-CLUE8 - שקד
-CLUE9 - גורי`;
+import Fab from "@mui/material/Fab";
 
 function Definitions(params) {
-  console.log(`in DDD text=[${params.text}] def=[${!!params.defs}]`);
-  const [text, setText] = useState(
-    params.text || defsToText(params.defs) || DEFAULT_TEXT
-  );
+  
+  console.log(`DDD <Definitions> params?.defs?.length`, params?.defs?.length);
+
+  const [theDefs, setTheDefs] = useState();
+  // const [text, setText] = useState(
+  //   params.text || defsToText(params.defs) || DEFAULT_TEXT
+  // );
 
   useEffect(() => {
-    console.log("update 1st!!!....");
-    params.onChange(textToDefs(text), text);
-  }, []);
-
-  const onTextAreaChange = (event) => {
-    handleChange(event.target.value);
-  };
-
-  const handleChange = (newText) => {
-    const defsBefore = textToDefs(text);
-    const defsAfter = textToDefs(newText);
-    setText(newText);
-    if (JSON.stringify(defsBefore) !== JSON.stringify(defsAfter)) {
-      console.log("there is a chnage in defs");
-      params.onChange(defsAfter, newText);
+    if (params?.defs?.length >0) {
+      setTheDefs(params.defs)
     }
+  }, [params.defs]);
+
+  const updatedAnswer = (e, d) => {
+    console.log("updatedAnswer ", e.target.value);
+    
+    d.answer = (e.target.value || "");
+    const defs = JSON.parse(JSON.stringify(theDefs));
+    // console.log(theDefs)
+    setTheDefs(defs)
   };
 
-  const renderDefs = (t) => {
-    const defs = textToDefs(t);
-    return defs.map((d, i) => {
+  const updatedClue = (e, d) => {
+    console.log("updatedClue ",e.target.value);
+    // const defs = JSON.parse(JSON.stringify(theDefs));
+    d.clue = (e.target.value || "");
+    const defs = JSON.parse(JSON.stringify(theDefs));
+    // console.log(theDefs)
+    setTheDefs(defs)
+  };
+
+  const add = () => {
+
+  };
+
+  const renderDefs = () => {
+    console.log("DDD theDefs.length", 
+    theDefs?.length);
+    if (!theDefs?.length) return <></>;
+    const existings = theDefs.map((d, i) => {
       return (
         <div key={i}>
-          <TextField key='answer'
+          <TextField
+            key="answer"
             label="תשובה"
             variant="standard"
-            disabled
+            onChange={(e) => updatedAnswer(e, d)}
             value={d.answer}
           />
 
-          <TextField key='clue'
+          <TextField
+            key="clue"
             label="הגדרה"
             inputProps={{
               size: d.clue.length,
             }}
             variant="standard"
-            disabled
+            onChange={(e) => updatedClue(e, d)}
             value={d.clue}
           />
         </div>
       );
     });
+
+    const newDefs = [
+      <div key="empty-def" className="empty-def">
+        <TextField key="new-answer" label="תשובה" variant="standard" />
+
+        <TextField
+          key="new-clue"
+          label="הגדרה"
+          inputProps={{
+            size: 20,
+          }}
+          variant="standard"
+        />
+
+        <Fab color="primary" aria-label="שמור">
+          <AddIcon onClick={add} />
+        </Fab>
+      </div>,
+    ];
+    return newDefs.concat(existings);
   };
-  return (
-    <>
-      <textarea value={text} onChange={onTextAreaChange}></textarea>
-      {renderDefs(text)}
-    </>
-  );
+
+  return <>{renderDefs()}</>;
 }
 
 const defsToText = (defs) => {

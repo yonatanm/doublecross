@@ -33,10 +33,9 @@ export default function Crossword() {
       console.log("@@@@@@@@");
       if (theId) {
         const record = await getCrossword(theId);
-        console.log("record", record);
         const cw = modelToCrossword(record);
         setCrossword(cw);
-        const d = textToDefs(cw.textInput);
+        const d = textToDefs(record.textInput);
         setDefs(d);
       }
     })();
@@ -264,7 +263,7 @@ export default function Crossword() {
 
   function onDefsChange(d, text) {
     console.log("!@# defs d:", d, " text:", text);
-    setDefs(d);
+    // setDefs(d);
     const cw = JSON.parse(JSON.stringify(crossword || {}));
     cw.textInput = text;
     setCrossword(cw);
@@ -331,7 +330,6 @@ export default function Crossword() {
     } else {
       return (
         <Definitions
-          text={crossword?.textInput}
           defs={defs}
           onChange={onDefsChange}
         ></Definitions>
@@ -394,7 +392,7 @@ export default function Crossword() {
 
   return (
     <>
-      <div class="info-panel">
+      <div className="info-panel">
         {showInfo()}
         <hr></hr>
       </div>

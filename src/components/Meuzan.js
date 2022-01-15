@@ -69,12 +69,12 @@ export default function Meuzan(params) {
   }
 
   return (
-    <div class="rendered-definitions">
-      <div class="across-def">
+    <div className="rendered-definitions">
+      <div className="across-def">
         <h3>מאוזן</h3>
         {renderHor("across")}
       </div>
-      <div class="down-def">
+      <div className="down-def">
         <h3>מאונך</h3>
         {renderHor("down")}
       </div>
