@@ -3,115 +3,140 @@ import TextField from "@mui/material/TextField";
 import AddIcon from "@mui/icons-material/Add";
 
 import Fab from "@mui/material/Fab";
+const DEF_DEFS = [
+  {
+    answer: `כל האמצעים כשרים`,
+    clue: `סוס-רפה-כלב נחש-כבשה-חמור חזיר-תרנגול-פיל`,
+  },
+  {
+    answer: `לקהל הרחב`,
+    clue: `דיאטה לכולם`,
+  },
+];
+
 
 function Definitions(params) {
   console.log(`DDD <Definitions> params?.defs?.length`, params?.defs?.length);
 
   const [theDefs, setTheDefs] = useState();
-  const [newAns, setNewAns] = useState()
-  const [newClue, setNewClue] = useState()
-  // const [text, setText] = useState(
-  //   params.text || defsToText(params.defs) || DEFAULT_TEXT
-  // );
+  const [newAns, setNewAns] = useState();
+  const [newClue, setNewClue] = useState();
 
   useEffect(() => {
-    if (params?.defs?.length > 0) {
+    console.log("DDD in useEffect -1-1-1 ", params?.defs?.length);
+    if (params?.defs !== undefined) {
+      console.log("DDD in useEffect 0000 ", params?.defs?.length);
       setTheDefs(params.defs);
+    } else { 
+      setTheDefs(DEF_DEFS)
     }
   }, [params.defs]);
 
-  const updatedAnswer = (e, d) => {
-    console.log("updatedAnswer ", e.target.value);
+  useEffect(() => {
+    console.log("DDD in useEffect 1", theDefs?.length);
+    if (JSON.stringify(params?.defs || []) !== JSON.stringify(theDefs || [])) {
+      console.log("DDD in useEffect 2 ", theDefs?.length);
+      if (theDefs?.length > 0) {
+        params.onChange(theDefs);
+      }
+    }
+    //
+  }, [theDefs]);
 
+  const updatedAnswer = (e, d, i) => {
+    console.log("updatedAnswer ", e.target.value);
     d.answer = e.target.value || "";
+    if (d.answer.trim().length === 0 && theDefs[i].clue.trim().length == 0) {
+      setTheDefs(theDefs.filter((dd, j) => i >= 0 && j !== i));
+      return;
+    }
     const defs = JSON.parse(JSON.stringify(theDefs));
     // console.log(theDefs)
     setTheDefs(defs);
   };
 
-  const updatedClue = (e, d) => {
+  const updatedClue = (e, d, i) => {
     console.log("updatedClue ", e.target.value);
     // const defs = JSON.parse(JSON.stringify(theDefs));
     d.clue = e.target.value || "";
+
+    if (d.clue.trim().length === 0 && theDefs[i].answer.trim().length == 0) {
+      setTheDefs(theDefs.filter((dd, j) => i >= 0 && j !== i));
+      return;
+    }
+
     const defs = JSON.parse(JSON.stringify(theDefs));
     // console.log(theDefs)
     setTheDefs(defs);
   };
 
+  const del = (i) => {
+    setTheDefs(theDefs.filter((x, j) => j !== i));
+  };
   const add = () => {
     let defs = JSON.parse(JSON.stringify(theDefs));
-    defs = [{clue:newClue, answer: newAns}].concat(defs)
-    setTheDefs(defs)
-    setNewClue('')
-    setNewAns('')
+    if (
+      defs.length > 1 &&
+      defs[0]?.answer?.trim()?.length > 0 &&
+      defs[0]?.clue?.trim()?.length > 0
+    ) {
+      defs = [{ clue: "", answer: "" }].concat(defs);
+      setTheDefs(defs);
+    }
+    // setNewClue("");
+    // setNewAns("");
   };
 
-  const updateNewAns = (v)=>{
-    setNewAns(v)
-  }
-  const updateNewClue = (v)=>{
-    setNewClue(v)
-  }
+  const updateNewAns = (v) => {
+    setNewAns(v);
+  };
+  const updateNewClue = (v) => {
+    setNewClue(v);
+  };
 
   const renderDefs = () => {
-    console.log("DDD theDefs.length", theDefs?.length);
-    if (!theDefs?.length) return <></>;
-    const existings = theDefs.map((d, i) => {
+    console.log("DDD renderDefs theDefs.length", theDefs?.length);
+    const existings = (theDefs || []).map((d, i) => {
       return (
-        <div key={i}>
+        <div className="defs-row" key={i}>
           <TextField
+            className="defs-col defs-answer"
             autoComplete="off"
             key="answer"
             label="תשובה"
             variant="standard"
-            onChange={(e) => updatedAnswer(e, d)}
+            onChange={(e) => updatedAnswer(e, d, i)}
             value={d.answer}
+            inputProps={{
+              size: Math.min(50, Math.max(20, d?.answer?.length)),
+            }}
           />
 
           <TextField
+            className="defs-col defs-clue"
             autoComplete="off"
             key="clue"
             label="הגדרה"
             inputProps={{
-              size: d.clue.length,
+              size: Math.min(50, Math.max(20, d?.clue?.length)),
             }}
             variant="standard"
-            onChange={(e) => updatedClue(e, d)}
+            onChange={(e) => updatedClue(e, d, i)}
             value={d.clue}
           />
         </div>
       );
     });
-
-    const newDefs = [
-      <div key="empty-def" className="empty-def">
-        <TextField
-          autoComplete="off"
-          key="new-answer"
-          label="תשובה"
-          variant="standard"
-          onChange={(e) => updateNewAns(e?.target?.value)}
-          value={newAns||''}
-        />
-
-        <TextField
-          autoComplete="off"
-          key="new-clue"
-          label="הגדרה"
-          inputProps={{
-            size: 20,
-          }}
-          variant="standard"
-          onChange={(e) => updateNewClue(e?.target?.value)}
-          value={newClue||''}
-        />
-
-        <Fab color="primary" aria-label="שמור">
-          <AddIcon onClick={add} />
-        </Fab>
-      </div>,
-    ];
-    return newDefs.concat(existings);
+    return (
+      <>
+        <div className="add-def-button">
+          <Fab color="primary" aria-label="שמור" onClick={add}>
+            <AddIcon />
+          </Fab>
+        </div>
+        {existings}
+      </>
+    );
   };
 
   return <>{renderDefs()}</>;

@@ -102,5 +102,23 @@ textarea {
 }
 
 .empty-def {
-  background-color: greenyellow;
+  width: 800px;
+  // padding-right: 20px;
+   background-color: greenyellow;
+}
+
+.defs-row { 
+  display: flex;
+  width: 800px;
+  padding-right: 40px;
+}
+
+.defs-col {
+  flex: 50%;
+}
+
+.info-thing{
+  display: flex;
+  justify-content: space-between;
+  width: 1000px
 }

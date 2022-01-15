@@ -17,6 +17,7 @@ import Fab from "@mui/material/Fab";
 
 const clg = require("crossword-layout-generator");
 
+const DEF_CROSS_WORD_NAME = "בהצלחה לנו";
 export default function Crossword() {
   const navigate = useNavigate();
 
@@ -34,8 +35,11 @@ export default function Crossword() {
       if (theId) {
         const record = await getCrossword(theId);
         const cw = modelToCrossword(record);
+        const d = JSON.parse(JSON.stringify(cw?.defs || []));
+        console.log("DDD got record ", d.length);
+        setDefs(d);
+        delete cw.defs;
         setCrossword(cw);
-        const d = textToDefs(record.textInput);
         setDefs(d);
       }
     })();
@@ -45,7 +49,7 @@ export default function Crossword() {
     const cw = JSON.parse(JSON.stringify(model));
     cw.table = resultToTable(model.result, model.cols, model.rows);
     cw.hints = cw.hints || [];
-    cw.name = cw.name || formatDate(new Date(cw.createdAt.seconds * 1000));
+    cw.defs = cw.defs || [];
     console.log("cw is about ot be", cw);
     return cw;
   };
@@ -134,18 +138,10 @@ export default function Crossword() {
       const clue = defs[i].clue;
       defs[i].identifier = i;
       defs[i].subId = 0;
-      if (answer.indexOf("~") >= 0) {
-        defs[i].origAnswer = answer.replace("~", " ");
-        defs[i].answer = answer.replace("~", "");
-      } else {
-        if (answer.indexOf("^") >= 0) {
-          defs[i].origAnswer = answer.replace("^", " ");
-          defs[i].answer = answer.replace("^", "");
-        } else {
-          defs[i].origAnswer = answer;
-        }
-      }
-      const words = answer.split(" ");
+      defs[i].origAnswer = answer.replace("~", " ").replace("^", " ");
+      defs[i].answer = answer.replace("~", "").replace("^", "");
+
+      const words = defs[i].answer.split(" ");
       if (words.length > 1) {
         for (let j = 1; j < words.length; j++) {
           additionalDefs.push({
@@ -261,16 +257,18 @@ export default function Crossword() {
     return t;
   };
 
-  function onDefsChange(d, text) {
-    console.log("!@# defs d:", d, " text:", text);
-    // setDefs(d);
-    const cw = JSON.parse(JSON.stringify(crossword || {}));
-    cw.textInput = text;
-    setCrossword(cw);
+
+  function onDefsChange(d) {
+    console.log("DDD onDefsChange  d:", d);
+    setDefs(d);
+    // const cw = JSON.parse(JSON.stringify(crossword || {}));
+    // setCrossword(cw);
   }
 
   async function save() {
     const model = JSON.parse(JSON.stringify(crossword));
+    model.defs = JSON.parse(JSON.stringify(defs));
+
     delete model.table;
     delete model.table_string;
     delete model.leftOut;
@@ -328,59 +326,81 @@ export default function Crossword() {
     if (theId && !crossword) {
       return <></>;
     } else {
-      return (
-        <Definitions
-          defs={defs}
-          onChange={onDefsChange}
-        ></Definitions>
-      );
+      return <Definitions defs={defs} onChange={onDefsChange}></Definitions>;
     }
   };
 
-  const showInfo = () => {
-    if (theId && crossword?.result) {
-      return (
-        <>
-          <div>
-            <TextField
-              inputProps={{
-                size: 50,
-              }}
-              size="small"
-              label="שם"
-              variant="standard"
-              onChange={(x) => {
-                const c = JSON.parse(JSON.stringify(crossword));
-                c.name = x.target.value;
-                setCrossword(c);
-              }}
-              value={crossword.name}
-            />
-            <TextField
-              label="תאריך עדכון"
-              variant="standard"
-              disabled
-              value={formatDate(new Date(crossword.updatedAt.seconds * 1000))}
-            />
+  const showBuildButton = () => {
+    return crossword && defs?.length > 1;
+  };
 
-            <TextField
-              label="תאריך יצירה"
-              variant="standard"
-              disabled
-              value={formatDate(new Date(crossword.createdAt.seconds * 1000))}
-            />
-            <Fab color="primary" aria-label="שמור">
-              <SaveIcon onClick={save} />
+  const showSaveButton = () => {
+    return crossword?.name?.trim()?.length > 0;
+  };
+
+  const showInfo = () => {
+    return (
+      <>
+        <div className="info-thing">
+          <div className="save-build-buttons">
+            <Fab
+              color="primary"
+              aria-label="שמור"
+              disabled={!showSaveButton()}
+              onClick={save}
+            >
+              <SaveIcon />
             </Fab>
-            <Fab color="secondary" aria-label="בנה">
-              <PsychologyIcon onClick={build} />
+
+            <Fab
+              color="secondary"
+              aria-label="בנה"
+              onClick={build}
+              disabled={!showBuildButton()}
+            >
+              <PsychologyIcon />
             </Fab>
           </div>
-        </>
-      );
-    } else {
-      return <></>;
-    }
+          <TextField
+            inputProps={{
+              size: 40,
+            }}
+            autoComplete="off"
+            size="small"
+            label="שם"
+            variant="standard"
+            onChange={(x) => {
+              const c = JSON.parse(JSON.stringify(crossword));
+              c.name = x.target.value;
+              setCrossword(c);
+            }}
+            value={crossword?.name || ""}
+            required
+          />
+          {theId && crossword?.result && (
+            <>
+              <TextField
+                label="תאריך עדכון"
+                variant="standard"
+                disabled
+                value={formatDate(
+                  new Date(crossword?.updatedAt?.seconds * 1000 || Date.now)
+                )}
+              />
+
+              <TextField
+                label="תאריך יצירה"
+                variant="standard"
+                disabled
+                value={formatDate(
+                  new Date(crossword?.createdAt?.seconds * 1000 || Date.now)
+                )}
+              />
+            </>
+          )}
+        </div>
+      </>
+    );
   };
 
   const showClues = () => {
@@ -398,9 +418,7 @@ export default function Crossword() {
       </div>
 
       <div className="main-panel">
-        <div className="def-panel">
-          {showDefinitions()}
-        </div>
+        <div className="def-panel">{showDefinitions()}</div>
         <div className="board-panel">
           {showBoard()}
           {showClues()}
