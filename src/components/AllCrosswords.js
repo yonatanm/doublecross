@@ -1,29 +1,32 @@
+import { useEffect, useState, useContext } from "react";
 import { formatDate } from "../utils";
 import { getAllCrosswords } from "../Firebase";
-import { useEffect, useState } from "react";
 import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
-import { useNavigate , Link} from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { AuthContext } from "../contexts/AuthContext";
+import GoogleLoginComponent from "./googlebutton.component";
 
 export default function AllCrosswords() {
+  const authContext = useContext(AuthContext);
   const navigate = useNavigate();
   const columns = [
     // {
     //   field: "id",
     //   headerName: "מספר",
-    //   width: 150,      
+    //   width: 150,
     // },
     {
       field: "name",
       headerName: "שם",
-      width: 150,     
+      width: 150,
     },
     {
       field: "text",
       headerName: "תוכן",
-      width: 150,      
+      width: 150,
     },
     {
       field: "createdAt",
@@ -99,6 +102,10 @@ export default function AllCrosswords() {
   // };
 
   const showGrid = () => {
+    if (!authContext.isLoggedIn) {
+      return <GoogleLoginComponent btn/>
+    }
+
     if (!allCrosswords) {
       return <></>;
     }
@@ -110,14 +117,14 @@ export default function AllCrosswords() {
           <div style={{ flexGrow: 1 }}>
             <DataGrid
               onRowClick={(params) => {
-                navigate(`/crosswords/${params.id}`)                
+                navigate(`/crosswords/${params.id}`);
               }}
               sortModel={sortModel}
               rowLength={5}
               disableColumnMenu={true}
               maxColumns={6}
-              rows={allCrosswords
-                .map((model) => modelToItem(model))
+              rows={
+                allCrosswords.map((model) => modelToItem(model))
                 // .filter((item) => applyFilter(item))
               }
               columns={columns}

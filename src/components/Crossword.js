@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -12,13 +12,18 @@ import Meuzan from "./Meuzan";
 import TextField from "@mui/material/TextField";
 import SaveIcon from "@mui/icons-material/Save";
 import PsychologyIcon from "@mui/icons-material/Psychology";
+import { AuthContext } from "../contexts/AuthContext";
+import GoogleLoginComponent from "./googlebutton.component";
 
 import Fab from "@mui/material/Fab";
 
 const clg = require("crossword-layout-generator");
 
 const DEF_CROSS_WORD_NAME = "בהצלחה לנו";
+
 export default function Crossword() {
+  const authContext = useContext(AuthContext);
+
   const navigate = useNavigate();
 
   let params = useParams();
@@ -257,7 +262,6 @@ export default function Crossword() {
     return t;
   };
 
-
   function onDefsChange(d) {
     console.log("DDD onDefsChange  d:", d);
     setDefs(d);
@@ -410,20 +414,30 @@ export default function Crossword() {
     return <></>;
   };
 
+  if (!authContext.isLoggedIn) {
+    return <GoogleLoginComponent btn/>
+  }
+
   return (
     <>
-      <div className="info-panel">
-        {showInfo()}
-        <hr></hr>
-      </div>
+      {!authContext.isLoggedIn ? (
+        <h1>please login</h1>
+      ) : (
+        <>
+          <div className="info-panel">
+            {showInfo()}
+            <hr></hr>
+          </div>
 
-      <div className="main-panel">
-        <div className="def-panel">{showDefinitions()}</div>
-        <div className="board-panel">
-          {showBoard()}
-          {showClues()}
-        </div>
-      </div>
+          <div className="main-panel">
+            <div className="def-panel">{showDefinitions()}</div>
+            <div className="board-panel">
+              {showBoard()}
+              {showClues()}
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

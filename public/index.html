@@ -34,9 +34,6 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>1 מאוזן</title>
-    <meta name="google-signin-client_id" content="48915359066-6tl28mb2n96e12qhio7qeqktcbsrf3jb.apps.googleusercontent.com">
-
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
     
   </head>
   <body dir="rtl">
@@ -54,15 +51,5 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-    <script>
-
-function onSignIn(googleUser) {
-  var profile = googleUser.getBasicProfile();
-  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
-  console.log('Name: ' + profile.getName());
-  console.log('Image URL: ' + profile.getImageUrl());
-  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
-}
-    </script>
   </body>
 </html>
