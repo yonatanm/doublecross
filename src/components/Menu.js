@@ -15,11 +15,8 @@ import { useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
-import MenuItem from "@mui/material/MenuItem";
-import Menu from "@mui/material/Menu";
 import { AuthContext } from "../contexts/AuthContext";
-import { GoogleLoginComponent } from "./googlebutton.component";
-
+import { SignInScreen } from "../components/googlebutton.component";
 const pages = [
   {
     title: "התשבצים שלי",
@@ -28,17 +25,6 @@ const pages = [
   { title: "תשבץ חדש", dest: "/crossword" },
 ];
 
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-};
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -87,31 +73,11 @@ const ResponsiveAppBar = () => {
 
   const { doLogout, isLoggedIn, userInfo } = useContext(AuthContext);
 
-  const [anchorElNav, setAnchorElNav] = useState(null);
-  const [anchorElUser, setAnchorElUser] = useState(null);
-
-  const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-
-  const handleOpenNavMenu = (event) => {
-    setAnchorElNav(event.currentTarget);
-  };
-  const handleOpenUserMenu = (event) => {
-    setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseNavMenu2 = () => {
-    setAnchorElNav(null);
-  };
-
-    const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
 
   const navigate = useNavigate();
 
   const handleCloseNavMenu = (dest) => {
-    setAnchorElNav(null);
     navigate(dest);
   };
 
@@ -123,7 +89,7 @@ const ResponsiveAppBar = () => {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>{/* <GoogleLoginComponent /> */}</Box>
+       
       </Modal>
       <AppBar position="static">
         <Container maxWidth="xl">
@@ -149,15 +115,23 @@ const ResponsiveAppBar = () => {
               ))}
             </Box>
 
+            <SignInScreen></SignInScreen>
+
             <Box sx={{ flexGrow: 0 }}>
               {/* <GoogleLoginComponent /> */}
               {console.log("userInfo", userInfo)}
               {isLoggedIn && (
-                 <Tooltip title={`לחץ כדי להתנתק, ${userInfo?.name}`}>
-                 <IconButton onClick={()=>{doLogout(); navigate('/')}} sx={{ p: 0 }}>
-                   <Avatar alt={userInfo?.name} src={userInfo?.avatar} />
-                 </IconButton>
-               </Tooltip>
+                <Tooltip title={`לחץ כדי להתנתק, ${userInfo?.name}`}>
+                  <IconButton
+                    onClick={() => {
+                      doLogout();
+                      navigate("/");
+                    }}
+                    sx={{ p: 0 }}
+                  >
+                    <Avatar alt={userInfo?.name} src={userInfo?.avatar} />
+                  </IconButton>
+                </Tooltip>
               )}
             </Box>
 

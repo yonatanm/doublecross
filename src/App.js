@@ -9,11 +9,9 @@ import rtlPlugin from "stylis-plugin-rtl";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
 import { AuthContext } from "./contexts/AuthContext";
-// import GoogleLoginComponent from "./components/googlebutton.component";
-import {SignInScreen /*, GoogleLoginComponent*/} from "./components/googlebutton.component"
+
 import { useState, useContext } from "react";
 import { firebase } from "./Firebase";
-
 
 // Create rtl cache
 const cacheRtl = createCache({
@@ -39,7 +37,7 @@ function App() {
     console.log("do logout :-(");
     setIsLoggedIn(false);
     setUserInfo({});
-    firebase.auth().signOut()
+    firebase.auth().signOut();
   };
 
   return (
@@ -48,41 +46,23 @@ function App() {
       <AuthContext.Provider value={{ isLoggedIn, doLogin, doLogout, userInfo }}>
         <RTL>
           <Router>
-            {/* <SearchAppBar> </SearchAppBar> */}
             <ResponsiveAppBar></ResponsiveAppBar>
-            <div>
-              {/* A <Switch> looks through its children <Route>s and
-          renders the first one that matches the current URL. */}
-              <Routes>
-                <Route path="/crossword" element={<Crossword />} />
-                <Route exact path="/crosswords" element={<AllCrosswords />} />
-                <Route path="/crosswords/:id" element={<Crossword />} />
-                <Route exact path="/" element={<Home />} />
-              </Routes>
-            </div>
+
+            {isLoggedIn && (
+              <div>
+                <Routes>
+                  <Route path="/crossword" element={<Crossword />} />
+                  <Route exact path="/crosswords" element={<AllCrosswords />} />
+                  <Route path="/crosswords/:id" element={<Crossword />} />
+                  <Route exact path="/" element={<AllCrosswords />} />
+                </Routes>
+              </div>
+            )}
           </Router>
-          {/* {!isLoggedIn && <GoogleLoginComponent btn />} */}
-
-          <SignInScreen></SignInScreen>
-
         </RTL>
       </AuthContext.Provider>
     </>
   );
 }
 
-function Home() {
-  const navigate = useNavigate();
-  const gotoNew = () => {
-    navigate(`/crossword`);
-  };
-  return (
-    <div>
-      {/* <Fab color="primary" aria-label="add" onClick={gotoNew}>
-        <AddIcon />
-      </Fab> */}
-      {/* <Outlet/> */}
-    </div>
-  );
-}
 export default App;

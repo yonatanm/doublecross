@@ -15,10 +15,20 @@
 // } from "firebase/firestore/lite";
 // import { doc, Timestamp } from "firebase/firestore";
 
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/firestore';
-import { getDoc, doc, getFirestore, collection, query, addDoc, setDoc, where, getDocs , Timestamp} from "firebase/firestore";
-
+import firebase from "firebase/compat/app";
+import "firebase/compat/firestore";
+import {
+  getDoc,
+  doc,
+  where,
+  getFirestore,
+  collection,
+  query,
+  addDoc,
+  setDoc,
+  getDocs,
+  Timestamp,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAeccL_SuxKvZipxrTCQGoGsu9yo58SoHY",
@@ -34,6 +44,10 @@ const db = firebase.firestore();
 
 async function updateCrossword(theId, crosswordModel) {
   crosswordModel.updatedAt = Timestamp.now();
+  crosswordModel.user = {
+    uid: firebase.auth().currentUser.multiFactor.user.uid,
+    email: firebase.auth().currentUser.multiFactor.user.email,
+  };
   const r = await setDoc(doc(db, "crossword", theId), crosswordModel);
   console.log("update", r);
   return r;
@@ -42,30 +56,35 @@ async function updateCrossword(theId, crosswordModel) {
 async function saveNewCrossword(crosswordModel) {
   crosswordModel.createdAt = Timestamp.now();
   crosswordModel.updatedAt = Timestamp.now();
+  crosswordModel.user = {
+    uid: firebase.auth().currentUser.multiFactor.user.uid,
+    email: firebase.auth().currentUser.multiFactor.user.email,
+  };
   const r = await addDoc(collection(db, "crossword"), crosswordModel);
   console.log("save", r.id);
   return r.id;
 }
 
 async function getCrossword(id) {
-  console.log("in getCrossword", id)
+  console.log("in getCrossword", id);
+  const crosswordCol = db
+    .collection("crossword")
+    .where("id", "==", id)
+    .where("user.uid", "==", firebase.auth().currentUser.multiFactor.user.uid);
+  const crosswordSnapshot = await crosswordCol.get();
 
-  const docRef = db.doc(`crossword/${id}`);
-  console.log("docRef", docRef);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    const res = { id: docSnap.id, ...docSnap.data() };
-    console.log("res", res);
-    return res;
-  } else {
-    // doc.data() will be undefined in this case
-    console.log("No such document!");
-    return;
-  }
+  const crosswordList = crosswordSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+  console.log("crosswordList size", crosswordList);
+  return crosswordList[0];
 }
 async function getAllCrosswords() {
-  console.log("in getAllCrosswords")
-  const crosswordCol = db.collection("crossword");
+  console.log("in getAllCrosswords");
+  const crosswordCol = db
+    .collection("crossword")
+    .where("user.uid", "==", firebase.auth().currentUser.multiFactor.user.uid);
   const crosswordSnapshot = await crosswordCol.get();
 
   const crosswordList = crosswordSnapshot.docs.map((doc) => ({
@@ -76,4 +95,11 @@ async function getAllCrosswords() {
   return crosswordList;
 }
 
-export { app, firebase, getAllCrosswords, getCrossword, saveNewCrossword, updateCrossword };
+export {
+  app,
+  firebase,
+  getAllCrosswords,
+  getCrossword,
+  saveNewCrossword,
+  updateCrossword,
+};

@@ -13,14 +13,11 @@ import TextField from "@mui/material/TextField";
 import SaveIcon from "@mui/icons-material/Save";
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import { AuthContext } from "../contexts/AuthContext";
-import {GoogleLoginComponent} from "./googlebutton.component";
 import 'firebase/compat/auth';
 
 import Fab from "@mui/material/Fab";
 
 const clg = require("crossword-layout-generator");
-
-const DEF_CROSS_WORD_NAME = "בהצלחה לנו";
 
 export default function Crossword() {
   const authContext = useContext(AuthContext);
@@ -414,10 +411,6 @@ export default function Crossword() {
     }
     return <></>;
   };
-
-  // if (!authContext.isLoggedIn) {
-  //   return <GoogleLoginComponent btn/>
-  // }
 
   return (
     <>

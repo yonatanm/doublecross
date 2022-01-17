@@ -7,10 +7,8 @@ import { useNavigate, Link } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { AuthContext } from "../contexts/AuthContext";
-import GoogleLoginComponent from "./googlebutton.component";
 
 export default function AllCrosswords() {
-  const authContext = useContext(AuthContext);
   const navigate = useNavigate();
   const columns = [
     // {
@@ -102,10 +100,7 @@ export default function AllCrosswords() {
   // };
 
   const showGrid = () => {
-    // if (!authContext.isLoggedIn) {
-    //   return <GoogleLoginComponent btn/>
-    // }
-
+  
     if (!allCrosswords) {
       return <></>;
     }
