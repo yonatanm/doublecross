@@ -13,7 +13,8 @@ import TextField from "@mui/material/TextField";
 import SaveIcon from "@mui/icons-material/Save";
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import { AuthContext } from "../contexts/AuthContext";
-import GoogleLoginComponent from "./googlebutton.component";
+import {GoogleLoginComponent} from "./googlebutton.component";
+import 'firebase/compat/auth';
 
 import Fab from "@mui/material/Fab";
 
@@ -374,7 +375,7 @@ export default function Crossword() {
             label="שם"
             variant="standard"
             onChange={(x) => {
-              const c = JSON.parse(JSON.stringify(crossword));
+              const c = JSON.parse(JSON.stringify(crossword||{}));
               c.name = x.target.value;
               setCrossword(c);
             }}
@@ -414,9 +415,9 @@ export default function Crossword() {
     return <></>;
   };
 
-  if (!authContext.isLoggedIn) {
-    return <GoogleLoginComponent btn/>
-  }
+  // if (!authContext.isLoggedIn) {
+  //   return <GoogleLoginComponent btn/>
+  // }
 
   return (
     <>

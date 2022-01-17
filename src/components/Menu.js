@@ -18,7 +18,7 @@ import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
 import { AuthContext } from "../contexts/AuthContext";
-import GoogleLoginComponent from "./googlebutton.component";
+import { GoogleLoginComponent } from "./googlebutton.component";
 
 const pages = [
   {
@@ -85,7 +85,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 const ResponsiveAppBar = () => {
   const [open, setOpen] = useState(false);
 
-  const authContext = useContext(AuthContext);
+  const { doLogout, isLoggedIn, userInfo } = useContext(AuthContext);
 
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
@@ -104,17 +104,7 @@ const ResponsiveAppBar = () => {
     setAnchorElNav(null);
   };
 
-  const doLogOut = () => {
-    console.log("LOGOUT");
-    handleCloseNavMenu2();
-  };
-
-  const doLogIn = () => {
-    handleOpen();
-    handleCloseNavMenu2();
-  };
-
-  const handleCloseUserMenu = () => {
+    const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
 
@@ -133,9 +123,7 @@ const ResponsiveAppBar = () => {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
-          <GoogleLoginComponent />
-        </Box>
+        <Box sx={style}>{/* <GoogleLoginComponent /> */}</Box>
       </Modal>
       <AppBar position="static">
         <Container maxWidth="xl">
@@ -162,7 +150,15 @@ const ResponsiveAppBar = () => {
             </Box>
 
             <Box sx={{ flexGrow: 0 }}>
-              <GoogleLoginComponent />
+              {/* <GoogleLoginComponent /> */}
+              {console.log("userInfo", userInfo)}
+              {isLoggedIn && (
+                 <Tooltip title={`לחץ כדי להתנתק, ${userInfo?.name}`}>
+                 <IconButton onClick={()=>{doLogout(); navigate('/')}} sx={{ p: 0 }}>
+                   <Avatar alt={userInfo?.name} src={userInfo?.avatar} />
+                 </IconButton>
+               </Tooltip>
+              )}
             </Box>
 
             {/* 

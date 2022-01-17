@@ -102,9 +102,9 @@ export default function AllCrosswords() {
   // };
 
   const showGrid = () => {
-    if (!authContext.isLoggedIn) {
-      return <GoogleLoginComponent btn/>
-    }
+    // if (!authContext.isLoggedIn) {
+    //   return <GoogleLoginComponent btn/>
+    // }
 
     if (!allCrosswords) {
       return <></>;

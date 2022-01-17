@@ -1,19 +1,24 @@
 //https://firebase.google.com/docs/firestore/manage-data/add-data
-import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  getDoc,
-  setDoc,
-  doc,
-  addDoc,
-  Timestamp,
-  query,
-  orderBy,
-  where
-} from "firebase/firestore/lite";
+// import { initializeApp } from "firebase/app";
+// import {
+//   getFirestore,
+//   collection,
+//   getDocs,
+//   getDoc,
+//   setDoc,
+//   doc,
+//   addDoc,
+//   Timestamp,
+//   query,
+//   orderBy,
+//   where
+// } from "firebase/firestore/lite";
 // import { doc, Timestamp } from "firebase/firestore";
+
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
+import { getDoc, doc, getFirestore, collection, query, addDoc, setDoc, where, getDocs , Timestamp} from "firebase/firestore";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyAeccL_SuxKvZipxrTCQGoGsu9yo58SoHY",
@@ -24,8 +29,8 @@ const firebaseConfig = {
   appId: "1:48915359066:web:28a74c2243ae7e3293ff63",
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 async function updateCrossword(theId, crosswordModel) {
   crosswordModel.updatedAt = Timestamp.now();
@@ -43,7 +48,9 @@ async function saveNewCrossword(crosswordModel) {
 }
 
 async function getCrossword(id) {
-  const docRef = doc(db, "crossword", id);
+  console.log("in getCrossword", id)
+
+  const docRef = db.doc(`crossword/${id}`);
   console.log("docRef", docRef);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
@@ -57,10 +64,9 @@ async function getCrossword(id) {
   }
 }
 async function getAllCrosswords() {
-  const crosswordCol = collection(db, "crossword");
-  const q = query(crosswordCol, 
-    orderBy('createdAt', 'desc'));
-  const crosswordSnapshot = await getDocs(q);
+  console.log("in getAllCrosswords")
+  const crosswordCol = db.collection("crossword");
+  const crosswordSnapshot = await crosswordCol.get();
 
   const crosswordList = crosswordSnapshot.docs.map((doc) => ({
     id: doc.id,
@@ -70,4 +76,4 @@ async function getAllCrosswords() {
   return crosswordList;
 }
 
-export { app, getAllCrosswords, getCrossword, saveNewCrossword, updateCrossword };
+export { app, firebase, getAllCrosswords, getCrossword, saveNewCrossword, updateCrossword };

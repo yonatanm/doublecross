@@ -1,6 +1,5 @@
 import "./App.scss";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-
 import Crossword from "./components/Crossword";
 import AllCrosswords from "./components/AllCrosswords";
 import { useNavigate } from "react-router-dom";
@@ -10,8 +9,11 @@ import rtlPlugin from "stylis-plugin-rtl";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
 import { AuthContext } from "./contexts/AuthContext";
-import GoogleLoginComponent from "./components/googlebutton.component";
+// import GoogleLoginComponent from "./components/googlebutton.component";
+import {SignInScreen /*, GoogleLoginComponent*/} from "./components/googlebutton.component"
 import { useState, useContext } from "react";
+import { firebase } from "./Firebase";
+
 
 // Create rtl cache
 const cacheRtl = createCache({
@@ -34,8 +36,10 @@ function App() {
     console.log("do login :-) ", ui);
   };
   const doLogout = () => {
+    console.log("do logout :-(");
     setIsLoggedIn(false);
     setUserInfo({});
+    firebase.auth().signOut()
   };
 
   return (
@@ -57,7 +61,10 @@ function App() {
               </Routes>
             </div>
           </Router>
-          {!isLoggedIn && <GoogleLoginComponent btn />}
+          {/* {!isLoggedIn && <GoogleLoginComponent btn />} */}
+
+          <SignInScreen></SignInScreen>
+
         </RTL>
       </AuthContext.Provider>
     </>
