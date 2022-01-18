@@ -2,8 +2,8 @@
 
 export default function Board(props) {
   console.log("@@@@ in Board, props", props);
-  const { cols, rows, table, result, onLetter } = props;
-  const letters = props.letters||[]
+  const { cols, rows, table, result, onLetter, forPrint } = props;
+  const letters = props.letters || [];
   console.log("result", result);
   console.log("table", table);
   console.log("cols,rows", cols, rows);
@@ -22,75 +22,46 @@ export default function Board(props) {
     return (
       <div>
         <div
-          className="crossword-grid" id='crossword-grid-id'
+          className="crossword-grid"
           style={{
             gridTemplateColumns: `repeat(${cols}, 50px)`,
-            width: `${50 * cols}px`,
-            height: `${50 * rows}px`,
+            width: `${50 * cols + 2}px`,
+            height: `${52 * rows}px`,
           }}
         >
-
-<div
-            className="crossword-grid labels-container"
-            style={{
-              width: `${50 * cols}px`,
-              height: `${50 * rows}px`,
-              gridTemplateColumns: `repeat(${cols}, 50px)`,
-              gridTemplateRows: `repeat(${rows}, 50px)`,
-            }}
-          >
-            {Object.keys(result).map((i) => {
-              const d = result[i];
-              let key = `lable-${i}`;
-              const x = d.origStartx;
-              return (
-                <span
-                  key={key}
-                  className="label"
-                  style={{
-                    gridArea: `${d.starty}/${x}`,
-                  }}
-                >
-                  <span className="text">{d.position}</span>
-                </span>
-              );
-            })}
-          </div>
-
           {Object.values(ROWS).map((r) => {
             return Object.values(COLS)
               .reverse()
               .map((c) => {
-                const pos = `${r}-${c}`
+                const pos = `${r}-${c}`;
                 const key = `item-${pos}`;
                 if (c >= cols || r >= rows || table[r][c] === "-") {
                   return <span key={key} className="blank"></span>;
                 } else {
-                  const isHint = letters.includes(pos)
+                  const isHint = letters.includes(pos);
+
+                  const label = result.find(
+                    (d) => d.starty === r + 1 && d.startx === c + 1
+                  );
                   return (
-                    <input
+                    <span
+                      onClick={() => !forPrint&&onLetter(pos)}
+                      className={`item ${!forPrint && isHint ? "hint" : ""}`}
                       key={key}
-                      className={`item ${isHint? "hint" :""}`}
-                      minLength="1"
-                      maxLength="1"
-                      onClick={()=>onLetter(pos)}
-                      readOnly
-                      value={table[r][c]}
-                    />
+                    >
+                      {(!forPrint || isHint)?(table[r][c]):''}
+                      {label && (
+                        <span className="text label">{label.position}</span>
+                      )}
+                    </span>
                   );
                 }
               });
           })}
-
-         
         </div>
       </div>
     );
   };
 
-  return (
-    <div className="crossword-board-container">
-      {renderBoard()}
-    </div>
-  );
+  return <div className="crossword-board-container">{renderBoard()}</div>;
 }

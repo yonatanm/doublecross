@@ -13,8 +13,9 @@ import TextField from "@mui/material/TextField";
 import SaveIcon from "@mui/icons-material/Save";
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import { AuthContext } from "../contexts/AuthContext";
-import 'firebase/compat/auth';
-
+import "firebase/compat/auth";
+import domtoimage from "dom-to-image-improved";
+import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
 
 const clg = require("crossword-layout-generator");
@@ -29,6 +30,7 @@ export default function Crossword() {
   const theId = params.id;
   const [crossword, setCrossword] = useState();
   const [defs, setDefs] = useState();
+  const [renderForPrint, setRenderForPrint] = useState(false);
 
   console.log("theId ", theId, " crossword", crossword);
 
@@ -293,10 +295,11 @@ export default function Crossword() {
     }
     setCrossword(c);
   };
-  function showBoard() {
+  function showBoard(forPrint) {
     if (crossword && crossword.result) {
       return (
         <Board
+          forPrint={!!forPrint}
           cols={crossword.cols}
           rows={crossword.rows}
           result={crossword.result}
@@ -340,6 +343,24 @@ export default function Crossword() {
     return crossword?.name?.trim()?.length > 0;
   };
 
+  const doRenderForPrint = () => {
+    setRenderForPrint(true);
+  };
+  const d2i = () => {
+    var node = document.getElementById("board-panel");
+
+    domtoimage
+      .toPng(node)
+      .then(function (dataUrl) {
+        console.log("d2i, dataUrl", dataUrl);
+        var img = new Image();
+        img.src = dataUrl;
+        document.body.appendChild(img);
+      })
+      .catch(function (error) {
+        console.error("oops, something went wrong!", error);
+      });
+  };
   const showInfo = () => {
     return (
       <>
@@ -362,6 +383,9 @@ export default function Crossword() {
             >
               <PsychologyIcon />
             </Fab>
+            <Button variant="contained" onClick={doRenderForPrint}>
+              הצג להדפסה
+            </Button>
           </div>
           <TextField
             inputProps={{
@@ -372,7 +396,7 @@ export default function Crossword() {
             label="שם"
             variant="standard"
             onChange={(x) => {
-              const c = JSON.parse(JSON.stringify(crossword||{}));
+              const c = JSON.parse(JSON.stringify(crossword || {}));
               c.name = x.target.value;
               setCrossword(c);
             }}
@@ -425,11 +449,21 @@ export default function Crossword() {
 
           <div className="main-panel">
             <div className="def-panel">{showDefinitions()}</div>
-            <div className="board-panel">
+            <div className="board-panel" id="board-panel">
               {showBoard()}
               {showClues()}
             </div>
           </div>
+          {renderForPrint && (
+            <div className="forPrint">
+              <div className="main-panel">
+                <div className="board-panel" id="board-panel">
+                  {showBoard(true)}
+                  {showClues()}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </>
