@@ -6,9 +6,11 @@ import { useNavigate, Link } from "react-router-dom";
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { AuthContext } from "../contexts/AuthContext";
+import { getUrlForScreenshot } from "../Firebase";
 
 export default function AllCrosswords() {
+  const [selectedId, setSelectedId] = useState();
+  const [previewUrl, setPreviewUrl] = useState();
   const navigate = useNavigate();
   const columns = [
     // {
@@ -99,33 +101,53 @@ export default function AllCrosswords() {
   //   return item.text.indexOf(search.trim()) >= 0;
   // };
 
+  useEffect(() => {
+    async function f() {
+      if (selectedId) {
+        const imageUrl = await getUrlForScreenshot(selectedId);
+        console.log("imageUrl", imageUrl);
+        setPreviewUrl(imageUrl);
+      }
+    }
+    f();
+  }, [selectedId]);
+
+  const showPreview = () => {
+    console.log("previewUrl =", previewUrl);
+    if (previewUrl) return <img alt="123" src={previewUrl}></img>;
+    return <></>;
+  };
+
   const showGrid = () => {
-  
     if (!allCrosswords) {
       return <></>;
     }
     return (
-      <div style={{ height: 400, width: "100%" }}>
-        {/* {showFilter()} */}
+      <div className="all-crosswords-panel">
+        <div className="list-panel">
+          {/* {showFilter()} */}
 
-        <div style={{ display: "flex", height: "100%" }}>
-          <div style={{ flexGrow: 1 }}>
-            <DataGrid
-              onRowClick={(params) => {
-                navigate(`/crosswords/${params.id}`);
-              }}
-              sortModel={sortModel}
-              rowLength={5}
-              disableColumnMenu={true}
-              maxColumns={6}
-              rows={
-                allCrosswords.map((model) => modelToItem(model))
-                // .filter((item) => applyFilter(item))
-              }
-              columns={columns}
-            />
+          <div style={{ display: "flex", height: "100%" }}>
+            <div style={{ flexGrow: 1 }}>
+              <DataGrid
+                onRowClick={(params) => {
+                  //navigate(`/crosswords/${params.id}`);
+                  setSelectedId(params.id);
+                }}
+                sortModel={sortModel}
+                rowLength={5}
+                disableColumnMenu={true}
+                maxColumns={6}
+                rows={
+                  allCrosswords.map((model) => modelToItem(model))
+                  // .filter((item) => applyFilter(item))
+                }
+                columns={columns}
+              />
+            </div>
           </div>
         </div>
+        <div className="preview-panel">{showPreview()}</div>
       </div>
     );
   };

@@ -22,7 +22,8 @@ export default function Board(props) {
     return (
       <div>
         <div
-          className="crossword-grid"
+          className="crossword-grid" 
+          id={`crossword-grid-id${forPrint?"-print":""}`}
           style={{
             gridTemplateColumns: `repeat(${cols}, 50px)`,
             width: `${50 * cols + 2}px`,

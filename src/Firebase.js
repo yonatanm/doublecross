@@ -30,6 +30,8 @@ import {
   Timestamp,
 } from "firebase/firestore";
 
+import { getStorage, ref, uploadBytes, uploadString, getDownloadURL } from "firebase/storage";
+
 const firebaseConfig = {
   apiKey: "AIzaSyAeccL_SuxKvZipxrTCQGoGsu9yo58SoHY",
   authDomain: "doublecross-e30cb.firebaseapp.com",
@@ -41,6 +43,7 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const storage = getStorage(app);
 
 async function updateCrossword(theId, crosswordModel) {
   crosswordModel.updatedAt = Timestamp.now();
@@ -95,6 +98,19 @@ async function getAllCrosswords() {
   return crosswordList;
 }
 
+async function uploadScreenshot(id, imageDataUrl) {
+  const storageRef = ref(storage, `screenshots/${id}/screenshot.jpg`);
+  const res = await uploadString(storageRef, imageDataUrl, "data_url");
+  return res;
+}
+
+async function getUrlForScreenshot(id) {
+  const storageRef = ref(storage, `screenshots/${id}/screenshot.jpg`);
+  const lnk = await getDownloadURL(storageRef)
+  console.log("LNK", lnk)
+  return lnk
+}
+
 export {
   app,
   firebase,
@@ -102,4 +118,6 @@ export {
   getCrossword,
   saveNewCrossword,
   updateCrossword,
+  uploadScreenshot,
+  getUrlForScreenshot
 };

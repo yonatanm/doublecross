@@ -5,7 +5,12 @@ import { useNavigate } from "react-router-dom";
 import Board from "./Board";
 import { formatDate } from "../utils";
 import { Definitions, textToDefs } from "./Definitions";
-import { saveNewCrossword, getCrossword, updateCrossword } from "../Firebase";
+import {
+  saveNewCrossword,
+  getCrossword,
+  updateCrossword,
+  uploadScreenshot,
+} from "../Firebase";
 import { useParams } from "react-router-dom";
 import { rankCrossword } from "../Ranker";
 import Meuzan from "./Meuzan";
@@ -17,10 +22,12 @@ import "firebase/compat/auth";
 import domtoimage from "dom-to-image-improved";
 import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
+import Switch from "@mui/material/Switch";
 
 const clg = require("crossword-layout-generator");
 
 export default function Crossword() {
+  const [printingView, setPrintingView] = useState(false);
   const authContext = useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -346,25 +353,37 @@ export default function Crossword() {
   const doRenderForPrint = () => {
     setRenderForPrint(true);
   };
-  const d2i = () => {
-    var node = document.getElementById("board-panel");
+  useEffect(() => {
+    if (renderForPrint === true && theId) {
+      d2i();
+    }
+  }, [renderForPrint]);
+  const d2i = async () => {
+    var node = document.getElementById("crossword-grid-id");
 
-    domtoimage
-      .toPng(node)
-      .then(function (dataUrl) {
-        console.log("d2i, dataUrl", dataUrl);
-        var img = new Image();
-        img.src = dataUrl;
-        document.body.appendChild(img);
-      })
-      .catch(function (error) {
-        console.error("oops, something went wrong!", error);
-      });
+    try {
+      const dataUrl = await domtoimage.toPng(node);
+      console.log("d2i, dataUrl", dataUrl);
+      var img = new Image();
+      img.src = dataUrl;
+      document.body.appendChild(img);
+      const x = uploadScreenshot(theId, dataUrl);
+      console.log("got x - Yay", x);
+    } catch (error) {
+      console.error("oops, something went wrong!", error);
+    }
   };
   const showInfo = () => {
     return (
       <>
         <div className="info-thing">
+          <Switch
+            checked={printingView}
+            onChange={() => setPrintingView(!printingView)}
+            name="loading"
+            color="primary"
+          />
+
           <div className="save-build-buttons">
             <Fab
               color="primary"
@@ -457,7 +476,7 @@ export default function Crossword() {
           {renderForPrint && (
             <div className="forPrint">
               <div className="main-panel">
-                <div className="board-panel" id="board-panel">
+                <div className="board-panel" id="board-panel-print">
                   {showBoard(true)}
                   {showClues()}
                 </div>

@@ -17,6 +17,7 @@ import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import { AuthContext } from "../contexts/AuthContext";
 import { SignInScreen } from "../components/googlebutton.component";
+import logo from '../static/cw.png'
 const pages = [
   {
     title: "התשבצים שלי",
@@ -94,6 +95,8 @@ const ResponsiveAppBar = () => {
       <AppBar position="static">
         <Container maxWidth="xl">
           <Toolbar disableGutters>
+
+            <img className="logo" src={logo} alt="logo"/>
             <Typography
               variant="h5"
               noWrap
