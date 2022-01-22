@@ -130,6 +130,8 @@ export default function AllCrosswords() {
           <div style={{ display: "flex", height: "100%" }}>
             <div style={{ flexGrow: 1 }}>
               <DataGrid
+                      onRowMouseEnter={(event) => console.log("onAuxClick", event)}
+
                 onRowClick={(params) => {
                   //navigate(`/crosswords/${params.id}`);
                   setSelectedId(params.id);
