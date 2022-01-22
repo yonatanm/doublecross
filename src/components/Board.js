@@ -4,9 +4,9 @@ export default function Board(props) {
   console.log("@@@@ in Board, props", props);
   const { cols, rows, table, result, onLetter, forPrint } = props;
   const letters = props.letters || [];
-  console.log("result", result);
-  console.log("table", table);
-  console.log("cols,rows", cols, rows);
+  console.log("forPrint", forPrint, "result", result);
+  // console.log("table", table);
+  // console.log("cols,rows", cols, rows);
 
   const ROWS = [];
   for (let i = 0; i < rows; i++) {

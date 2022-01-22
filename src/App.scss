@@ -39,16 +39,16 @@ textarea {
   display: grid;
   // list-style-type: none;
   // padding: 0;
-  // outline: 1px solid black;  
+  // outline: 1px solid black;
   border: 1px solid black;
   margin-right: 100px;
 }
 
 // .crossword-grid-container{
-  
+
 // }
 .blank {
-  background:black;
+  background: black;
   border: 1px solid black;
   // outline: 1px solid black;
   height: 50px;
@@ -57,7 +57,7 @@ textarea {
 
 .forPrint {
   .blank {
-    background:white;
+    background: white;
     // border: 1px solid white;
     // outline: 1px solid white;
     height: 50px;
@@ -80,7 +80,6 @@ textarea {
   justify-content: center;
   height: 50px;
   width: 50px;
-
 }
 
 .hint {
@@ -119,14 +118,13 @@ textarea {
   flex: 55%;
 }
 
-
-.all-crosswords-panel { 
+.all-crosswords-panel {
   display: flex;
 }
 .preview-panel {
-  flex: 45%
+  flex: 45%;
 }
-.list-panel{
+.list-panel {
   flex: 55%;
   width: 100%;
   height: 400px;
@@ -158,6 +156,15 @@ textarea {
 
 .info-thing {
   display: flex;
-  justify-content: space-between;
-  width: 1000px;
+  // justify-content: space-between;
+  // width: 1000px;
+}
+
+.switch-crossword-mode {
+  // text-align: center;
+  // justify-content: center;
+
+  display: flex;
+  width: 500px;
+  padding-right: 300px
 }

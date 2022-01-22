@@ -23,11 +23,13 @@ import domtoimage from "dom-to-image-improved";
 import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
 import Switch from "@mui/material/Switch";
+import ButtonGroup from "@mui/material/ButtonGroup";
+import Grid from "@material-ui/core/Grid";
 
 const clg = require("crossword-layout-generator");
 
 export default function Crossword() {
-  const [printingView, setPrintingView] = useState(false);
+  const [editMode, setEditMode] = useState(true);
   const authContext = useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -37,7 +39,6 @@ export default function Crossword() {
   const theId = params.id;
   const [crossword, setCrossword] = useState();
   const [defs, setDefs] = useState();
-  const [renderForPrint, setRenderForPrint] = useState(false);
 
   console.log("theId ", theId, " crossword", crossword);
 
@@ -350,16 +351,8 @@ export default function Crossword() {
     return crossword?.name?.trim()?.length > 0;
   };
 
-  const doRenderForPrint = () => {
-    setRenderForPrint(true);
-  };
-  useEffect(() => {
-    if (renderForPrint === true && theId) {
-      d2i();
-    }
-  }, [renderForPrint]);
   const d2i = async () => {
-    var node = document.getElementById("crossword-grid-id");
+    var node = document.getElementById("crossword-grid-id-print");
 
     try {
       const dataUrl = await domtoimage.toPng(node);
@@ -377,35 +370,6 @@ export default function Crossword() {
     return (
       <>
         <div className="info-thing">
-          <Switch
-            checked={printingView}
-            onChange={() => setPrintingView(!printingView)}
-            name="loading"
-            color="primary"
-          />
-
-          <div className="save-build-buttons">
-            <Fab
-              color="primary"
-              aria-label="שמור"
-              disabled={!showSaveButton()}
-              onClick={save}
-            >
-              <SaveIcon />
-            </Fab>
-
-            <Fab
-              color="secondary"
-              aria-label="בנה"
-              onClick={build}
-              disabled={!showBuildButton()}
-            >
-              <PsychologyIcon />
-            </Fab>
-            <Button variant="contained" onClick={doRenderForPrint}>
-              הצג להדפסה
-            </Button>
-          </div>
           <TextField
             inputProps={{
               size: 40,
@@ -443,6 +407,50 @@ export default function Crossword() {
               />
             </>
           )}
+
+          <div className="save-build-buttons">
+            <ButtonGroup
+              variant="contained"
+              aria-label="outlined primary button group"
+            >
+              <Button
+                variant="contained"
+                disabled={!showBuildButton()}
+                onClick={build}
+              >
+                בנה
+              </Button>
+
+              <Button
+                variant="contained"
+                disabled={!showSaveButton()}
+                onClick={save}
+              >
+                שמור
+              </Button>
+              <Button
+                variant="contained"
+                onClick={d2i}
+              >
+                הדפס
+              </Button>
+            </ButtonGroup>
+          </div>
+
+          <span className="switch-crossword-mode">
+            <Grid component="label" container alignItems="center" spacing={1}>
+              <Grid item>הדפסה</Grid>
+              <Grid item>
+                <Switch
+                  checked={editMode}
+                  onChange={() => setEditMode(!editMode)}
+                  name="loading"
+                  color="primary"
+                />
+              </Grid>
+              <Grid item>בניה</Grid>
+            </Grid>
+          </span>
         </div>
       </>
     );
@@ -466,23 +474,13 @@ export default function Crossword() {
             <hr></hr>
           </div>
 
-          <div className="main-panel">
+          <div className={`main-panel ${!editMode ? "forPrint" : ""}`}>
             <div className="def-panel">{showDefinitions()}</div>
-            <div className="board-panel" id="board-panel">
-              {showBoard()}
+            <div className="board-panel" id="board-panel-print">
+              {showBoard(!editMode)}
               {showClues()}
             </div>
           </div>
-          {renderForPrint && (
-            <div className="forPrint">
-              <div className="main-panel">
-                <div className="board-panel" id="board-panel-print">
-                  {showBoard(true)}
-                  {showClues()}
-                </div>
-              </div>
-            </div>
-          )}
         </>
       )}
     </>
