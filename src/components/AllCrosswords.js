@@ -21,13 +21,13 @@ export default function AllCrosswords() {
     {
       field: "name",
       headerName: "שם",
-      width: 150,
+      width: 300,
     },
-    {
-      field: "text",
-      headerName: "תוכן",
-      width: 150,
-    },
+    // {
+    //   field: "text",
+    //   headerName: "תוכן",
+    //   width: 150,
+    // },
     {
       field: "createdAt",
       headerName: "תאריך יצירה",
@@ -43,7 +43,7 @@ export default function AllCrosswords() {
     {
       field: "act-ions",
       type: "actions",
-      width: 100,
+      width: 40,
       getActions: (params) => [
         <GridActionsCellItem
           icon={<EditIcon />}
@@ -130,6 +130,9 @@ export default function AllCrosswords() {
           <div style={{ display: "flex", height: "100%" }}>
             <div style={{ flexGrow: 1 }}>
               <DataGrid
+              hideFooter="true"
+
+
                       onRowMouseEnter={(event) => console.log("onAuxClick", event)}
 
                 onRowClick={(params) => {
