@@ -4,6 +4,8 @@ TeamLead:
     - evaluating the work of the team members
     - 1x1s, team’s weekly, check-ins, feedback
     - Employee life cycle onboarding, HR aspects of the team members
+    - Removing obstacles so the team members have a clear path for impact
+    - getting the WHAT from the team members, and from effort leads (from time to time)
 
    [Technology]:    
     - Architecture, Scale, Stability, On calls
@@ -14,7 +16,3 @@ TeamLead:
   [Execution]:
     - Tech debt tasks
     - Guilds and compliance tasks
-    - Daily status meetings 
-    - Being involved in all spec reviews
-    - Feature execution (aka pushing Jira tickets to DONE)
-    - Bugs management    
