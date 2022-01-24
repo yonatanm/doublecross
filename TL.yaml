@@ -4,6 +4,8 @@ TeamLead:
     - evaluating the work of the team members
     - 1x1s, team’s weekly, check-ins, feedback
     - Employee life cycle onboarding, HR aspects of the team members
+    - Removing obstacles so the team members have a clear path for impact
+    - Getting the WHAT from their team members, and from effort leads (from time to time)
 
    [Technology]:    
     - Architecture, Scale, Stability, On calls
@@ -12,7 +14,6 @@ TeamLead:
     - Onboard guests that come to do impact via his product/system
 
   [Execution]:
-    - Feature execution
-    - Bugs managment
+    - Bugs managment (only partly)
     - Tasks relates to Techdebt
     - Tasks related to guilds and compliance
