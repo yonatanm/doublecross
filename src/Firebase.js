@@ -30,7 +30,13 @@ import {
   Timestamp,
 } from "firebase/firestore";
 
-import { getStorage, ref, uploadBytes, uploadString, getDownloadURL } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  uploadString,
+  getDownloadURL,
+} from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAeccL_SuxKvZipxrTCQGoGsu9yo58SoHY",
@@ -69,33 +75,55 @@ async function saveNewCrossword(crosswordModel) {
 }
 
 async function getCrossword(id) {
-  console.log("in getCrossword", id);
-  const crosswordCol = db
-    .collection("crossword")
-    .where("id", "==", id)
-    .where("user.uid", "==", firebase.auth().currentUser.multiFactor.user.uid);
-  const crosswordSnapshot = await crosswordCol.get();
+  console.log(
+    "in getCrossword ",
+    id,
+    "for user",
+    firebase.auth().currentUser.multiFactor.user.uid
+  );
 
-  const crosswordList = crosswordSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
-  console.log("crosswordList size", crosswordList);
-  return crosswordList[0];
+
+  // const crosswordCol = db
+  //   .collection("crossword")
+  //   .where("id", "==", id)
+  //   // .where("user.uid", "==", firebase.auth().currentUser.multiFactor.user.uid);
+
+  try {
+    // const crosswordSnapshot = await crosswordCol.get();
+    const docRef = doc(db, "crossword", id);
+    const docSnap = await getDoc(docRef);
+    
+    // const crosswordList = crosswordSnapshot.docs.map((doc) => ({
+    //   id: doc.id,
+    //   ...doc.data(),
+    // }));
+    // console.log("crosswordList size", crosswordList);
+    // return crosswordList[0];
+    console.log("got docSnap",docSnap.data())
+    return docSnap.data()
+  } catch (ex) {
+    console.error("got error", ex);
+    return;
+  }
 }
 async function getAllCrosswords() {
   console.log("in getAllCrosswords");
   const crosswordCol = db
     .collection("crossword")
     .where("user.uid", "==", firebase.auth().currentUser.multiFactor.user.uid);
-  const crosswordSnapshot = await crosswordCol.get();
+  try {
+    const crosswordSnapshot = await crosswordCol.get();
 
-  const crosswordList = crosswordSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
-  console.log("crosswordList", crosswordList);
-  return crosswordList;
+    const crosswordList = crosswordSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    console.log("crosswordList", crosswordList);
+    return crosswordList;
+  } catch (ex) {
+    console.error("got error", ex);
+    return [];
+  }
 }
 
 async function uploadScreenshot(id, imageDataUrl) {
@@ -106,9 +134,9 @@ async function uploadScreenshot(id, imageDataUrl) {
 
 async function getUrlForScreenshot(id) {
   const storageRef = ref(storage, `screenshots/${id}/screenshot.jpg`);
-  const lnk = await getDownloadURL(storageRef)
-  console.log("LNK", lnk)
-  return lnk
+  const lnk = await getDownloadURL(storageRef);
+  console.log("LNK", lnk);
+  return lnk;
 }
 
 export {
@@ -119,5 +147,5 @@ export {
   saveNewCrossword,
   updateCrossword,
   uploadScreenshot,
-  getUrlForScreenshot
+  getUrlForScreenshot,
 };
