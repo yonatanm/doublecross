@@ -75,32 +75,13 @@ async function saveNewCrossword(crosswordModel) {
 }
 
 async function getCrossword(id) {
-  console.log(
-    "in getCrossword ",
-    id,
-    "for user",
-    firebase.auth().currentUser.multiFactor.user.uid
-  );
-
-
-  // const crosswordCol = db
-  //   .collection("crossword")
-  //   .where("id", "==", id)
-  //   // .where("user.uid", "==", firebase.auth().currentUser.multiFactor.user.uid);
-
+  console.log("in getCrossword ", id);
   try {
-    // const crosswordSnapshot = await crosswordCol.get();
     const docRef = doc(db, "crossword", id);
     const docSnap = await getDoc(docRef);
-    
-    // const crosswordList = crosswordSnapshot.docs.map((doc) => ({
-    //   id: doc.id,
-    //   ...doc.data(),
-    // }));
-    // console.log("crosswordList size", crosswordList);
-    // return crosswordList[0];
-    console.log("got docSnap",docSnap.data())
-    return docSnap.data()
+
+    console.log("got docSnap", docSnap.data());
+    return docSnap.data();
   } catch (ex) {
     console.error("got error", ex);
     return;
