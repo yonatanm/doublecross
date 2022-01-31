@@ -46,7 +46,7 @@ export default function Board(props) {
                   );
                   return (
                     <span
-                      onClick={() => !forPrint&&onLetter(pos)}
+                      onClick={() => onLetter(pos)}
                       className={`item ${!forPrint && isHint ? "hint" : ""}`}
                       key={key}
                     >

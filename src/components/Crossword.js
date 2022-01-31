@@ -29,7 +29,10 @@ import Grid from "@material-ui/core/Grid";
 const clg = require("crossword-layout-generator");
 
 export default function Crossword() {
+  const [showNameForPrint, setShowNameForPrint] = useState()
   const [editMode, setEditMode] = useState(true);
+  const [imageIsReady, setImageIsReady] = useState(false)
+  const [imageUrl, setImageUrl] = useState()
   const authContext = useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -151,8 +154,8 @@ export default function Crossword() {
       const clue = defs[i].clue;
       defs[i].identifier = i;
       defs[i].subId = 0;
-      defs[i].origAnswer = answer.replace("~", " ").replace("^", " ");
-      defs[i].answer = answer.replace("~", "").replace("^", "");
+      defs[i].origAnswer = answer.replaceAll("~", " ").replaceAll("^", " ");
+      defs[i].answer = answer.replaceAll("~", "").replaceAll("^", "");
 
       const words = defs[i].answer.split(" ");
       if (words.length > 1) {
@@ -278,6 +281,7 @@ export default function Crossword() {
   }
 
   async function save() {
+    d2i(false)
     const model = JSON.parse(JSON.stringify(crossword));
     model.defs = JSON.parse(JSON.stringify(defs));
 
@@ -348,24 +352,32 @@ export default function Crossword() {
   };
 
   const showSaveButton = () => {
-    return crossword?.name?.trim()?.length > 0;
+    return editMode && crossword?.name?.trim()?.length > 0;
   };
 
-  const d2i = async () => {
-    var node = document.getElementById("crossword-grid-id-print");
+  const d2i = async (forPrint) => {
+    var node = document.getElementById("board-panel-print") //crossword-grid-id-print");
 
     try {
       const dataUrl = await domtoimage.toPng(node);
-      console.log("d2i, dataUrl", dataUrl);
-      var img = new Image();
-      img.src = dataUrl;
-      document.body.appendChild(img);
-      const x = uploadScreenshot(theId, dataUrl);
-      console.log("got x - Yay", x);
+      // console.log("d2i, dataUrl", dataUrl);
+      if (!forPrint) {
+        uploadScreenshot(theId, dataUrl);
+      } else {
+        console.log('d2i chnage imageToRead')
+        setImageIsReady(true)
+        setImageUrl(dataUrl)  
+      }
+      return dataUrl
     } catch (error) {
       console.error("oops, something went wrong!", error);
     }
   };
+
+  const onModeChange = async ()=> {
+    setEditMode(!editMode)
+  }
+  
   const showInfo = () => {
     return (
       <>
@@ -430,7 +442,17 @@ export default function Crossword() {
               </Button>
               <Button
                 variant="contained"
-                onClick={d2i}
+                disabled={editMode}
+                onClick={ async  ()=> {
+                  setShowNameForPrint(true)
+                  const u = await d2i(true)
+                  var image = new Image();
+                  image.src = u;
+          
+                  var w = window.open("");
+                  w.document.write(image.outerHTML);
+                  setShowNameForPrint(false)
+                }}
               >
                 הדפס
               </Button>
@@ -443,7 +465,7 @@ export default function Crossword() {
               <Grid item>
                 <Switch
                   checked={editMode}
-                  onChange={() => setEditMode(!editMode)}
+                  onChange={()=>onModeChange()}
                   name="loading"
                   color="primary"
                 />
@@ -477,8 +499,21 @@ export default function Crossword() {
           <div className={`main-panel ${!editMode ? "forPrint" : ""}`}>
             <div className="def-panel">{showDefinitions()}</div>
             <div className="board-panel" id="board-panel-print">
+              { !editMode && showNameForPrint && crossword?.name}
               {showBoard(!editMode)}
               {showClues()}
+              { !editMode && showNameForPrint && (<>
+                <br/>
+                נוצר:
+                {formatDate(
+                  new Date(crossword?.createdAt?.seconds * 1000 || Date.now)
+                )}
+                <br/>
+                עודכן:
+                {formatDate(
+                  new Date(crossword?.updatedAt?.seconds * 1000 || Date.now)
+                )}
+              </>)}
             </div>
           </div>
         </>

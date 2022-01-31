@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import TextField from "@mui/material/TextField";
 import AddIcon from "@mui/icons-material/Add";
+import Button from "@mui/material/Button";
 
-import Fab from "@mui/material/Fab";
 const DEF_DEFS = [
   {
     answer: `כל האמצעים כשרים`,
@@ -14,21 +14,20 @@ const DEF_DEFS = [
   },
 ];
 
-
 function Definitions(params) {
   console.log(`DDD <Definitions> params?.defs?.length`, params?.defs?.length);
 
   const [theDefs, setTheDefs] = useState();
-  const [newAns, setNewAns] = useState();
-  const [newClue, setNewClue] = useState();
+  const [newAns, setNewAns] = useState("");
+  const [newClue, setNewClue] = useState("");
 
   useEffect(() => {
     console.log("DDD in useEffect -1-1-1 ", params?.defs?.length);
     if (params?.defs !== undefined) {
       console.log("DDD in useEffect 0000 ", params?.defs?.length);
       setTheDefs(params.defs);
-    } else { 
-      setTheDefs(DEF_DEFS)
+    } else {
+      setTheDefs(DEF_DEFS);
     }
   }, [params.defs]);
 
@@ -75,25 +74,22 @@ function Definitions(params) {
   };
   const add = () => {
     let defs = JSON.parse(JSON.stringify(theDefs));
-    if (
-      defs.length > 1 &&
-      defs[0]?.answer?.trim()?.length > 0 &&
-      defs[0]?.clue?.trim()?.length > 0
-    ) {
-      defs = [{ clue: "", answer: "" }].concat(defs);
-      setTheDefs(defs);
-    }
-    // setNewClue("");
-    // setNewAns("");
+    defs = defs.concat([{ clue: newClue.trim(), answer: newAns.trim() }]);
+    setTheDefs(defs);
+    setNewClue("");
+    setNewAns("");
   };
 
-  const updateNewAns = (v) => {
-    setNewAns(v);
+  const updateNewAns = (e) => {
+    setNewAns(e.target.value || "");
   };
-  const updateNewClue = (v) => {
-    setNewClue(v);
+  const updateNewClue = (e) => {
+    setNewClue(e.target.value || "");
   };
 
+  const isAddButtonEnabled = () => {
+    return newAns?.trim()?.length > 0 && newClue?.trim()?.length;
+  };
   const renderDefs = () => {
     console.log("DDD renderDefs theDefs.length", theDefs?.length);
     const existings = (theDefs || []).map((d, i) => {
@@ -129,12 +125,49 @@ function Definitions(params) {
     });
     return (
       <>
-        <div className="add-def-button">
+        {existings}
+        <div className="new-defss-block">
+          <div className="defs-row">
+            <TextField
+              className="defs-col defs-answer"
+              autoComplete="off"
+              key="answer"
+              label="תשובה"
+              variant="standard"
+              onChange={(e) => updateNewAns(e)}
+              value={newAns}
+              inputProps={{ size: 20 }}
+            />
+
+            <TextField
+              className="defs-col defs-clue"
+              autoComplete="off"
+              key="clue"
+              label="הגדרה"
+              inputProps={{ size: 20 }}
+              variant="standard"
+              onChange={(e) => updateNewClue(e)}
+              value={newClue}
+            />
+          </div>
+          <br />
+          <Button
+            disabled={!isAddButtonEnabled()}
+            onClick={add}
+            className="add-button"
+            variant="contained"
+            endIcon={<AddIcon />}
+          >
+            {" "}
+            הוסף הגדרה
+          </Button>
+        </div>
+
+        {/* <div className="add-def-button">
           <Fab color="primary" aria-label="שמור" onClick={add}>
             <AddIcon />
           </Fab>
-        </div>
-        {existings}
+        </div> */}
       </>
     );
   };
@@ -158,7 +191,7 @@ const textToDefs = (t) => {
   console.log("textToDefs t=", t);
   if (!t) return [];
   var lines = t
-    .replace(/[\r\n:]+/g, "~")
+    .replaceAll(/[\r\n:]+/g, "~")
     .split("~")
     .map((x) => x.trim())
     .filter((x) => x.length > 0);
