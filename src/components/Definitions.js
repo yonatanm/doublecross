@@ -3,6 +3,28 @@ import TextField from "@mui/material/TextField";
 import AddIcon from "@mui/icons-material/Add";
 import Button from "@mui/material/Button";
 
+const KAF_SOPHIT = "ך";
+const KAF = "כ";
+
+const MEM_SOPHIT = "ם";
+const MEM = "מ";
+
+const NUN_SOPHIT = "ן";
+const NUN = "נ";
+
+const PEY_SOPHIT = "ף";
+const PEY = "פ";
+
+const TSADY_SOPHIT = "ץ";
+const TSADY = "צ";
+
+const lastLetters = {};
+lastLetters[KAF_SOPHIT] = KAF;
+lastLetters[MEM_SOPHIT] = MEM;
+lastLetters[NUN_SOPHIT] = NUN;
+lastLetters[PEY_SOPHIT] = PEY;
+lastLetters[TSADY_SOPHIT] = TSADY;
+
 const DEF_DEFS = [
   {
     answer: `כל האמצעים כשרים`,
@@ -96,19 +118,6 @@ function Definitions(params) {
       return (
         <div className="defs-row" key={i}>
           <TextField
-            className="defs-col defs-answer"
-            autoComplete="off"
-            key="answer"
-            label="תשובה"
-            variant="standard"
-            onChange={(e) => updatedAnswer(e, d, i)}
-            value={d.answer}
-            inputProps={{
-              size: Math.min(50, Math.max(20, d?.answer?.length)),
-            }}
-          />
-
-          <TextField
             className="defs-col defs-clue"
             autoComplete="off"
             key="clue"
@@ -120,6 +129,18 @@ function Definitions(params) {
             onChange={(e) => updatedClue(e, d, i)}
             value={d.clue}
           />
+          <TextField
+            className="defs-col defs-answer"
+            autoComplete="off"
+            key="answer"
+            label="תשובה"
+            variant="standard"
+            onChange={(e) => updatedAnswer(e, d, i)}
+            value={d.answer}
+            inputProps={{
+              size: Math.min(50, Math.max(20, d?.answer?.length)),
+            }}
+          />
         </div>
       );
     });
@@ -129,17 +150,6 @@ function Definitions(params) {
         <div className="new-defss-block">
           <div className="defs-row">
             <TextField
-              className="defs-col defs-answer"
-              autoComplete="off"
-              key="answer"
-              label="תשובה"
-              variant="standard"
-              onChange={(e) => updateNewAns(e)}
-              value={newAns}
-              inputProps={{ size: 20 }}
-            />
-
-            <TextField
               className="defs-col defs-clue"
               autoComplete="off"
               key="clue"
@@ -148,6 +158,16 @@ function Definitions(params) {
               variant="standard"
               onChange={(e) => updateNewClue(e)}
               value={newClue}
+            />
+            <TextField
+              className="defs-col defs-answer"
+              autoComplete="off"
+              key="answer"
+              label="תשובה"
+              variant="standard"
+              onChange={(e) => updateNewAns(e)}
+              value={newAns}
+              inputProps={{ size: 20 }}
             />
           </div>
           <br />
@@ -214,11 +234,7 @@ const cleanAnswer = (a) => {
     .join(" ");
   const noLastLetters = noDblSpaces
     .split("")
-    .map((x) => (x === "ם" ? "מ" : x))
-    .map((x) => (x === "ן" ? "מ" : x))
-    .map((x) => (x === "ך" ? "כ" : x))
-    .map((x) => (x === "ף" ? "פ" : x))
-    .map((x) => (x === "ץ" ? "צ" : x))
+    .map((x) => lastLetters[x] || x)
     .join("");
   return noLastLetters;
 };

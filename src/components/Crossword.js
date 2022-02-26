@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, forwardRef } from "react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -25,14 +25,20 @@ import Fab from "@mui/material/Fab";
 import Switch from "@mui/material/Switch";
 import ButtonGroup from "@mui/material/ButtonGroup";
 import Grid from "@material-ui/core/Grid";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 const clg = require("crossword-layout-generator");
 
+const Alert = forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
 export default function Crossword() {
-  const [showNameForPrint, setShowNameForPrint] = useState()
+  const [showNameForPrint, setShowNameForPrint] = useState();
   const [editMode, setEditMode] = useState(true);
-  const [imageIsReady, setImageIsReady] = useState(false)
-  const [imageUrl, setImageUrl] = useState()
+  const [imageIsReady, setImageIsReady] = useState(false);
+  const [imageUrl, setImageUrl] = useState();
   const authContext = useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -42,6 +48,7 @@ export default function Crossword() {
   const theId = params.id;
   const [crossword, setCrossword] = useState();
   const [defs, setDefs] = useState();
+  const [saveSucess, setSaveSucess] = useState(false);
 
   console.log("theId ", theId, " crossword", crossword);
 
@@ -281,7 +288,7 @@ export default function Crossword() {
   }
 
   async function save() {
-    d2i(false)
+    d2i(false);
     const model = JSON.parse(JSON.stringify(crossword));
     model.defs = JSON.parse(JSON.stringify(defs));
 
@@ -295,6 +302,7 @@ export default function Crossword() {
       navigate(`/crosswords/${newRecId}`);
     } else {
       await updateCrossword(theId, model);
+      setSaveSucess(true);
     }
   }
 
@@ -356,7 +364,7 @@ export default function Crossword() {
   };
 
   const d2i = async (forPrint) => {
-    var node = document.getElementById("board-panel-print") //crossword-grid-id-print");
+    var node = document.getElementById("board-panel-print"); //crossword-grid-id-print");
 
     try {
       const dataUrl = await domtoimage.toPng(node);
@@ -364,20 +372,20 @@ export default function Crossword() {
       if (!forPrint) {
         uploadScreenshot(theId, dataUrl);
       } else {
-        console.log('d2i chnage imageToRead')
-        setImageIsReady(true)
-        setImageUrl(dataUrl)  
+        console.log("d2i chnage imageToRead");
+        setImageIsReady(true);
+        setImageUrl(dataUrl);
       }
-      return dataUrl
+      return dataUrl;
     } catch (error) {
       console.error("oops, something went wrong!", error);
     }
   };
 
-  const onModeChange = async ()=> {
-    setEditMode(!editMode)
-  }
-  
+  const onModeChange = async () => {
+    setEditMode(!editMode);
+  };
+
   const showInfo = () => {
     return (
       <>
@@ -443,15 +451,15 @@ export default function Crossword() {
               <Button
                 variant="contained"
                 disabled={editMode}
-                onClick={ async  ()=> {
-                  setShowNameForPrint(true)
-                  const u = await d2i(true)
+                onClick={async () => {
+                  setShowNameForPrint(true);
+                  const u = await d2i(true);
                   var image = new Image();
                   image.src = u;
-          
+
                   var w = window.open("");
                   w.document.write(image.outerHTML);
-                  setShowNameForPrint(false)
+                  setShowNameForPrint(false);
                 }}
               >
                 הדפס
@@ -465,7 +473,7 @@ export default function Crossword() {
               <Grid item>
                 <Switch
                   checked={editMode}
-                  onChange={()=>onModeChange()}
+                  onChange={() => onModeChange()}
                   name="loading"
                   color="primary"
                 />
@@ -485,6 +493,28 @@ export default function Crossword() {
     return <></>;
   };
 
+  const showSnack = () => {
+    const handleClose=()=>{
+      setSaveSucess(!saveSucess)
+    }
+    return (
+      <>
+        <Snackbar 
+        open={saveSucess}
+        anchorOrigin={{ vertical:'top', horizontal:'center' }}
+
+         autoHideDuration={6000} onClose={handleClose}>
+          <Alert
+            onClose={handleClose}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            התשבץ נשמר בהצלחה
+          </Alert>
+        </Snackbar>
+      </>
+    );
+  };
   return (
     <>
       {!authContext.isLoggedIn ? (
@@ -499,22 +529,25 @@ export default function Crossword() {
           <div className={`main-panel ${!editMode ? "forPrint" : ""}`}>
             <div className="def-panel">{showDefinitions()}</div>
             <div className="board-panel" id="board-panel-print">
-              { !editMode && showNameForPrint && crossword?.name}
+              {!editMode && showNameForPrint && crossword?.name}
               {showBoard(!editMode)}
               {showClues()}
-              { !editMode && showNameForPrint && (<>
-                <br/>
-                נוצר:
-                {formatDate(
-                  new Date(crossword?.createdAt?.seconds * 1000 || Date.now)
-                )}
-                <br/>
-                עודכן:
-                {formatDate(
-                  new Date(crossword?.updatedAt?.seconds * 1000 || Date.now)
-                )}
-              </>)}
+              {!editMode && showNameForPrint && (
+                <>
+                  <br />
+                  נוצר:
+                  {formatDate(
+                    new Date(crossword?.createdAt?.seconds * 1000 || Date.now)
+                  )}
+                  <br />
+                  עודכן:
+                  {formatDate(
+                    new Date(crossword?.updatedAt?.seconds * 1000 || Date.now)
+                  )}
+                </>
+              )}
             </div>
+            {showSnack()}
           </div>
         </>
       )}
