@@ -195,18 +195,6 @@ function Definitions(params) {
   return <>{renderDefs()}</>;
 }
 
-const defsToText = (defs) => {
-  let s = "";
-  if (defs) {
-    s = defs
-      .map((d) => `${d.clue} - ${d.answer}`)
-      .join("\n")
-      .trim();
-  }
-  console.log(`defs To TExt [${!!defs}] !!!! [${s}] !!`);
-  return s;
-};
-
 const textToDefs = (t) => {
   console.log("textToDefs t=", t);
   if (!t) return [];
@@ -236,6 +224,7 @@ const cleanAnswer = (a) => {
     .split("")
     .map((x) => lastLetters[x] || x)
     .join("");
+  console.log("noLastLetters", noLastLetters)
   return noLastLetters;
 };
-export { Definitions, defsToText, textToDefs };
+export { Definitions, textToDefs, cleanAnswer };

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import Board from "./Board";
 import { formatDate } from "../utils";
-import { Definitions, textToDefs } from "./Definitions";
+import { Definitions, textToDefs, cleanAnswer } from "./Definitions";
 import {
   saveNewCrossword,
   getCrossword,
@@ -82,7 +82,7 @@ export default function Crossword() {
     c.hints = [];
     setCrossword(c);
 
-    const d = defs || textToDefs(crossword.textInput);
+    const d = (defs || textToDefs(crossword.textInput)).map(x=>({...x, answer: cleanAnswer(x.answer)}))
     console.log("initial d is ", d);
 
     const { candidate, r } = getBestLayout(d);
@@ -148,7 +148,7 @@ export default function Crossword() {
     m.leftOut = JSON.parse(JSON.stringify(leftOut));
 
     console.log("now m is ", m);
-    setDefs(d);
+//    setDefs(d);
     setCrossword(m);
   }
 
