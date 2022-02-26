@@ -45,7 +45,7 @@ function App() {
       <div id="image-placeholder"></div>
       <AuthContext.Provider value={{ isLoggedIn, doLogin, doLogout, userInfo }}>
         <RTL>
-          <Router>
+          <Router basename="/doublecross/">
             <ResponsiveAppBar></ResponsiveAppBar>
 
             {isLoggedIn && (
