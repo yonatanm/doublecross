@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/doublecross/static/css/main.61b808bf.css",
-    "main.js": "/doublecross/static/js/main.d27f17b2.js",
+    "main.css": "/doublecross/static/css/main.3041db6a.css",
+    "main.js": "/doublecross/static/js/main.8825fbe0.js",
     "static/js/787.f42cf035.chunk.js": "/doublecross/static/js/787.f42cf035.chunk.js",
     "index.html": "/doublecross/index.html",
-    "main.61b808bf.css.map": "/doublecross/static/css/main.61b808bf.css.map",
-    "main.d27f17b2.js.map": "/doublecross/static/js/main.d27f17b2.js.map",
+    "main.3041db6a.css.map": "/doublecross/static/css/main.3041db6a.css.map",
+    "main.8825fbe0.js.map": "/doublecross/static/js/main.8825fbe0.js.map",
     "787.f42cf035.chunk.js.map": "/doublecross/static/js/787.f42cf035.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.61b808bf.css",
-    "static/js/main.d27f17b2.js"
+    "static/css/main.3041db6a.css",
+    "static/js/main.8825fbe0.js"
   ]
 }
