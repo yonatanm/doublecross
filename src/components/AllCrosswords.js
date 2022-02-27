@@ -22,6 +22,7 @@ export default function AllCrosswords() {
       field: "name",
       headerName: "שם",
       width: 300,
+      sortable: false
     },
     // {
     //   field: "text",
@@ -33,12 +34,14 @@ export default function AllCrosswords() {
       headerName: "תאריך יצירה",
       width: 300,
       valueFormatter: ({ value }) => formatDate(new Date(value)),
+      sortable: false
     },
     {
       field: "updatedAt",
       headerName: "תאריך עדכון",
       width: 300,
       valueFormatter: ({ value }) => formatDate(new Date(value)),
+      sortable: false
     },
     {
       field: "act-ions",
