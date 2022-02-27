@@ -11,7 +11,7 @@ import { getUrlForScreenshot } from "../Firebase";
 export default function AllCrosswords() {
   const [selectedId, setSelectedId] = useState();
   const [previewUrl, setPreviewUrl] = useState();
-  const [crosswordName, setCrosswordName] = useState()
+  const [crosswordName, setCrosswordName] = useState();
   const columns = [
     // {
     //   field: "id",
@@ -22,7 +22,7 @@ export default function AllCrosswords() {
       field: "name",
       headerName: "שם",
       width: 300,
-      sortable: false
+      sortable: false,
     },
     // {
     //   field: "text",
@@ -34,14 +34,14 @@ export default function AllCrosswords() {
       headerName: "תאריך יצירה",
       width: 300,
       valueFormatter: ({ value }) => formatDate(new Date(value)),
-      sortable: false
+      sortable: false,
     },
     {
       field: "updatedAt",
       headerName: "תאריך עדכון",
       width: 300,
       valueFormatter: ({ value }) => formatDate(new Date(value)),
-      sortable: false
+      sortable: false,
     },
     {
       field: "act-ions",
@@ -58,13 +58,6 @@ export default function AllCrosswords() {
       ],
     },
   ];
-
-  const [sortModel, setSortModel] = useState([
-    {
-      field: "updatedAt",
-      sort: "desc",
-    },
-  ]);
 
   const [allCrosswords, setAllCrosswords] = useState();
   // const [search, setSearch] = useState("");
@@ -107,7 +100,7 @@ export default function AllCrosswords() {
   useEffect(() => {
     async function f() {
       if (selectedId) {
-        const imageUrl = await getUrlForScreenshot(selectedId);        
+        const imageUrl = await getUrlForScreenshot(selectedId);
         console.log("imageUrl", imageUrl);
         setPreviewUrl(imageUrl);
       }
@@ -136,10 +129,15 @@ export default function AllCrosswords() {
                 hideFooter={true}
                 onRowMouseEnter={(event) => console.log("onAuxClick", event)}
                 onRowClick={(params) => {
-                  setCrosswordName(params.row.name)
+                  setCrosswordName(params.row.name);
                   setSelectedId(params.id);
                 }}
-                sortModel={sortModel}
+                sortModel={[
+                  {
+                    field: "updatedAt",
+                    sort: "desc",
+                  },
+                ]}
                 rowLength={5}
                 disableColumnMenu={true}
                 maxColumns={6}
@@ -153,11 +151,9 @@ export default function AllCrosswords() {
           </div>
         </div>
         <div className="preview-panel">
-          <div className="crossword-name">
-              {crosswordName}
-          </div>
+          <div className="crossword-name">{crosswordName}</div>
           {showPreview()}
-          </div>
+        </div>
       </div>
     );
   };
