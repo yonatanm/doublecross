@@ -9,6 +9,7 @@ export default function Meuzan(params) {
 
     return `(${words
       .split(" ")
+      .reverse()
       .map((w) => w.length)
       .join(",")})`;
   }
@@ -20,6 +21,19 @@ export default function Meuzan(params) {
       </span>
     );
   };
+
+  const renderRefrences = (siblings) => {
+    const refs = siblings.filter((s) => s.subId > 0);
+    return refs.map((s, i) => {
+      return (
+        <span key={s.subId}>
+          {i > 0 ? ", " : ""}
+          {renerReference(s)}
+        </span>
+      );
+    });
+  };
+
   const renerClue = (d) => {
     const siblings = result
       .filter((dd) => dd.identifier === d.identifier)
@@ -36,17 +50,8 @@ export default function Meuzan(params) {
     if (d.subId === 0) {
       return (
         <span>
-          {d.clue} {renderSize(d)}
-          {siblings
-            .filter((s) => s.subId > 0)
-            .map((s, i) => {
-              return (
-                <span key={s.subId}>
-                  {i >= 0 ? " + " : ""}
-                  {renerReference(s)}
-                </span>
-              );
-            })}
+          (יחד עם  {renderRefrences(siblings)}) {d.clue}
+          {renderSize(d)}        
         </span>
       );
     }

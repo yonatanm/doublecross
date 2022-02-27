@@ -171,14 +171,18 @@ textarea {
 
   display: flex;
   width: 500px;
-  padding-right: 300px
+  padding-right: 300px;
 }
 
-.new-defss-block { 
+.new-defss-block {
   margin-top: 50px;
   border: solid 3px;
 }
 
 .add-button {
   margin-right: 100px !important ;
+}
+
+.preview-panel .crossword-name {
+  text-align: center;  
 }

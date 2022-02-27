@@ -11,7 +11,7 @@ import { getUrlForScreenshot } from "../Firebase";
 export default function AllCrosswords() {
   const [selectedId, setSelectedId] = useState();
   const [previewUrl, setPreviewUrl] = useState();
-  const navigate = useNavigate();
+  const [crosswordName, setCrosswordName] = useState()
   const columns = [
     // {
     //   field: "id",
@@ -104,7 +104,7 @@ export default function AllCrosswords() {
   useEffect(() => {
     async function f() {
       if (selectedId) {
-        const imageUrl = await getUrlForScreenshot(selectedId);
+        const imageUrl = await getUrlForScreenshot(selectedId);        
         console.log("imageUrl", imageUrl);
         setPreviewUrl(imageUrl);
       }
@@ -133,7 +133,7 @@ export default function AllCrosswords() {
                 hideFooter={true}
                 onRowMouseEnter={(event) => console.log("onAuxClick", event)}
                 onRowClick={(params) => {
-                  //navigate(`/crosswords/${params.id}`);
+                  setCrosswordName(params.row.name)
                   setSelectedId(params.id);
                 }}
                 sortModel={sortModel}
@@ -149,7 +149,12 @@ export default function AllCrosswords() {
             </div>
           </div>
         </div>
-        <div className="preview-panel">{showPreview()}</div>
+        <div className="preview-panel">
+          <div className="crossword-name">
+              {crosswordName}
+          </div>
+          {showPreview()}
+          </div>
       </div>
     );
   };
