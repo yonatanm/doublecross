@@ -64,6 +64,9 @@ export default function Crossword() {
         delete cw.defs;
         setCrossword(cw);
         setDefs(d);
+      } else { 
+        setDefs();
+        setCrossword()
       }
     })();
   }, [theId]);
