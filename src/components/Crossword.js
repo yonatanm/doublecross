@@ -532,11 +532,12 @@ export default function Crossword() {
           <div className={`main-panel ${!editMode ? "forPrint" : ""}`}>
             <div className="def-panel">{showDefinitions()}</div>
             <div className="board-panel" id="board-panel-print">
-              {!editMode && showNameForPrint && crossword?.name}
+              <h1 className="crossword-name-print">{!editMode && showNameForPrint && crossword?.name}</h1>
               {showBoard(!editMode)}
               {showClues()}
               {!editMode && showNameForPrint && (
                 <>
+                  <hr/>
                   <br />
                   נוצר:
                   {formatDate(
