@@ -351,15 +351,15 @@ export default function Crossword() {
     );
   }
   const showDefinitions = () => {
-    if ((theId && !crossword) || !crossword?.name?.trim()?.length) {
+    if (theId && !crossword) {
       return <></>;
     } else {
-      return <Definitions defs={defs} onChange={onDefsChange}></Definitions>;
+      return <Definitions showAddDef={crossword?.name?.trim()?.length && editMode} defs={defs} onChange={onDefsChange}></Definitions>;
     }
   };
 
   const showBuildButton = () => {
-    return crossword && defs?.length > 1;
+    return crossword && defs?.length > 1 && editMode && crossword?.name?.trim()?.length > 0;
   };
 
   const showSaveButton = () => {

@@ -32,6 +32,7 @@ function Definitions(params) {
   const [theDefs, setTheDefs] = useState([]);
   const [newAns, setNewAns] = useState("");
   const [newClue, setNewClue] = useState("");
+  const showAddDef = params.showAddDef
 
   useEffect(() => {
     console.log("DDD in useEffect -1-1-1 ", params?.defs?.length);
@@ -136,7 +137,7 @@ function Definitions(params) {
     });
     return (
       <>
-        <div className="new-defss-block">
+        {showAddDef && <div className="new-defss-block">
           <div className="defs-row">
             <TextField
               className="defs-col defs-clue"
@@ -165,20 +166,9 @@ function Definitions(params) {
               onClick={add}
             >
               <AddIcon />
-            </Fab>
-
-            {/* <Button
-            disabled={!isAddButtonEnabled()}
-            onClick={add}
-            className="add-button"
-            variant="contained"
-            endIcon={<AddIcon />}
-          >
-            {" "}
-            הוסף הגדרה
-          </Button> */}
+            </Fab>           
           </div>
-        </div>
+        </div>}
         {existings}
 
         {/* <div className="add-def-button">
