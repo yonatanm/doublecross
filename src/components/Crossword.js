@@ -332,7 +332,7 @@ export default function Crossword() {
         ></Board>
       );
     } else {
-      return <h1>no board</h1>;
+      return <></>
     }
   }
 
@@ -351,7 +351,7 @@ export default function Crossword() {
     );
   }
   const showDefinitions = () => {
-    if (theId && !crossword) {
+    if ((theId && !crossword) || !crossword?.name?.trim()?.length) {
       return <></>;
     } else {
       return <Definitions defs={defs} onChange={onDefsChange}></Definitions>;

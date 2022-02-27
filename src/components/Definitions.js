@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import TextField from "@mui/material/TextField";
 import AddIcon from "@mui/icons-material/Add";
 import Button from "@mui/material/Button";
+import Fab from "@mui/material/Fab";
 
 const KAF_SOPHIT = "ך";
 const KAF = "כ";
@@ -25,21 +26,10 @@ lastLetters[NUN_SOPHIT] = NUN;
 lastLetters[PEY_SOPHIT] = PEY;
 lastLetters[TSADY_SOPHIT] = TSADY;
 
-const DEF_DEFS = [
-  {
-    answer: `כל האמצעים כשרים`,
-    clue: `סוס-רפה-כלב נחש-כבשה-חמור חזיר-תרנגול-פיל`,
-  },
-  {
-    answer: `לקהל הרחב`,
-    clue: `דיאטה לכולם`,
-  },
-];
-
 function Definitions(params) {
   console.log(`DDD <Definitions> params?.defs?.length`, params?.defs?.length);
 
-  const [theDefs, setTheDefs] = useState();
+  const [theDefs, setTheDefs] = useState([]);
   const [newAns, setNewAns] = useState("");
   const [newClue, setNewClue] = useState("");
 
@@ -49,7 +39,7 @@ function Definitions(params) {
       console.log("DDD in useEffect 0000 ", params?.defs?.length);
       setTheDefs(params.defs);
     } else {
-      setTheDefs(DEF_DEFS);
+      setTheDefs([]);
     }
   }, [params.defs]);
 
@@ -96,7 +86,7 @@ function Definitions(params) {
   };
   const add = () => {
     let defs = JSON.parse(JSON.stringify(theDefs));
-    defs = defs.concat([{ clue: newClue.trim(), answer: newAns.trim() }]);
+    defs = [{ clue: newClue.trim(), answer: newAns.trim() }].concat(defs)
     setTheDefs(defs);
     setNewClue("");
     setNewAns("");
@@ -146,7 +136,6 @@ function Definitions(params) {
     });
     return (
       <>
-        {existings}
         <div className="new-defss-block">
           <div className="defs-row">
             <TextField
@@ -169,9 +158,16 @@ function Definitions(params) {
               value={newAns}
               inputProps={{ size: 20 }}
             />
-          </div>
-          <br />
-          <Button
+            <Fab
+              color="primary"
+              aria-label="add"
+              disabled={!isAddButtonEnabled()}
+              onClick={add}
+            >
+              <AddIcon />
+            </Fab>
+
+            {/* <Button
             disabled={!isAddButtonEnabled()}
             onClick={add}
             className="add-button"
@@ -180,8 +176,10 @@ function Definitions(params) {
           >
             {" "}
             הוסף הגדרה
-          </Button>
+          </Button> */}
+          </div>
         </div>
+        {existings}
 
         {/* <div className="add-def-button">
           <Fab color="primary" aria-label="שמור" onClick={add}>
@@ -224,7 +222,7 @@ const cleanAnswer = (a) => {
     .split("")
     .map((x) => lastLetters[x] || x)
     .join("");
-  console.log("noLastLetters", noLastLetters)
+  console.log("noLastLetters", noLastLetters);
   return noLastLetters;
 };
 export { Definitions, textToDefs, cleanAnswer };
