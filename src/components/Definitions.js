@@ -113,6 +113,7 @@ function Definitions(params) {
             autoComplete="off"
             key="clue"
             label="הגדרה"
+            disabled={!showAddDef}
             inputProps={{
               size: Math.min(50, Math.max(20, d?.clue?.length)),
             }}
@@ -125,6 +126,7 @@ function Definitions(params) {
             autoComplete="off"
             key="answer"
             label="תשובה"
+            disabled={!showAddDef}
             variant="standard"
             onChange={(e) => updatedAnswer(e, d, i)}
             value={d.answer}
@@ -137,6 +139,7 @@ function Definitions(params) {
     });
     return (
       <>
+        <div>{theDefs.length} הגדרות</div>
         {showAddDef && <div className="new-defss-block">
           <div className="defs-row">
             <TextField
@@ -201,6 +204,7 @@ const textToDefs = (t) => {
   console.log("in textToDefs", t, defs);
   return defs;
 };
+
 
 const cleanAnswer = (a) => {
   const noDblSpaces = (a || "")
