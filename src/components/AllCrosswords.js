@@ -13,6 +13,20 @@ export default function AllCrosswords() {
   const [previewUrl, setPreviewUrl] = useState();
   const [crosswordName, setCrosswordName] = useState();
   const columns = [
+    {
+      field: "act-ions",
+      type: "actions",
+      width: 40,
+      getActions: (params) => [
+        <GridActionsCellItem icon={<DeleteIcon />} label="Delete" />,
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          component={Link}
+          to={`/crosswords/${params.id}`}
+          label="Edit"
+        />,
+      ],
+    },
     // {
     //   field: "id",
     //   headerName: "מספר",
@@ -42,20 +56,6 @@ export default function AllCrosswords() {
       width: 300,
       valueFormatter: ({ value }) => formatDate(new Date(value)),
       sortable: false,
-    },
-    {
-      field: "act-ions",
-      type: "actions",
-      width: 40,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<EditIcon />}
-          component={Link}
-          to={`/crosswords/${params.id}`}
-          label="Edit"
-        />,
-        <GridActionsCellItem icon={<DeleteIcon />} label="Delete" />,
-      ],
     },
   ];
 
