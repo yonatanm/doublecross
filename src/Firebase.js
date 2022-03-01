@@ -53,10 +53,10 @@ const storage = getStorage(app);
 
 async function updateCrossword(theId, crosswordModel) {
   crosswordModel.updatedAt = Timestamp.now();
-  crosswordModel.user = {
-    uid: firebase.auth().currentUser.multiFactor.user.uid,
-    email: firebase.auth().currentUser.multiFactor.user.email,
-  };
+  // crosswordModel.user = {
+  //   uid: firebase.auth().currentUser.multiFactor.user.uid,
+  //   email: firebase.auth().currentUser.multiFactor.user.email,
+  // };
   const r = await setDoc(doc(db, "crossword", theId), crosswordModel);
   console.log("update", r);
   return r;
