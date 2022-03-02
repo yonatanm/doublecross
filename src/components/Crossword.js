@@ -408,6 +408,7 @@ export default function Crossword() {
           </div>
 
           <span className="switch-crossword-mode">
+            מצב:
             <Grid component="label" container alignItems="center" spacing={1}>
               <Grid item>הדפסה</Grid>
               <Grid item>
