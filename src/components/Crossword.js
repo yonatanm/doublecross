@@ -164,10 +164,10 @@ export default function Crossword() {
       const clue = defs[i].clue;
       defs[i].identifier = i;
       defs[i].subId = 0;
-      defs[i].origAnswer = answer.replaceAll("~", " ").replaceAll("^", " ");
-      defs[i].answer = answer.replaceAll("~", "").replaceAll("^", "");
+      defs[i].origAnswer = answer.replaceAll("^", " ");
+      defs[i].answer = answer.replaceAll(" ", "")
 
-      const words = defs[i].answer.split(" ");
+      const words = defs[i].answer.split("^");
       if (words.length > 1) {
         for (let j = 1; j < words.length; j++) {
           additionalDefs.push({
@@ -189,73 +189,10 @@ export default function Crossword() {
   };
 
   const getBestLayout = (defs) => {
-    let ll = 0;
-    let ranking = 0;
-    const doGetBestLayout = (d, defIndx, charIndx, type, spaces) => {
-      if (spaces === 0) {
-        ranking++;
+    const defSpaceAware = makeDefsSpaceAware(JSON.parse(JSON.stringify(defs)));
 
-        const defSpaceAware = makeDefsSpaceAware(d);
-        const l = clg.generateLayout(defSpaceAware);
-
-        const r = rankCrossword(l.result, l.table);
-        console.log("  -- &&& RANKING " + ranking + " and rank is ", r);
-        if (r > candidateRank) {
-          console.log("  -- &&& found something intersing with new rank ", r);
-          candidateRank = r;
-          candidate = defSpaceAware;
-        }
-      }
-      console.log("&&& in doGetBestLayout type ", type, defIndx, charIndx, ll);
-      ll++;
-      for (; defIndx < d.length; defIndx++) {
-        for (; charIndx < d[defIndx].answer.length; charIndx++) {
-          if (d[defIndx].answer.charAt(charIndx) !== " ") continue;
-
-          doGetBestLayout(d, defIndx, charIndx + 1, "SPACE", spaces - 1);
-
-          const withoutSpace = JSON.parse(JSON.stringify(d));
-
-          // let answer = d[defIndx].answer;
-
-          // answer = answer.slice(0, charIndx) + answer.slice(charIndx + 1);
-          // doGetBestLayout(
-          //   withoutSpace,
-          //   defIndx,
-          //   charIndx + 1,
-          //   "JOIN",
-          //   spaces - 1
-          // );
-          // d[defIndx].answer = answer.slice(0, charIndx) +" "+answer.slice(charIndx + 1);
-
-          withoutSpace[defIndx].answer =
-            withoutSpace[defIndx].answer.slice(0, charIndx) +
-            "~" +
-            withoutSpace[defIndx].answer.slice(charIndx + 1);
-
-          doGetBestLayout(
-            withoutSpace,
-            defIndx,
-            charIndx + 1,
-            "JOIN",
-            spaces - 1
-          );
-        }
-        charIndx = 0;
-      }
-    };
-    const numOfSpaces = defs
-      .map((d) => d.answer.split(" ").length - 1)
-      .reduce((acc, n) => {
-        return acc + n;
-      }, 0);
-    console.log("numOfSpaces", numOfSpaces);
-    let candidate = JSON.parse(JSON.stringify(defs));
-    let candidateRank = -1;
-    console.log("start with candidate", candidate);
-
-    doGetBestLayout(candidate, 0, 0, "NATURAL", numOfSpaces, []);
-    return { candidate, r: candidateRank };
+    let candidate = defSpaceAware
+    return { candidate, r: -1 };
   };
 
   const resultToTable = (result, cols, rows) => {
@@ -481,7 +418,7 @@ export default function Crossword() {
                   color="primary"
                 />
               </Grid>
-              <Grid item>בניה</Grid>
+              <Grid item>עריכה</Grid>
             </Grid>
           </span>
         </div>
