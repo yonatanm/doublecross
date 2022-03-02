@@ -418,7 +418,7 @@ export default function Crossword() {
                   color="primary"
                 />
               </Grid>
-              <Grid item>בניה</Grid>
+              <Grid item>עריכה</Grid>
             </Grid>
           </span>
         </div>
