@@ -16,6 +16,7 @@ import { rankCrossword } from "../Ranker";
 import Meuzan from "./Meuzan";
 import TextField from "@mui/material/TextField";
 import SaveIcon from "@mui/icons-material/Save";
+import PrintIcon from '@mui/icons-material/Print';
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import { AuthContext } from "../contexts/AuthContext";
 import "firebase/compat/auth";
@@ -27,6 +28,8 @@ import ButtonGroup from "@mui/material/ButtonGroup";
 import Grid from "@material-ui/core/Grid";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import Print from "@mui/icons-material/Print";
 
 const clg = require("crossword-layout-generator");
 
@@ -48,7 +51,9 @@ export default function Crossword() {
   const theId = params.id;
   const [crossword, setCrossword] = useState();
   const [defs, setDefs] = useState();
+  const [theUIDefs, setTheUIDefs] = useState();
   const [saveSucess, setSaveSucess] = useState(false);
+  const [history, setHistory] = useState({ index: -1, defs: [], crosswords: [] })
 
   console.log("theId ", theId, " crossword", crossword);
 
@@ -60,11 +65,17 @@ export default function Crossword() {
         const cw = modelToCrossword(record);
         const d = JSON.parse(JSON.stringify(cw?.defs || []));
         console.log("DDD got record ", d.length);
-        setDefs(d);
         delete cw.defs;
         setCrossword(cw);
         setDefs(d);
-      } else { 
+        setTheUIDefs(d)
+
+        history.index = 0
+        history.defs.push(d)
+        history.crosswords.push(cw)
+        setHistory({ index: 0, defs: [d], crosswords: [cw] })
+
+      } else {
         setDefs();
         setCrossword()
       }
@@ -80,94 +91,121 @@ export default function Crossword() {
     return cw;
   };
 
-  function build() {
+  function build(next) {
+    if (!next) {
+      setCrossword(history.crosswords[history.index - 1])
+      setDefs(history.defs[history.index - 1])
+      setTheUIDefs(history.defs[history.index - 1])
+      history.index--
+      setHistory(history)
+      return
+    }
+    if (history.index >= 0 && history.crosswords[history.index + 1]) {
+      setCrossword(history.crosswords[history.index + 1])
+      setDefs(history.defs[history.index + 1])
+      setTheUIDefs(history.defs[history.index + 1])
+      history.index++
+      setHistory(history)
+      return
+    }
+
     const c = JSON.parse(JSON.stringify(crossword));
     c.hints = [];
     setCrossword(c);
 
-    const d = (defs || textToDefs(crossword.textInput)).map(x=>({...x, answer: cleanAnswer(x.answer)}))
-    console.log("initial d is ", d);
+    const d = defs.map(x => ({ ...x, answer: cleanAnswer(x.answer) }))
+    let { candidate, r } = getBestLayout(d)
+    let m;
+    while (true) {
+      let o = getBestLayout(d);
+      candidate = o.candidate
+      r = o.r
+      const _layout = clg.generateLayout(candidate);
+      console.log(
+        "@@@@@ defs is",
+        candidate,
+        "the winning has rank ",
+        r,
+        " def is ",
+        _layout.result
+      );
+      const leftOut = _layout.result.filter(
+        (d) =>
+          d.startx < 1 ||
+          d.starty < 1 ||
+          !d.orientation ||
+          d.orientation === "none"
+      );
 
-    const { candidate, r } = getBestLayout(d);
-    const _layout = clg.generateLayout(candidate);
-    console.log(
-      "@@@@@ defs is",
-      candidate,
-      "the winning has rank ",
-      r,
-      " def is ",
-      _layout.result
-    );
-    const leftOut = _layout.result.filter(
-      (d) =>
-        d.startx < 1 ||
-        d.starty < 1 ||
-        !d.orientation ||
-        d.orientation === "none"
-    );
+      _layout.result = _layout.result.filter(
+        (d) => d.startx > 0 && d.starty > 0 && d.orientation !== "none"
+      );
 
-    _layout.result = _layout.result.filter(
-      (d) => d.startx > 0 && d.starty > 0 && d.orientation !== "none"
-    );
+      _layout.result = _layout.result.map((d) => ({
+        ...d,
+        origStartx: d.startx,
+        startx: _layout.cols + 1 - d.startx,
+      }));
+      console.log("@@@@ result", _layout.result);
 
-    _layout.result = _layout.result.map((d) => ({
-      ...d,
-      origStartx: d.startx,
-      startx: _layout.cols + 1 - d.startx,
-    }));
-    console.log("@@@@ result", _layout.result);
+      _layout.result.sort((a, b) => {
+        let diff = 0;
+        if (a.starty !== b.starty) {
+          diff = a.starty - b.starty;
+        } else {
+          diff = -(a.startx - b.startx);
+        }
+        return diff;
+      });
 
-    _layout.result.sort((a, b) => {
-      let diff = 0;
-      if (a.starty !== b.starty) {
-        diff = a.starty - b.starty;
-      } else {
-        diff = -(a.startx - b.startx);
-      }
-      return diff;
-    });
+      let i = 0;
+      let x = 0;
+      let y = 0;
+      _layout.result.forEach((v, index) => {
+        let d = _layout.result[index];
+        if (d.startx !== x || d.starty !== y) {
+          x = d.startx;
+          y = d.starty;
+          i++;
+        }
+        d.position = i;
+      });
 
-    let i = 0;
-    let x = 0;
-    let y = 0;
-    _layout.result.forEach((v, index) => {
-      let d = _layout.result[index];
-      if (d.startx !== x || d.starty !== y) {
-        x = d.startx;
-        y = d.starty;
-        i++;
-      }
-      d.position = i;
-    });
+      const t = resultToTable(_layout.result, _layout.cols, _layout.rows);
+      console.log("@@@@ t", t);
 
-    const t = resultToTable(_layout.result, _layout.cols, _layout.rows);
-    console.log("@@@@ t", t);
-
-    const m = JSON.parse(JSON.stringify(crossword));
-    m.result = JSON.parse(JSON.stringify(_layout.result));
-    m.table = t;
-    m.cols = _layout.cols;
-    m.rows = _layout.rows;
-    m.leftOut = JSON.parse(JSON.stringify(leftOut));
-
-    console.log("now m is ", m);
-//    setDefs(d);
+      m = JSON.parse(JSON.stringify(crossword));
+      m.result = JSON.parse(JSON.stringify(_layout.result));
+      m.table = t;
+      m.cols = _layout.cols;
+      m.rows = _layout.rows;
+      m.leftOut = JSON.parse(JSON.stringify(leftOut));
+      if (history.index <= 0) break;
+      if (JSON.stringify(m) !== JSON.stringify(history.crosswords[history.index])) break;
+    }
     setCrossword(m);
+
+    console.log("HHH", history);
+    const ii = history.index + 1
+    history.defs.push(d)
+    history.crosswords.push(m)
+    history.index = ii
+    setHistory(history)
   }
 
   const makeDefsSpaceAware = (d) => {
-    let defs = JSON.parse(JSON.stringify(d));
+    let spaceAwareD = JSON.parse(JSON.stringify(d));
     console.log("!@!@ input", JSON.stringify(d));
     const additionalDefs = [];
-    for (let i = 0; i < defs.length; i++) {
-      const answer = defs[i].answer;
-      const clue = defs[i].clue;
-      defs[i].identifier = i;
-      defs[i].subId = 0;
-      defs[i].origAnswer = answer.replaceAll("^", " ");
-      defs[i].answer = answer.replaceAll(" ", "")
+    for (let i = 0; i < spaceAwareD.length; i++) {
+      const answer = spaceAwareD[i].answer;
+      const clue = spaceAwareD[i].clue;
+      spaceAwareD[i].identifier = i;
+      spaceAwareD[i].subId = 0;
+      spaceAwareD[i].origAnswer = answer.replaceAll("^", " ");
+      spaceAwareD[i].answer = answer.replaceAll(" ", "")
 
-      const words = defs[i].answer.split("^");
+      const words = spaceAwareD[i].answer.split("^");
       if (words.length > 1) {
         for (let j = 1; j < words.length; j++) {
           additionalDefs.push({
@@ -178,20 +216,35 @@ export default function Crossword() {
             subId: j,
           });
         }
-        defs[i].answer = words[0];
-        defs[i].identifier = i;
+        spaceAwareD[i].answer = words[0];
+        spaceAwareD[i].identifier = i;
       }
     }
-    defs = defs.concat(additionalDefs);
-    console.log("!@!@ w/o spaces it looks like ", defs);
+    spaceAwareD = spaceAwareD.concat(additionalDefs);
+    console.log("!@!@ w/o spaces it looks like ", spaceAwareD);
 
-    return defs;
+    return spaceAwareD;
   };
 
+
   const getBestLayout = (defs) => {
+
+    const shuffle = (arr) => {
+      let currentIndex = arr.length, randomIndex;
+      while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+
+        [arr[currentIndex], arr[randomIndex]] = [
+          arr[randomIndex], arr[currentIndex]];
+      }
+
+      return arr;
+    }
+
     const defSpaceAware = makeDefsSpaceAware(JSON.parse(JSON.stringify(defs)));
 
-    let candidate = defSpaceAware
+    let candidate = shuffle(defSpaceAware)
     return { candidate, r: -1 };
   };
 
@@ -221,10 +274,11 @@ export default function Crossword() {
   };
 
   function onDefsChange(d) {
-    console.log("DDD onDefsChange  d:", d);
-    setDefs(d);
-    // const cw = JSON.parse(JSON.stringify(crossword || {}));
-    // setCrossword(cw);
+    console.log("CCCCC onDefsChange  d:", d);
+    if (d.some((e, i) => d[i].answer.trim() !== defs[i].answer?.trim())) {
+      setDefs(d);
+      setHistory({ index: -1, defs: [], crosswords:[] })
+    }
   }
 
   async function save() {
@@ -291,11 +345,11 @@ export default function Crossword() {
     if (theId && !crossword) {
       return <></>;
     } else {
-      return <Definitions showAddDef={crossword?.name?.trim()?.length && editMode} defs={defs} onChange={onDefsChange}></Definitions>;
+      return <Definitions showAddDef={crossword?.name?.trim()?.length && editMode} defs={theUIDefs} onChange={onDefsChange}></Definitions>;
     }
   };
 
-  const showBuildButton = () => {
+  const showNextButton = () => {
     return crossword && defs?.length > 1 && editMode && crossword?.name?.trim()?.length > 0;
   };
 
@@ -368,27 +422,46 @@ export default function Crossword() {
             </>
           )}
 
-          <div className="save-build-buttons">
+          <div className="save-build-buttons">            
+          </div>
+
+          <span className="switch-crossword-mode">
+          <Grid component="label" container alignItems="center" spacing={1}>
+
+          <Button
+                variant="contained"
+                disabled={!showSaveButton()}
+                onClick={save}
+                startIcon={<SaveIcon />}
+
+              >
+                שמור
+              </Button>
+            &nbsp;&nbsp;&nbsp;
+
             <ButtonGroup
               variant="contained"
               aria-label="outlined primary button group"
             >
               <Button
                 variant="contained"
-                disabled={!showBuildButton()}
-                onClick={build}
+                disabled={!showNextButton() || history.index <= 0}
+                onClick={() => build(false)}
               >
-                בנה
+                &lt;&lt;
               </Button>
-
               <Button
                 variant="contained"
-                disabled={!showSaveButton()}
-                onClick={save}
+                disabled={!showNextButton()}
+                onClick={() => build(true)}
               >
-                שמור
+                &gt;&gt;
               </Button>
-              <Button
+            </ButtonGroup>            
+          
+              &nbsp;&nbsp;&nbsp;
+            <Button
+              startIcon={<Print />}
                 variant="contained"
                 disabled={editMode}
                 onClick={async () => {
@@ -403,15 +476,7 @@ export default function Crossword() {
                 }}
               >
                 הדפס
-              </Button>
-            </ButtonGroup>
-          </div>
-
-          <span className="switch-crossword-mode">
-            מצב:
-            <Grid component="label" container alignItems="center" spacing={1}>
-              <Grid item>הדפסה</Grid>
-              <Grid item>
+              </Button>              <Grid item>
                 <Switch
                   checked={editMode}
                   onChange={() => onModeChange()}
@@ -435,16 +500,16 @@ export default function Crossword() {
   };
 
   const showSnack = () => {
-    const handleClose=()=>{
+    const handleClose = () => {
       setSaveSucess(!saveSucess)
     }
     return (
       <>
-        <Snackbar 
-        open={saveSucess}
-        anchorOrigin={{ vertical:'top', horizontal:'center' }}
+        <Snackbar
+          open={saveSucess}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
 
-         autoHideDuration={6000} onClose={handleClose}>
+          autoHideDuration={6000} onClose={handleClose}>
           <Alert
             onClose={handleClose}
             severity="success"
@@ -475,7 +540,7 @@ export default function Crossword() {
               {showClues()}
               {!editMode && showNameForPrint && (
                 <>
-                  <hr/>
+                  <hr />
                   <br />
                   נוצר:
                   {formatDate(

@@ -35,13 +35,7 @@ function Definitions(params) {
   const showAddDef = params.showAddDef
 
   useEffect(() => {
-    console.log("DDD in useEffect -1-1-1 ", params?.defs?.length);
-    if (params?.defs !== undefined) {
-      console.log("DDD in useEffect 0000 ", params?.defs?.length);
-      setTheDefs(params.defs);
-    } else {
-      setTheDefs([]);
-    }
+    setTheDefs(params.defs || []);
   }, [params.defs]);
 
   useEffect(() => {
@@ -63,8 +57,8 @@ function Definitions(params) {
       return;
     }
     const defs = JSON.parse(JSON.stringify(theDefs));
-    // console.log(theDefs)
     setTheDefs(defs);
+    params.onChange(defs);
   };
 
   const updatedClue = (e, d, i) => {
@@ -76,15 +70,15 @@ function Definitions(params) {
       setTheDefs(theDefs.filter((dd, j) => i >= 0 && j !== i));
       return;
     }
-
     const defs = JSON.parse(JSON.stringify(theDefs));
-    // console.log(theDefs)
     setTheDefs(defs);
+    params.onChange(defs);
   };
 
   const del = (i) => {
     setTheDefs(theDefs.filter((x, j) => j !== i));
   };
+
   const add = () => {
     let defs = JSON.parse(JSON.stringify(theDefs));
     defs = [{ clue: newClue.trim(), answer: newAns.trim() }].concat(defs)
@@ -96,6 +90,7 @@ function Definitions(params) {
   const updateNewAns = (e) => {
     setNewAns(e.target.value || "");
   };
+
   const updateNewClue = (e) => {
     setNewClue(e.target.value || "");
   };
@@ -169,7 +164,7 @@ function Definitions(params) {
               onClick={add}
             >
               <AddIcon />
-            </Fab>           
+            </Fab>
           </div>
         </div>}
         {existings}
@@ -216,7 +211,6 @@ const cleanAnswer = (a) => {
     .split("")
     .map((x) => lastLetters[x] || x)
     .join("");
-  console.log("noLastLetters", noLastLetters);
   return noLastLetters;
 };
 export { Definitions, textToDefs, cleanAnswer };
