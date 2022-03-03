@@ -274,8 +274,8 @@ export default function Crossword() {
   };
 
   function onDefsChange(d) {
-    console.log("CCCCC onDefsChange  d:", d);
-    if (d.some((e, i) => d[i].answer.trim() !== defs[i].answer?.trim())) {
+    console.log("CCCCC onDefsChange  d:", d, "defs", defs);
+    if (!defs || d.some((e, i) => d[i].answer.trim() !== defs[i]?.answer?.trim())) {
       setDefs(d);
       setHistory({ index: -1, defs: [], crosswords:[] })
     }
