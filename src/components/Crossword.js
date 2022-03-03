@@ -116,6 +116,7 @@ export default function Crossword() {
     const d = defs.map(x => ({ ...x, answer: cleanAnswer(x.answer) }))
     let { candidate, r } = getBestLayout(d)
     let m;
+    const maxTries = 5;
     while (true) {
       let o = getBestLayout(d);
       candidate = o.candidate
@@ -182,6 +183,7 @@ export default function Crossword() {
       m.leftOut = JSON.parse(JSON.stringify(leftOut));
       if (history.index <= 0) break;
       if (JSON.stringify(m) !== JSON.stringify(history.crosswords[history.index])) break;
+      if (!--maxTries) break;
     }
     setCrossword(m);
 
