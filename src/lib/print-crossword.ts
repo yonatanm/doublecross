@@ -33,32 +33,29 @@ export function openPrintWindow(crossword: Crossword) {
   const fontSize = Math.max(10, Math.floor(cellSize * 0.45))
   const numFontSize = Math.max(6, Math.floor(cellSize * 0.22))
 
-  // Build grid HTML: iterate rows, then columns in order (RTL handled by generator flip + LTR grid)
+  // Build grid HTML as a <table> with border-collapse for uniform single borders
   let gridHtml = ""
   for (let r = 0; r < rows; r++) {
+    gridHtml += "<tr>"
     for (let c = 0; c < cols; c++) {
       const cell = grid[r]?.[c]
-      if (!cell) continue
-
-      const pos = `${r}-${c}`
-      const isHighlighted = (highlighted_cells || []).includes(pos)
-
-      // Find position label
-      const word = (layout_result || []).find(
-        (d) => d.starty === r + 1 && d.startx === c + 1
-      )
-      const label = word?.position
-
-      if (cell.isBlocked) {
-        gridHtml += `<span class="cell blocked"></span>`
+      if (!cell || cell.isBlocked) {
+        gridHtml += `<td class="blocked"></td>`
       } else {
+        const pos = `${r}-${c}`
+        const isHighlighted = (highlighted_cells || []).includes(pos)
+        const word = (layout_result || []).find(
+          (d) => d.starty === r + 1 && d.startx === c + 1
+        )
+        const label = word?.position
         const letter = isHighlighted && cell.letter ? cell.letter : ""
-        gridHtml += `<span class="cell${isHighlighted ? " hint" : ""}">
+        gridHtml += `<td class="cell${isHighlighted ? " hint" : ""}">
           ${letter}
           ${label != null ? `<span class="num">${label}</span>` : ""}
-        </span>`
+        </td>`
       }
     }
+    gridHtml += "</tr>"
   }
 
   // Format timestamp { seconds } → "DD/MM/YYYY HH:MM"
@@ -130,29 +127,27 @@ export function openPrintWindow(crossword: Crossword) {
       margin-bottom: 24px;
     }
     .grid {
-      display: inline-grid;
-      grid-template-columns: repeat(${cols}, ${cellSize}px);
+      border-collapse: collapse;
       direction: ltr;
     }
-    .cell {
+    .grid td {
       width: ${cellSize}px;
       height: ${cellSize}px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      text-align: center;
+      vertical-align: middle;
       position: relative;
       font-family: 'Frank Ruhl Libre', serif;
       font-size: ${fontSize}px;
       font-weight: 500;
+      padding: 0;
     }
-    .cell:not(.blocked) {
-      outline: 1.5px solid #1A1A1A;
-      outline-offset: -0.75px;
+    .grid td.cell {
+      border: 1.5px solid #1A1A1A;
     }
-    .cell.blocked {
-      background: transparent !important;
+    .grid td.blocked {
+      border: none;
     }
-    .cell.hint {
+    .grid td.hint {
       background: white;
     }
     .num {
@@ -184,8 +179,7 @@ export function openPrintWindow(crossword: Crossword) {
     }
     @media print {
       body { padding: 12px; }
-      .cell:not(.blocked) { outline: 1.5px solid #000 !important; outline-offset: -0.75px; }
-      .cell.blocked { background: transparent !important; }
+      .grid td.cell { border-color: #000 !important; }
     }
   </style>
 </head>
@@ -194,7 +188,7 @@ export function openPrintWindow(crossword: Crossword) {
   ${descriptionHtml}
   ${datesHtml}
   <div class="grid-container">
-    <div class="grid">${gridHtml}</div>
+    <table class="grid">${gridHtml}</table>
   </div>
   <div class="clues">
     ${renderClues(clues_across || [], "מאוזן")}

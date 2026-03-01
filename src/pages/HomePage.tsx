@@ -1,11 +1,11 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Search, Pencil, Printer, Trash2 } from "lucide-react"
+import { Plus, Search, Printer, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import CrosswordGrid from "@/components/CrosswordGrid"
-import Walkthrough from "@/components/Walkthrough"
+import GuidedTour from "@/components/GuidedTour"
 import { useCrosswords } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { useWalkthrough } from "@/hooks/useWalkthrough"
@@ -78,7 +78,7 @@ export default function HomePage() {
 
   return (
     <div>
-      <Walkthrough page="home" open={walkthrough.isOpen} onClose={walkthrough.close} />
+      <GuidedTour page="home" open={walkthrough.isOpen} onClose={walkthrough.close} />
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
@@ -100,7 +100,7 @@ export default function HomePage() {
               מחק ארכיון
             </Button>
           )}
-          <Button onClick={() => navigate("/editor")} className="gap-2">
+          <Button onClick={() => navigate("/editor")} className="gap-2" data-tour="new-crossword">
             <Plus className="w-4 h-4" />
             תשבץ חדש
           </Button>
@@ -153,7 +153,7 @@ export default function HomePage() {
       ) : (
         <div className="grid grid-cols-[420px_1fr] gap-4">
           {/* Right: List */}
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-hidden" data-tour="crossword-list">
             {/* List header */}
             <div className="flex items-center justify-between px-4 py-2 bg-secondary/50 border-b text-xs text-muted-foreground font-medium">
               <span>שם</span>
@@ -185,24 +185,14 @@ export default function HomePage() {
                       <span className="text-xs text-muted-foreground">
                         {formatDate(cw.updatedAt)}
                       </span>
-                      <div className="flex gap-0.5">
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={(e) => { e.stopPropagation(); navigate(`/editor?id=${cw.id}`) }}
-                          title="ערוך"
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={(e) => { e.stopPropagation(); openPrintWindow(cw) }}
-                          title="הדפס"
-                        >
-                          <Printer className="w-3 h-3" />
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={(e) => { e.stopPropagation(); openPrintWindow(cw) }}
+                        title="הדפס"
+                      >
+                        <Printer className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
                   {/* Line 2: topic tag + description */}
@@ -226,7 +216,7 @@ export default function HomePage() {
           </div>
 
           {/* Left: Preview */}
-          <div className="bg-card border rounded-lg p-6 flex flex-col items-center min-h-[400px]">
+          <div className="bg-card border rounded-lg p-6 flex flex-col items-center min-h-[400px]" data-tour="preview">
             {selected?.grid && selected.layout_result ? (
               <>
                 <h2

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select"
 import CrosswordGrid from "@/components/CrosswordGrid"
 import CluesDisplay from "@/components/CluesDisplay"
-import Walkthrough from "@/components/Walkthrough"
+import GuidedTour from "@/components/GuidedTour"
 import { useCrossword, useCrosswords, useSaveCrossword } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { generateProposals } from "@/lib/layout-strategy"
@@ -446,7 +446,7 @@ export default function EditorPage() {
 
   return (
     <div className="space-y-6">
-      <Walkthrough page="editor" open={walkthrough.isOpen} onClose={walkthrough.close} />
+      <GuidedTour page="editor" open={walkthrough.isOpen} onClose={walkthrough.close} />
       {/* Editor Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -495,7 +495,7 @@ export default function EditorPage() {
             )}
           </div>
           {generatorResult && (
-            <Button variant="outline" onClick={handlePrint} className="gap-2">
+            <Button variant="outline" onClick={handlePrint} className="gap-2" data-tour="print-area">
               <Printer className="w-4 h-4" />
               הדפס
             </Button>
@@ -537,7 +537,7 @@ export default function EditorPage() {
                 פורמט: תשובה-הגדרה (שורה לכל הגדרה)
               </span>
             </div>
-            <div className="flex gap-0">
+            <div className="flex gap-0" data-tour="clues-textarea">
               {hasUnplaced && (
                 <div
                   ref={indicatorRef}
@@ -574,11 +574,12 @@ export default function EditorPage() {
           </div>
 
           {/* Generate controls */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap" data-tour="proposal-gallery">
             <Button
               onClick={generate}
               disabled={!canGenerate || isGenerating}
               className="gap-2"
+              data-tour="generate-btn"
             >
               {isGenerating ? "מייצר..." : "שבץ מילים"}
             </Button>
@@ -718,7 +719,7 @@ export default function EditorPage() {
                     לחצו על תא כדי לסמן רמז
                   </span>
                 </div>
-                <div className="bg-card border rounded-lg p-4 inline-block max-w-full overflow-auto">
+                <div className="bg-card border rounded-lg p-4 inline-block max-w-full overflow-auto" data-tour="crossword-grid">
                   <CrosswordGrid
                     grid={generatorResult.grid}
                     cols={generatorResult.cols}

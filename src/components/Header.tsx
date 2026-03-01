@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { LayoutGrid, Plus, LogIn, LogOut, HelpCircle } from "lucide-react"
+import { LayoutGrid, LogIn, LogOut, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/hooks/useAuth"
@@ -32,16 +32,6 @@ export default function Header() {
               >
                 <LayoutGrid className="w-4 h-4" />
                 התשבצים שלי
-              </Button>
-            </Link>
-            <Link to="/editor">
-              <Button
-                variant={isActive("/editor") ? "secondary" : "ghost"}
-                size="sm"
-                className="gap-2 text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                תשבץ חדש
               </Button>
             </Link>
           </nav>
