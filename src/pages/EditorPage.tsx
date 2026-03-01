@@ -461,6 +461,14 @@ export default function EditorPage() {
     updateGalleryScroll()
   }, [proposals, updateGalleryScroll])
 
+  // Scroll active thumbnail into view when activeProposalIndex changes
+  useEffect(() => {
+    const el = galleryRef.current
+    if (!el || activeProposalIndex < 0) return
+    const child = el.children[activeProposalIndex] as HTMLElement | undefined
+    child?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" })
+  }, [activeProposalIndex])
+
   const scrollGallery = (direction: "left" | "right") => {
     const el = galleryRef.current
     if (!el) return
@@ -587,25 +595,23 @@ export default function EditorPage() {
               </span>
             </div>
             <div className="flex gap-0" data-tour="clues-textarea">
-              {hasUnplaced && (
-                <div
-                  ref={indicatorRef}
-                  className="overflow-hidden shrink-0 pt-2"
-                  style={{ width: "22px" }}
-                >
-                  {textareaLines.map((_, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-center"
-                      style={{ height: "calc(0.875rem * 1.625)" }}
-                    >
-                      {lineWarnings[i] && (
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div
+                ref={indicatorRef}
+                className="overflow-hidden shrink-0 pt-2"
+                style={{ width: "22px" }}
+              >
+                {hasUnplaced && textareaLines.map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-center"
+                    style={{ height: "calc(0.875rem * 1.625)" }}
+                  >
+                    {lineWarnings[i] && (
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                    )}
+                  </div>
+                ))}
+              </div>
               <Textarea
                 ref={textareaRef}
                 value={rawCluesText}
