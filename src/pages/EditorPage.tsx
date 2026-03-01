@@ -126,6 +126,22 @@ export default function EditorPage() {
     setActiveProposalIndex(0)
   }, [rawCluesText])
 
+  // Keyboard arrow navigation for proposals
+  useEffect(() => {
+    if (proposals.length <= 1) return
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return
+      if (e.key === "ArrowLeft") {
+        setActiveProposalIndex((i) => Math.min(proposals.length - 1, i + 1))
+      } else if (e.key === "ArrowRight") {
+        setActiveProposalIndex((i) => Math.max(0, i - 1))
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [proposals.length])
+
   const toggleCell = (pos: string) => {
     if (activeProposalIndex < 0) return
 
