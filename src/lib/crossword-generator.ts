@@ -41,6 +41,130 @@ export interface VariantClue {
   origAnswer: string    // the original multi-word answer (for display)
 }
 
+/** Move words from smaller connected components to unplaced. Keeps largest island only. */
+function removeIslands(
+  result: LayoutWord[],
+  unplacedClues: RawClue[],
+  variantMap: Map<string, VariantClue>,
+): LayoutWord[] {
+  if (result.length <= 1) return result
+
+  // Map each cell to the word indices that occupy it (engine coords, before RTL flip)
+  const cellToWords = new Map<string, number[]>()
+  result.forEach((d, idx) => {
+    const cells = wordCells(d)
+    for (const key of cells) {
+      const arr = cellToWords.get(key) ?? []
+      arr.push(idx)
+      cellToWords.set(key, arr)
+    }
+  })
+
+  // Build word-level adjacency from shared cells
+  const adj: Set<number>[] = result.map(() => new Set<number>())
+  for (const indices of cellToWords.values()) {
+    for (let i = 0; i < indices.length; i++) {
+      for (let j = i + 1; j < indices.length; j++) {
+        adj[indices[i]].add(indices[j])
+        adj[indices[j]].add(indices[i])
+      }
+    }
+  }
+
+  // BFS to find connected components
+  const visited = new Set<number>()
+  const components: number[][] = []
+  for (let i = 0; i < result.length; i++) {
+    if (visited.has(i)) continue
+    const component: number[] = []
+    const queue = [i]
+    visited.add(i)
+    while (queue.length > 0) {
+      const node = queue.shift()!
+      component.push(node)
+      for (const neighbor of adj[node]) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor)
+          queue.push(neighbor)
+        }
+      }
+    }
+    components.push(component)
+  }
+
+  if (components.length <= 1) return result
+
+  // Keep only the largest component
+  const largest = components.reduce((a, b) => (a.length >= b.length ? a : b))
+  const keepSet = new Set(largest)
+
+  for (let i = 0; i < result.length; i++) {
+    if (keepSet.has(i)) continue
+    const d = result[i]
+    const vc = variantMap.get(`${d.clue}|${d.answer}`)
+    if (!unplacedClues.some((u) => u.clue === d.clue)) {
+      unplacedClues.push({ clue: d.clue, answer: vc?.origAnswer ?? d.answer })
+    }
+  }
+
+  return result.filter((_, i) => keepSet.has(i))
+}
+
+/** Get the set of cell keys occupied by a word (engine coords, before RTL flip). */
+function wordCells(d: LayoutWord): string[] {
+  const cells: string[] = []
+  if (d.orientation === "across") {
+    for (let i = 0; i < d.answer.length; i++) {
+      cells.push(`${d.starty},${d.startx + i}`)
+    }
+  } else if (d.orientation === "down") {
+    for (let i = 0; i < d.answer.length; i++) {
+      cells.push(`${d.starty + i},${d.startx}`)
+    }
+  }
+  return cells
+}
+
+/** Remove split multi-word answers where not all fragments were placed. */
+function removeIncompleteSplits(
+  result: LayoutWord[],
+  variantClues: VariantClue[],
+  unplacedClues: RawClue[],
+  variantMap: Map<string, VariantClue>,
+): LayoutWord[] {
+  const fragmentsNeeded = new Map<number, number>()
+  for (const vc of variantClues) {
+    fragmentsNeeded.set(vc.identifier, (fragmentsNeeded.get(vc.identifier) ?? 0) + 1)
+  }
+  const fragmentsPlaced = new Map<number, number>()
+  for (const d of result) {
+    const vc = variantMap.get(`${d.clue}|${d.answer}`)
+    if (vc) {
+      fragmentsPlaced.set(vc.identifier, (fragmentsPlaced.get(vc.identifier) ?? 0) + 1)
+    }
+  }
+  const incompleteIds = new Set<number>()
+  for (const [id, needed] of fragmentsNeeded) {
+    if (needed > 1 && (fragmentsPlaced.get(id) ?? 0) < needed) {
+      incompleteIds.add(id)
+    }
+  }
+  if (incompleteIds.size === 0) return result
+
+  for (const d of result) {
+    const vc = variantMap.get(`${d.clue}|${d.answer}`)
+    if (vc && incompleteIds.has(vc.identifier)) {
+      if (!unplacedClues.some((u) => u.clue === d.clue)) {
+        unplacedClues.push({ clue: d.clue, answer: vc.origAnswer })
+      }
+    }
+  }
+  return result.filter((d) => {
+    const vc = variantMap.get(`${d.clue}|${d.answer}`)
+    return !vc || !incompleteIds.has(vc.identifier)
+  })
+}
+
 /**
  * Post-engine processing: filter unplaced, RTL flip, grid build, numbering, clue extraction.
  * Takes raw engine output + variant clues and produces a full GeneratorResult.
@@ -69,40 +193,14 @@ export function buildGeneratorResult(
     (d) => d.startx && d.startx > 0 && d.starty && d.starty > 0 && d.orientation !== "none"
   ) as LayoutWord[]
 
-  // 1b. Enforce split completeness: if a multi-word answer was split,
+  // 1b. Enforce single connected component — no islands.
+  // Keep only the largest connected cluster; move the rest to unplaced.
+  result = removeIslands(result, unplacedClues, variantMap)
+
+  // 1c. Enforce split completeness: if a multi-word answer was split,
   // ALL its fragments must be placed. Remove partially-placed splits.
-  const fragmentsNeeded = new Map<number, number>()
-  for (const vc of variantClues) {
-    fragmentsNeeded.set(vc.identifier, (fragmentsNeeded.get(vc.identifier) ?? 0) + 1)
-  }
-  const fragmentsPlaced = new Map<number, number>()
-  for (const d of result) {
-    const vc = variantMap.get(`${d.clue}|${d.answer}`)
-    if (vc) {
-      fragmentsPlaced.set(vc.identifier, (fragmentsPlaced.get(vc.identifier) ?? 0) + 1)
-    }
-  }
-  const incompleteIds = new Set<number>()
-  for (const [id, needed] of fragmentsNeeded) {
-    if (needed > 1 && (fragmentsPlaced.get(id) ?? 0) < needed) {
-      incompleteIds.add(id)
-    }
-  }
-  if (incompleteIds.size > 0) {
-    // Move incomplete fragments from placed → unplaced
-    for (const d of result) {
-      const vc = variantMap.get(`${d.clue}|${d.answer}`)
-      if (vc && incompleteIds.has(vc.identifier)) {
-        if (!unplacedClues.some((u) => u.clue === d.clue)) {
-          unplacedClues.push({ clue: d.clue, answer: vc.origAnswer })
-        }
-      }
-    }
-    result = result.filter((d) => {
-      const vc = variantMap.get(`${d.clue}|${d.answer}`)
-      return !vc || !incompleteIds.has(vc.identifier)
-    })
-  }
+  // (Runs after island removal so orphaned fragments from removed islands are caught.)
+  result = removeIncompleteSplits(result, variantClues, unplacedClues, variantMap)
 
   const cols: number = engineResult.cols
   const rows: number = engineResult.rows

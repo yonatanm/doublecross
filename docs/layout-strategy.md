@@ -37,16 +37,27 @@ Each attempt shuffles the word order randomly, producing a different layout.
 
 Total engine passes = `min(2^M, maxVariants) × attemptsPerVariant`.
 
-## Split Completeness Enforcement
+## Layout Validity Enforcement
+
+Two rules are enforced in `buildGeneratorResult()` after the engine runs, in this order:
+
+### No islands (single connected component)
+
+All placed words must form a single connected cluster. If the engine produces
+disconnected islands, only the largest connected component is kept — words from
+smaller islands are moved to the unplaced list.
+
+Connectivity is checked at the word level: two words are connected if they share
+at least one cell (i.e. they cross). BFS finds connected components; the largest
+wins.
+
+### Split completeness
 
 When a multi-word answer is split, **ALL fragments must be placed** for the answer to
 count as placed. If the engine places "תל" but not "אביב", both fragments are removed
 from the layout and the original answer "תל אביב" appears in the unplaced clues list.
 
-This is enforced in `buildGeneratorResult()` after the engine runs:
-1. Count how many fragments each identifier (original clue) needs
-2. Count how many were actually placed
-3. If any identifier has `needed > 1` but `placed < needed`, remove all its fragments
+This runs after island removal so that fragments orphaned by island removal are caught.
 
 This means split variants may have lower placement ratios than they would otherwise,
 but the layouts they produce are always valid — no orphaned fragments.
@@ -123,7 +134,7 @@ a new generation. Each proposal has its own `highlightedCells` state.
 ## Files
 
 - `src/lib/layout-strategy.ts` — orchestrator (variant enum, scoring, dedup, ranking)
-- `src/lib/crossword-generator.ts` — `buildGeneratorResult()` (post-engine: RTL flip, grid build, split enforcement), `generateFromVariant()`, `VariantClue` type
+- `src/lib/crossword-generator.ts` — `buildGeneratorResult()` (post-engine: island removal, split enforcement, RTL flip, grid build), `generateFromVariant()`, `VariantClue` type
 - `src/lib/layout-engine.ts` — core placement engine (inline, ported from crossword-layout-generator)
 - `src/types/crossword.ts` — `RankedProposal` type
 - `src/pages/EditorPage.tsx` — sessions + proposal navigation UI
