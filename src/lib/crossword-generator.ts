@@ -23,7 +23,7 @@ export function cleanAnswer(answer: string): string {
 }
 
 function formatAnswerLength(answer: string): string {
-  const words = answer.split(" ").reverse()
+  const words = answer.split(/[ _]/).reverse()
   if (words.length === 1) return `(${words[0].length})`
   return `(${words.map((w) => w.length).join(",")})`
 }
@@ -201,6 +201,10 @@ export function buildGeneratorResult(
   // ALL its fragments must be placed. Remove partially-placed splits.
   // (Runs after island removal so orphaned fragments from removed islands are caught.)
   result = removeIncompleteSplits(result, variantClues, unplacedClues, variantMap)
+
+  // 1d. Re-check islands: removing incomplete splits may have broken a bridge word
+  // that connected two components, creating new islands.
+  result = removeIslands(result, unplacedClues, variantMap)
 
   const cols: number = engineResult.cols
   const rows: number = engineResult.rows

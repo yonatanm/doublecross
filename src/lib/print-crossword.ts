@@ -3,6 +3,7 @@ import type { Crossword } from "@/types/crossword"
 export function openPrintWindow(crossword: Crossword) {
   const {
     title,
+    description,
     grid,
     clues_across,
     clues_down,
@@ -10,6 +11,8 @@ export function openPrintWindow(crossword: Crossword) {
     layout_result,
     layout_cols: cols,
     layout_rows: rows,
+    createdAt,
+    updatedAt,
   } = crossword
 
   if (!grid || !cols || !rows) return
@@ -58,6 +61,26 @@ export function openPrintWindow(crossword: Crossword) {
     }
   }
 
+  // Format timestamp { seconds } → "DD/MM/YYYY HH:MM"
+  const fmtDate = (ts?: { seconds: number }) => {
+    if (!ts) return ""
+    const d = new Date(ts.seconds * 1000)
+    const dd = String(d.getDate()).padStart(2, "0")
+    const mm = String(d.getMonth() + 1).padStart(2, "0")
+    const hh = String(d.getHours()).padStart(2, "0")
+    const min = String(d.getMinutes()).padStart(2, "0")
+    return `${dd}/${mm}/${d.getFullYear()} ${hh}:${min}`
+  }
+
+  const descriptionHtml = description ? `<p class="description">${description}</p>` : ""
+
+  const dateParts: string[] = []
+  if (createdAt) dateParts.push(`נוצר בתאריך: ${fmtDate(createdAt)}`)
+  if (updatedAt) dateParts.push(`שונה לאחרונה: ${fmtDate(updatedAt)}`)
+  const datesHtml = dateParts.length > 0
+    ? `<div class="dates">${dateParts.join("  ·  ")}</div>`
+    : ""
+
   // Build clues HTML
   const renderClues = (clues: typeof clues_across, heading: string) => {
     const items = clues
@@ -86,8 +109,20 @@ export function openPrintWindow(crossword: Crossword) {
     h1 {
       font-family: 'Frank Ruhl Libre', serif;
       font-size: 22px;
-      margin-bottom: 16px;
+      margin-bottom: 4px;
       text-align: center;
+    }
+    .description {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 4px;
+    }
+    .dates {
+      text-align: center;
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 16px;
     }
     .grid-container {
       display: flex;
@@ -156,6 +191,8 @@ export function openPrintWindow(crossword: Crossword) {
 </head>
 <body>
   <h1>${title || ""}</h1>
+  ${descriptionHtml}
+  ${datesHtml}
   <div class="grid-container">
     <div class="grid">${gridHtml}</div>
   </div>

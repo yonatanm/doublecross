@@ -105,7 +105,7 @@ function buildVariantClues(
       // Single-word or joined multi-word: one engine entry
       result.push({
         clue: item.clue,
-        answer: item.answer.replaceAll(" ", ""),
+        answer: item.answer.replaceAll(" ", "").replaceAll("_", ""),
         identifier: idx,
         subId: 0,
         origAnswer: item.answer,
@@ -115,7 +115,7 @@ function buildVariantClues(
       words.forEach((word, j) => {
         result.push({
           clue: item.clue,
-          answer: word,
+          answer: word.replaceAll("_", ""),
           identifier: idx,
           subId: j,
           origAnswer: item.answer,

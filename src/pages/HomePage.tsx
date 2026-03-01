@@ -1,13 +1,16 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Search, Pencil, Printer } from "lucide-react"
+import { Plus, Search, Pencil, Printer, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import CrosswordGrid from "@/components/CrosswordGrid"
+import Walkthrough from "@/components/Walkthrough"
 import { useCrosswords } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
+import { useWalkthrough } from "@/hooks/useWalkthrough"
 import { openPrintWindow } from "@/lib/print-crossword"
+import { deleteArchivedCrosswords } from "@/lib/firestore"
 import type { Crossword } from "@/types/crossword"
 
 type StatusFilter = "all" | "draft" | "published" | "archived"
@@ -41,7 +44,8 @@ function formatDate(timestamp?: { seconds: number }): string {
 export default function HomePage() {
   const navigate = useNavigate()
   const { isLoggedIn, login } = useAuth()
-  const { data: crosswords, isLoading } = useCrosswords()
+  const { data: crosswords, isLoading, refetch } = useCrosswords()
+  const walkthrough = useWalkthrough("home")
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("draft")
   const [searchQuery, setSearchQuery] = useState("")
@@ -74,15 +78,33 @@ export default function HomePage() {
 
   return (
     <div>
+      <Walkthrough page="home" open={walkthrough.isOpen} onClose={walkthrough.close} />
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
           התשבצים שלי
         </h1>
-        <Button onClick={() => navigate("/editor")} className="gap-2">
-          <Plus className="w-4 h-4" />
-          תשבץ חדש
-        </Button>
+        <div className="flex gap-2">
+          {import.meta.env.DEV && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={async () => {
+                const count = await deleteArchivedCrosswords()
+                alert(`נמחקו ${count} תשבצים`)
+                refetch()
+              }}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              מחק ארכיון
+            </Button>
+          )}
+          <Button onClick={() => navigate("/editor")} className="gap-2">
+            <Plus className="w-4 h-4" />
+            תשבץ חדש
+          </Button>
+        </div>
       </div>
 
       {/* Filters + Search */}

@@ -5,6 +5,7 @@ import {
   setDoc,
   getDoc,
   getDocs,
+  deleteDoc,
   query,
   where,
   Timestamp,
@@ -21,6 +22,10 @@ const COLLECTION = "crossword"
 function serializeForFirestore(crossword: Omit<Crossword, "id">) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = { ...crossword }
+  // Strip undefined values — Firebase v12 modular SDK rejects them
+  for (const key of Object.keys(data)) {
+    if (data[key] === undefined) delete data[key]
+  }
   if (data.grid) data.grid = JSON.stringify(data.grid)
   if (data.layout_result) data.layout_result = JSON.stringify(data.layout_result)
   if (data.clues_across) data.clues_across = JSON.stringify(data.clues_across)
@@ -115,4 +120,22 @@ export async function repairMissingUserIds(): Promise<number> {
     }
   }
   return fixed
+}
+
+/** Delete all crosswords with status "archived" for the current user. */
+export async function deleteArchivedCrosswords(): Promise<number> {
+  const user = auth.currentUser
+  if (!user) return 0
+  const q = query(
+    collection(db, COLLECTION),
+    where("userId", "==", user.uid),
+    where("status", "==", "archived"),
+  )
+  const snapshot = await getDocs(q)
+  let deleted = 0
+  for (const d of snapshot.docs) {
+    await deleteDoc(doc(db, COLLECTION, d.id))
+    deleted++
+  }
+  return deleted
 }

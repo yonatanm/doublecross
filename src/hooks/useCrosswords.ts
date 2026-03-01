@@ -36,8 +36,9 @@ export function useSaveCrossword() {
       }
       return saveCrossword(data)
     },
-    onSuccess: () => {
+    onSuccess: (_id, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["crosswords"] })
+      if (id) queryClient.invalidateQueries({ queryKey: ["crossword", id] })
     },
   })
 }

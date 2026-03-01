@@ -14,11 +14,14 @@ import {
 } from "@/components/ui/select"
 import CrosswordGrid from "@/components/CrosswordGrid"
 import CluesDisplay from "@/components/CluesDisplay"
+import Walkthrough from "@/components/Walkthrough"
 import { useCrossword, useCrosswords, useSaveCrossword } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { generateProposals } from "@/lib/layout-strategy"
 import { openPrintWindow } from "@/lib/print-crossword"
+import { useWalkthrough } from "@/hooks/useWalkthrough"
 import type { RawClue, Crossword, GeneratorResult, LayoutWord } from "@/types/crossword"
+import defaultCluesUrl from "@/data/default-clues.txt?url"
 
 function parseRawClues(text: string): RawClue[] {
   if (!text.trim()) return []
@@ -67,26 +70,13 @@ export default function EditorPage() {
   const { data: allCrosswords } = useCrosswords()
   const saveMutation = useSaveCrossword()
 
-  const DEFAULT_CLUES = `חתול-בעל חיים ביתי שאוהב לישון
-שמש-כוכב במרכז מערכת השמש
-מחשב-מכשיר אלקטרוני לעיבוד מידע
-ספר-אוסף דפים כרוכים
-גשם-מים שיורדים מהשמיים
-תפוח-פרי אדום או ירוק
-כדורגל-משחק עם כדור ושתי שערים
-מוזיקה-אמנות הצלילים
-ארנב-בעל חיים עם אוזניים ארוכות
-שולחן-רהיט לאכילה או עבודה
-מטוס-כלי תעופה עם כנפיים
-שעון-מכשיר למדידת זמן`
-
   const [title, setTitle] = useState("")
   const [topic, setTopic] = useState("")
   const [description, setDescription] = useState("")
   const [status, setStatus] = useState<Crossword["status"]>("draft")
   const [difficulty, setDifficulty] = useState<Crossword["difficulty"]>("medium")
   const titleInitRef = useRef(!editId)
-  const [rawCluesText, setRawCluesText] = useState(editId ? "" : DEFAULT_CLUES)
+  const [rawCluesText, setRawCluesText] = useState("")
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [activeProposalIndex, setActiveProposalIndex] = useState(-1)
   const [proposalsHash, setProposalsHash] = useState("")
@@ -95,8 +85,10 @@ export default function EditorPage() {
   const docIdRef = useRef<string | null>(editId)
   const initialLoadRef = useRef(!!editId)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [showClues, setShowClues] = useState(true)
+  const [showClues, setShowClues] = useState(false)
+  const walkthrough = useWalkthrough("editor")
   const [focusedCells, setFocusedCells] = useState<string[][]>([])
+  const [focusedClueKeys, setFocusedClueKeys] = useState<Set<string>>(new Set())
 
   // Set default title for new crosswords (deduplicated against existing titles)
   useEffect(() => {
@@ -141,10 +133,13 @@ export default function EditorPage() {
 
       if (savedHash && savedHash === currentHash && existingCrossword.saved_proposals) {
         try {
-          const parsed = JSON.parse(existingCrossword.saved_proposals) as Proposal[]
+          const blob = JSON.parse(existingCrossword.saved_proposals)
+          // Support both new format { proposals, activeIndex } and legacy array format
+          const parsed: Proposal[] = Array.isArray(blob) ? blob : blob.proposals
+          const savedIdx: number = Array.isArray(blob) ? 0 : (blob.activeIndex ?? 0)
           if (parsed.length > 0) {
             setProposals(parsed)
-            setActiveProposalIndex(0)
+            setActiveProposalIndex(Math.min(savedIdx, parsed.length - 1))
             setProposalsHash(savedHash)
             restored = true
           }
@@ -193,6 +188,17 @@ export default function EditorPage() {
     }))
   }, [rawCluesText])
 
+  // Clear stale proposals when clues change after a generation
+  useEffect(() => {
+    if (!proposalsHash || proposals.length === 0) return
+    const currentHash = answersHash(parseRawClues(rawCluesText))
+    if (currentHash !== proposalsHash) {
+      setProposals([])
+      setActiveProposalIndex(-1)
+      setProposalsHash("")
+    }
+  }, [rawCluesText, proposalsHash, proposals.length])
+
   // Keyboard arrow navigation for proposals
   useEffect(() => {
     if (proposals.length <= 1) return
@@ -226,6 +232,7 @@ export default function EditorPage() {
   // Auto-save with debounce
   useEffect(() => {
     if (!title.trim()) return
+    if (parseRawClues(rawCluesText).length === 0) return
     if (isGenerating) return
     if (initialLoadRef.current) {
       initialLoadRef.current = false
@@ -243,22 +250,22 @@ export default function EditorPage() {
       const rawClues = parseRawClues(rawCluesText)
       const data: Omit<Crossword, "id"> = {
         title,
-        topic: topic || undefined,
-        description: description || undefined,
+        topic,
+        description,
         status,
         difficulty,
         grid_size: genResult?.cols || 0,
         grid: genResult?.grid || [],
         raw_clues: rawClues,
         answers_hash: answersHash(rawClues),
-        proposals_hash: proposalsHash || undefined,
-        saved_proposals: proposals.length > 0 ? JSON.stringify(proposals) : undefined,
+        proposals_hash: proposalsHash,
+        saved_proposals: proposals.length > 0 ? JSON.stringify({ proposals, activeIndex: activeProposalIndex }) : "",
         clues_across: genResult?.clues_across || [],
         clues_down: genResult?.clues_down || [],
         highlighted_cells: hCells,
-        layout_result: genResult?.layout_result,
-        layout_rows: genResult?.rows,
-        layout_cols: genResult?.cols,
+        layout_result: genResult?.layout_result || [],
+        layout_rows: genResult?.rows || 0,
+        layout_cols: genResult?.cols || 0,
       }
 
       setAutoSaveStatus("saving")
@@ -269,7 +276,8 @@ export default function EditorPage() {
           navigate(`/editor?id=${id}`, { replace: true })
         }
         setAutoSaveStatus("saved")
-      } catch {
+      } catch (err) {
+        console.error("Auto-save failed:", err)
         setAutoSaveStatus("idle")
       }
     }, 1500)
@@ -282,8 +290,8 @@ export default function EditorPage() {
     if (!generatorResult) return
     const cw: Crossword = {
       title,
-      topic: topic || undefined,
-      description: description || undefined,
+      topic,
+      description,
       status,
       difficulty,
       grid_size: generatorResult.cols,
@@ -295,6 +303,8 @@ export default function EditorPage() {
       layout_result: generatorResult.layout_result,
       layout_rows: generatorResult.rows,
       layout_cols: generatorResult.cols,
+      createdAt: existingCrossword?.createdAt,
+      updatedAt: existingCrossword?.updatedAt,
     }
     openPrintWindow(cw)
   }
@@ -338,7 +348,7 @@ export default function EditorPage() {
 
   const handleTextareaCursor = useCallback(() => {
     const el = textareaRef.current
-    if (!el || !generatorResult) { setFocusedCells([]); return }
+    if (!el || !generatorResult) { setFocusedCells([]); setFocusedClueKeys(new Set()); return }
     const pos = el.selectionStart ?? 0
     // Find which raw clue line the cursor is on
     const lineIndex = el.value.substring(0, pos).split("\n").length - 1
@@ -352,15 +362,17 @@ export default function EditorPage() {
       }
     }
     const currentLine = lines[lineIndex]?.trim() || ""
-    if (!currentLine || !currentLine.includes("-")) { setFocusedCells([]); return }
+    if (!currentLine || !currentLine.includes("-")) { setFocusedCells([]); setFocusedClueKeys(new Set()); return }
 
     // Look up layout words by identifier (= raw clue index)
     const map = clueIndexToLayoutWords()
     const words = map.get(rawClueIdx)
-    if (!words) { setFocusedCells([]); return }
+    if (!words) { setFocusedCells([]); setFocusedClueKeys(new Set()); return }
 
     const groups: string[][] = []
+    const keys = new Set<string>()
     for (const w of words) {
+      keys.add(`${w.orientation}-${w.position}`)
       const wordCells: string[] = []
       for (let i = 0; i < w.answer.length; i++) {
         const r = w.orientation === "down" ? w.starty - 1 + i : w.starty - 1
@@ -371,6 +383,7 @@ export default function EditorPage() {
       groups.push(wordCells)
     }
     setFocusedCells(groups)
+    setFocusedClueKeys(keys)
   }, [generatorResult, clueIndexToLayoutWords])
 
   // Gallery scroll
@@ -433,6 +446,7 @@ export default function EditorPage() {
 
   return (
     <div className="space-y-6">
+      <Walkthrough page="editor" open={walkthrough.isOpen} onClose={walkthrough.close} />
       {/* Editor Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -551,8 +565,8 @@ export default function EditorPage() {
                 onSelect={handleTextareaCursor}
                 onClick={handleTextareaCursor}
                 onKeyUp={handleTextareaCursor}
-                onBlur={() => setFocusedCells([])}
-                placeholder={`חתול-בעל חיים ביתי\nשמש-כוכב מרכזי\nמים-נוזל חיים`}
+                onBlur={() => { setFocusedCells([]); setFocusedClueKeys(new Set()) }}
+                placeholder={`חתול-בעל חיים ביתי\nבית_ספר-מקום ללמוד\nמים-נוזל חיים`}
                 className="min-h-[300px] font-mono text-sm leading-relaxed resize-none flex-1"
                 dir="rtl"
               />
@@ -568,6 +582,19 @@ export default function EditorPage() {
             >
               {isGenerating ? "מייצר..." : "שבץ מילים"}
             </Button>
+            {import.meta.env.DEV && !rawCluesText.trim() && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={async () => {
+                  const res = await fetch(defaultCluesUrl)
+                  setRawCluesText((await res.text()).trim())
+                }}
+              >
+                טען דוגמה
+              </Button>
+            )}
 
             {/* Proposal navigation arrows */}
             {proposals.length > 1 && (
@@ -719,6 +746,7 @@ export default function EditorPage() {
                   <CluesDisplay
                     cluesAcross={generatorResult.clues_across}
                     cluesDown={generatorResult.clues_down}
+                    focusedClueKeys={focusedClueKeys}
                   />
                 )}
               </div>
@@ -729,7 +757,9 @@ export default function EditorPage() {
                 #
               </div>
               <p className="text-sm text-muted-foreground">
-                הזינו הגדרות ולחצו "יצירת תשבץ"
+                {rawClues.length === 0
+                  ? "יש להוסיף לפחות הגדרה אחת"
+                  : "לחצו \"שבץ מילים\" ליצירת התשבץ"}
               </p>
             </div>
           )}

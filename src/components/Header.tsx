@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { LayoutGrid, Plus, LogIn, LogOut } from "lucide-react"
+import { LayoutGrid, Plus, LogIn, LogOut, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/hooks/useAuth"
@@ -47,8 +47,18 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Left side: Auth */}
+        {/* Left side: Help + Auth */}
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-walkthrough"))}
+            title="עזרה"
+          >
+            <HelpCircle className="w-4 h-4" />
+            עזרה
+          </Button>
           {isLoggedIn ? (
             <>
               <div className="flex items-center gap-2.5">
