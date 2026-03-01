@@ -145,7 +145,8 @@ export default function HomePage() {
                     "flex items-center justify-between px-4 py-3 cursor-pointer transition-colors",
                     selected?.id === cw.id ? "bg-secondary" : "hover:bg-secondary/30",
                   ].join(" ")}
-                  onClick={() => setSelectedId(cw.id || null)}
+                  onMouseEnter={() => setSelectedId(cw.id || null)}
+                  onClick={() => navigate(`/editor?id=${cw.id}`)}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm font-medium truncate">
