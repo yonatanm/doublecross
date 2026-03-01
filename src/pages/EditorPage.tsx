@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { Save, ChevronRight, ChevronLeft, AlertTriangle, Printer } from "lucide-react"
+import { Save, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -224,6 +224,40 @@ export default function EditorPage() {
     }
   }
 
+  // Gallery scroll
+  const galleryRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const updateGalleryScroll = useCallback(() => {
+    const el = galleryRef.current
+    if (!el) return
+    const overflowing = el.scrollWidth > el.clientWidth
+    if (!overflowing) {
+      setCanScrollLeft(false)
+      setCanScrollRight(false)
+      return
+    }
+    // scrollLeft sign varies by browser in RTL; use absolute value comparison
+    const sl = Math.abs(el.scrollLeft)
+    const maxScroll = el.scrollWidth - el.clientWidth
+    // In RTL, scrollLeft=0 means fully right (start). As user scrolls left, |scrollLeft| grows.
+    setCanScrollRight(sl > 1) // items hidden to the right (RTL start side)
+    setCanScrollLeft(sl < maxScroll - 1) // items hidden to the left (RTL end side)
+  }, [])
+
+  useEffect(() => {
+    updateGalleryScroll()
+  }, [proposals, updateGalleryScroll])
+
+  const scrollGallery = (direction: "left" | "right") => {
+    const el = galleryRef.current
+    if (!el) return
+    const amount = el.clientWidth * 0.6
+    // In RTL, positive scrollBy moves content leftward (toward end)
+    el.scrollBy({ left: direction === "left" ? amount : -amount, behavior: "smooth" })
+  }
+
   if (!isLoggedIn) {
     return (
       <div className="text-center py-20 text-muted-foreground">
@@ -344,7 +378,7 @@ export default function EditorPage() {
                 onChange={(e) => setRawCluesText(e.target.value)}
                 onScroll={handleTextareaScroll}
                 placeholder={`חתול-בעל חיים ביתי\nשמש-כוכב מרכזי\nמים-נוזל חיים`}
-                className="min-h-[300px] font-mono text-sm leading-relaxed resize-y flex-1"
+                className="min-h-[300px] font-mono text-sm leading-relaxed resize-none flex-1"
                 dir="rtl"
               />
             </div>
@@ -394,34 +428,57 @@ export default function EditorPage() {
 
           {/* Thumbnail gallery strip */}
           {proposals.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto py-1">
-              {proposals.map((p, i) => (
+            <div className="relative">
+              {canScrollRight && (
                 <button
-                  key={i}
-                  onClick={() => setActiveProposalIndex(i)}
-                  className={`shrink-0 cursor-pointer rounded-md p-1.5 transition-all ${
-                    i === activeProposalIndex
-                      ? "ring-2 ring-[#C8963E] bg-amber-50"
-                      : "ring-1 ring-gray-200 hover:ring-gray-400"
-                  }`}
+                  onClick={() => scrollGallery("right")}
+                  className="absolute right-0 top-0 bottom-0 z-10 flex items-center px-1 bg-gradient-to-l from-white via-white/90 to-transparent cursor-pointer"
                 >
-                  <CrosswordGrid
-                    grid={p.result.grid}
-                    cols={p.result.cols}
-                    rows={p.result.rows}
-                    layoutResult={p.result.layout_result}
-                    highlightedCells={p.highlightedCells}
-                    onCellClick={() => {}}
-                    interactive={false}
-                    showNumbers={false}
-                    showLetters={false}
-                    cellSize={6}
-                  />
-                  <div className="text-[10px] text-muted-foreground text-center mt-1">
-                    {Math.round(p.adjustedScore * 100)}%
-                  </div>
+                  <ChevronsRight className="w-5 h-5 text-gray-500" />
                 </button>
-              ))}
+              )}
+              {canScrollLeft && (
+                <button
+                  onClick={() => scrollGallery("left")}
+                  className="absolute left-0 top-0 bottom-0 z-10 flex items-center px-1 bg-gradient-to-r from-white via-white/90 to-transparent cursor-pointer"
+                >
+                  <ChevronsLeft className="w-5 h-5 text-gray-500" />
+                </button>
+              )}
+              <div
+                ref={galleryRef}
+                onScroll={updateGalleryScroll}
+                className="flex gap-2 overflow-x-auto py-1 scrollbar-none"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {proposals.map((p, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveProposalIndex(i)}
+                    className={`shrink-0 cursor-pointer rounded-md p-1.5 transition-all ${
+                      i === activeProposalIndex
+                        ? "ring-2 ring-[#C8963E] bg-amber-50"
+                        : "ring-1 ring-gray-200 hover:ring-gray-400"
+                    }`}
+                  >
+                    <CrosswordGrid
+                      grid={p.result.grid}
+                      cols={p.result.cols}
+                      rows={p.result.rows}
+                      layoutResult={p.result.layout_result}
+                      highlightedCells={p.highlightedCells}
+                      onCellClick={() => {}}
+                      interactive={false}
+                      showNumbers={false}
+                      showLetters={false}
+                      cellSize={6}
+                    />
+                    <div className="text-[10px] text-muted-foreground text-center mt-1">
+                      {Math.round(p.adjustedScore * 100)}%
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
