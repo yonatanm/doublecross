@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { Save, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer } from "lucide-react"
+import { Save, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -76,6 +76,7 @@ export default function EditorPage() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [activeProposalIndex, setActiveProposalIndex] = useState(-1)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   // Derived state
   const activeProposal = activeProposalIndex >= 0 ? proposals[activeProposalIndex] ?? null : null
@@ -116,14 +117,19 @@ export default function EditorPage() {
     const rawClues = parseRawClues(rawCluesText)
     if (rawClues.length < 2) return
 
-    const ranked = generateProposals(rawClues)
-    setProposals(ranked.map((p) => ({
-      result: p.result,
-      highlightedCells: [],
-      adjustedScore: p.adjustedScore,
-      variantLabel: p.variantLabel,
-    })))
-    setActiveProposalIndex(0)
+    setIsGenerating(true)
+    // Defer heavy work so the spinner renders first
+    setTimeout(() => {
+      const ranked = generateProposals(rawClues)
+      setProposals(ranked.map((p) => ({
+        result: p.result,
+        highlightedCells: [],
+        adjustedScore: p.adjustedScore,
+        variantLabel: p.variantLabel,
+      })))
+      setActiveProposalIndex(0)
+      setIsGenerating(false)
+    }, 0)
   }, [rawCluesText])
 
   // Keyboard arrow navigation for proposals
@@ -400,10 +406,11 @@ export default function EditorPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <Button
               onClick={generate}
-              disabled={!canGenerate}
+              disabled={!canGenerate || isGenerating}
               className="gap-2"
             >
-              שבץ מילים
+              {isGenerating && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isGenerating ? "מייצר..." : "שבץ מילים"}
             </Button>
 
             {/* Proposal navigation arrows */}
