@@ -1,17 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff } from "lucide-react"
+import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Globe, Archive } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import CrosswordGrid from "@/components/CrosswordGrid"
 import CluesDisplay from "@/components/CluesDisplay"
 import GuidedTour from "@/components/GuidedTour"
@@ -64,7 +57,7 @@ export default function EditorPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const editId = searchParams.get("id")
-  const { isLoggedIn } = useAuth()
+  const { isLoggedIn, user } = useAuth()
 
   const { data: existingCrossword, isLoading } = useCrossword(editId)
   const { data: allCrosswords } = useCrosswords()
@@ -84,6 +77,27 @@ export default function EditorPage() {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const docIdRef = useRef<string | null>(editId)
   const initialLoadRef = useRef(!!editId)
+  // localStorage-backed proposals cache (keyed by answers hash, scoped per document)
+  const proposalsCache = useRef({
+    _key: () => `proposals-cache:${docIdRef.current || "new"}`,
+    _maxEntries: 5,
+    _load(): Record<string, { proposals: Proposal[]; activeIndex: number }> {
+      try { return JSON.parse(localStorage.getItem(this._key()) || "{}") } catch { return {} }
+    },
+    get(hash: string) {
+      return this._load()[hash] ?? null
+    },
+    set(hash: string, entry: { proposals: Proposal[]; activeIndex: number }) {
+      const data = this._load()
+      data[hash] = entry
+      // Evict oldest entries beyond cap
+      const keys = Object.keys(data)
+      if (keys.length > this._maxEntries) {
+        for (const k of keys.slice(0, keys.length - this._maxEntries)) delete data[k]
+      }
+      try { localStorage.setItem(this._key(), JSON.stringify(data)) } catch { /* quota */ }
+    },
+  }).current
   const [isGenerating, setIsGenerating] = useState(false)
   const [showClues, setShowClues] = useState(false)
   const walkthrough = useWalkthrough("editor")
@@ -114,9 +128,12 @@ export default function EditorPage() {
   const generatorResult = activeProposal?.result ?? null
   const highlightedCells = activeProposal?.highlightedCells ?? []
 
-  // Load existing crossword
+  // Load existing crossword (only on first fetch, not on auto-save refetches)
+  const firestoreLoadedRef = useRef(false)
   useEffect(() => {
+    if (firestoreLoadedRef.current) return
     if (existingCrossword) {
+      firestoreLoadedRef.current = true
       initialLoadRef.current = true
       setTitle(existingCrossword.title || "")
       setTopic(existingCrossword.topic || "")
@@ -176,28 +193,58 @@ export default function EditorPage() {
     // Double rAF ensures the browser paints the spinner before blocking
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const ranked = generateProposals(rawClues)
-      setProposals(ranked.map((p) => ({
+      const newProposals = ranked.map((p) => ({
         result: p.result,
         highlightedCells: [],
         adjustedScore: p.adjustedScore,
         variantLabel: p.variantLabel,
-      })))
+      }))
+      const hash = answersHash(rawClues)
+      setProposals(newProposals)
       setActiveProposalIndex(0)
-      setProposalsHash(answersHash(rawClues))
+      setProposalsHash(hash)
+      proposalsCache.set(hash, { proposals: newProposals, activeIndex: 0 })
       setIsGenerating(false)
     }))
   }, [rawCluesText])
 
-  // Clear stale proposals when clues change after a generation
+  // Stash proposals when answers change, restore on undo (hash returns to a stashed value)
+  const stashedHashes = useRef(new Set<string>())
+  const justClearedRef = useRef(false)
   useEffect(() => {
-    if (!proposalsHash || proposals.length === 0) return
     const currentHash = answersHash(parseRawClues(rawCluesText))
-    if (currentHash !== proposalsHash) {
+
+    if (proposalsHash && proposals.length > 0 && currentHash !== proposalsHash) {
+      // Hash changed — stash current proposals and clear
+      proposalsCache.set(proposalsHash, { proposals, activeIndex: activeProposalIndex })
+      stashedHashes.current.add(proposalsHash)
+      justClearedRef.current = true
       setProposals([])
       setActiveProposalIndex(-1)
       setProposalsHash("")
+      return
     }
-  }, [rawCluesText, proposalsHash, proposals.length])
+
+    if (proposals.length === 0 && !justClearedRef.current && currentHash && stashedHashes.current.has(currentHash)) {
+      // Hash returned to a previously stashed value (undo) — restore
+      const cached = proposalsCache.get(currentHash)
+      if (cached) {
+        setProposals(cached.proposals)
+        setActiveProposalIndex(cached.activeIndex)
+        setProposalsHash(currentHash)
+        return
+      }
+    }
+
+    justClearedRef.current = false
+  }, [rawCluesText, proposalsHash, proposals.length, activeProposalIndex])
+
+  // Keep localStorage cache in sync with current proposals state
+  useEffect(() => {
+    if (proposalsHash && proposals.length > 0 && activeProposalIndex >= 0) {
+      proposalsCache.set(proposalsHash, { proposals, activeIndex: activeProposalIndex })
+    }
+  }, [proposals, activeProposalIndex, proposalsHash, proposalsCache])
 
   // Keyboard arrow navigation for proposals
   useEffect(() => {
@@ -448,10 +495,10 @@ export default function EditorPage() {
     <div className="space-y-6">
       <GuidedTour page="editor" open={walkthrough.isOpen} onClose={walkthrough.close} />
       {/* Editor Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="flex-1 max-w-sm">
-            <Label htmlFor="title" className="text-xs text-muted-foreground mb-1.5 block">
+      <div className="flex items-end justify-between gap-3 flex-wrap">
+        <div className="flex items-end gap-3 flex-1 min-w-0 flex-wrap">
+          <div className="min-w-[180px] max-w-sm flex-1">
+            <Label htmlFor="title" className="text-xs text-muted-foreground mb-1 block">
               שם התשבץ
             </Label>
             <Input
@@ -464,23 +511,49 @@ export default function EditorPage() {
             />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">סטטוס</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as Crossword["status"])}>
-              <SelectTrigger className="w-28">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">טיוטה</SelectItem>
-                <SelectItem value="published">פורסם</SelectItem>
-                <SelectItem value="archived">ארכיון</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="text-xs text-muted-foreground mb-1 block">נושא</Label>
+            <Input
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="חגים, טבע..."
+              className="h-9 text-xs w-32"
+            />
+          </div>
+          <div className="flex-1 min-w-[120px] max-w-xs">
+            <Label className="text-xs text-muted-foreground mb-1 block">תיאור</Label>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="תיאור קצר..."
+              className="h-9 text-xs"
+            />
           </div>
         </div>
 
         <div className="flex items-end gap-2">
+          {/* Status toggle */}
+          <div className="flex gap-0.5 h-9 items-center">
+            {([
+              { value: "draft", label: "טיוטה", Icon: Pencil },
+              { value: "published", label: "פורסם", Icon: Globe },
+              { value: "archived", label: "ארכיון", Icon: Archive },
+            ] as const).map(({ value, label, Icon }) => (
+              <button
+                key={value}
+                onClick={() => setStatus(value)}
+                className={`flex items-center gap-1 px-2.5 h-8 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  status === value
+                    ? "bg-secondary text-foreground border border-border"
+                    : "text-muted-foreground hover:bg-secondary/50"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
           {/* Auto-save status indicator */}
-          <div className="flex items-center gap-1.5 text-xs h-9 px-2">
+          <div className="flex items-center justify-center gap-1.5 text-xs h-9 w-16">
             {autoSaveStatus === "saving" && (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
@@ -494,34 +567,10 @@ export default function EditorPage() {
               </>
             )}
           </div>
-          {generatorResult && (
-            <Button variant="outline" onClick={handlePrint} className="gap-2" data-tour="print-area">
-              <Printer className="w-4 h-4" />
-              הדפס
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Topic & Description */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <Label className="text-xs text-muted-foreground shrink-0">נושא</Label>
-          <Input
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder="למשל: חגים, טבע, ספורט..."
-            className="h-7 text-xs w-40 rounded-full px-3 border-[#C8963E]/40 focus-visible:ring-[#C8963E]/30"
-          />
-        </div>
-        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <Label className="text-xs text-muted-foreground shrink-0">תיאור</Label>
-          <Input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="תיאור קצר..."
-            className="h-7 text-xs flex-1 max-w-sm"
-          />
+          <Button variant="outline" onClick={handlePrint} disabled={!generatorResult} className="gap-2" data-tour="print-area">
+            <Printer className="w-4 h-4" />
+            הדפס
+          </Button>
         </div>
       </div>
 
@@ -683,8 +732,8 @@ export default function EditorPage() {
             </div>
           )}
 
-          {/* Score & variant info */}
-          {generatorResult && activeProposal && (
+          {/* Score & variant info (dev or admin only) */}
+          {proposals.length > 0 && generatorResult && activeProposal && (import.meta.env.DEV || user?.email === "yonatanm@gmail.com") && (
             <div className="text-xs text-muted-foreground space-y-0.5">
               <div>
                 ציון כולל: {Math.round(activeProposal.adjustedScore * 100)}%
