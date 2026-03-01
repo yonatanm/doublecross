@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select"
 import CrosswordGrid from "@/components/CrosswordGrid"
 import CluesDisplay from "@/components/CluesDisplay"
-import { useCrossword, useSaveCrossword } from "@/hooks/useCrosswords"
+import { useCrossword, useCrosswords, useSaveCrossword } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { generateProposals } from "@/lib/layout-strategy"
 import { openPrintWindow } from "@/lib/print-crossword"
@@ -54,6 +54,7 @@ export default function EditorPage() {
   const { isLoggedIn } = useAuth()
 
   const { data: existingCrossword, isLoading } = useCrossword(editId)
+  const { data: allCrosswords } = useCrosswords()
   const saveMutation = useSaveCrossword()
 
   const DEFAULT_CLUES = `חתול-בעל חיים ביתי שאוהב לישון
@@ -72,6 +73,7 @@ export default function EditorPage() {
   const [title, setTitle] = useState("")
   const [status, setStatus] = useState<Crossword["status"]>("draft")
   const [difficulty, setDifficulty] = useState<Crossword["difficulty"]>("medium")
+  const titleInitRef = useRef(!editId)
   const [rawCluesText, setRawCluesText] = useState(editId ? "" : DEFAULT_CLUES)
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [activeProposalIndex, setActiveProposalIndex] = useState(-1)
@@ -82,6 +84,25 @@ export default function EditorPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [showClues, setShowClues] = useState(true)
   const [focusedCells, setFocusedCells] = useState<string[]>([])
+
+  // Set default title for new crosswords (deduplicated against existing titles)
+  useEffect(() => {
+    if (!titleInitRef.current) return
+    if (!allCrosswords) return
+    titleInitRef.current = false
+    const d = new Date()
+    const dd = String(d.getDate()).padStart(2, "0")
+    const mm = String(d.getMonth() + 1).padStart(2, "0")
+    const base = `תשבץ-${dd}-${mm}-${d.getFullYear()}`
+    const existingTitles = new Set(allCrosswords.map((cw) => cw.title))
+    if (!existingTitles.has(base)) {
+      setTitle(base)
+      return
+    }
+    let idx = 1
+    while (existingTitles.has(`${base}_${idx}`)) idx++
+    setTitle(`${base}_${idx}`)
+  }, [allCrosswords])
 
   // Derived state
   const activeProposal = activeProposalIndex >= 0 ? proposals[activeProposalIndex] ?? null : null
@@ -395,19 +416,6 @@ export default function EditorPage() {
                 <SelectItem value="draft">טיוטה</SelectItem>
                 <SelectItem value="published">פורסם</SelectItem>
                 <SelectItem value="archived">ארכיון</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">רמת קושי</Label>
-            <Select value={difficulty} onValueChange={(v) => setDifficulty(v as Crossword["difficulty"])}>
-              <SelectTrigger className="w-28">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="easy">קל</SelectItem>
-                <SelectItem value="medium">בינוני</SelectItem>
-                <SelectItem value="hard">קשה</SelectItem>
               </SelectContent>
             </Select>
           </div>
