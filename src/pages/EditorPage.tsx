@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { Save, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Loader2 } from "lucide-react"
+import { Save, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -118,8 +118,8 @@ export default function EditorPage() {
     if (rawClues.length < 2) return
 
     setIsGenerating(true)
-    // Defer heavy work so the spinner renders first
-    setTimeout(() => {
+    // Double rAF ensures the browser paints the spinner before blocking
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const ranked = generateProposals(rawClues)
       setProposals(ranked.map((p) => ({
         result: p.result,
@@ -129,7 +129,7 @@ export default function EditorPage() {
       })))
       setActiveProposalIndex(0)
       setIsGenerating(false)
-    }, 0)
+    }))
   }, [rawCluesText])
 
   // Keyboard arrow navigation for proposals
@@ -409,7 +409,6 @@ export default function EditorPage() {
               disabled={!canGenerate || isGenerating}
               className="gap-2"
             >
-              {isGenerating && <Loader2 className="w-4 h-4 animate-spin" />}
               {isGenerating ? "מייצר..." : "שבץ מילים"}
             </Button>
 
@@ -447,7 +446,7 @@ export default function EditorPage() {
 
           {/* Thumbnail gallery strip */}
           {proposals.length > 1 && (
-            <div className="flex items-center gap-1">
+            <div className={`flex items-center gap-1 ${isGenerating ? "opacity-50 pointer-events-none" : ""}`}>
               <button
                 onClick={() => scrollGallery("right")}
                 disabled={!canScrollRight}
