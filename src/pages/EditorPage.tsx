@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { Save, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer } from "lucide-react"
+import { Save, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -77,6 +77,7 @@ export default function EditorPage() {
   const [activeProposalIndex, setActiveProposalIndex] = useState(-1)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [showClues, setShowClues] = useState(true)
 
   // Derived state
   const activeProposal = activeProposalIndex >= 0 ? proposals[activeProposalIndex] ?? null : null
@@ -549,10 +550,21 @@ export default function EditorPage() {
               </div>
 
               {/* Clues display */}
-              <CluesDisplay
-                cluesAcross={generatorResult.clues_across}
-                cluesDown={generatorResult.clues_down}
-              />
+              <div>
+                <button
+                  onClick={() => setShowClues((v) => !v)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer mb-2"
+                >
+                  {showClues ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  {showClues ? "הסתר הגדרות" : "הצג הגדרות"}
+                </button>
+                {showClues && (
+                  <CluesDisplay
+                    cluesAcross={generatorResult.clues_across}
+                    cluesDown={generatorResult.clues_down}
+                  />
+                )}
+              </div>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-card border border-dashed rounded-lg">
