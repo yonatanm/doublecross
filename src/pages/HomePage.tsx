@@ -1,14 +1,13 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Search, Pencil, Printer, Archive, Wrench } from "lucide-react"
+import { Plus, Search, Pencil, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import CrosswordGrid from "@/components/CrosswordGrid"
-import { useCrosswords, useArchiveCrossword } from "@/hooks/useCrosswords"
+import { useCrosswords } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { openPrintWindow } from "@/lib/print-crossword"
-import { repairMissingUserIds } from "@/lib/firestore"
 import type { Crossword } from "@/types/crossword"
 
 type StatusFilter = "all" | "draft" | "published" | "archived"
@@ -28,10 +27,14 @@ const STATUS_LABELS: Record<Crossword["status"], string> = {
 
 function formatDate(timestamp?: { seconds: number }): string {
   if (!timestamp) return ""
-  return new Date(timestamp.seconds * 1000).toLocaleDateString("he-IL", {
+  const d = new Date(timestamp.seconds * 1000)
+  return d.toLocaleDateString("he-IL", {
     day: "2-digit",
     month: "short",
     year: "numeric",
+  }) + " " + d.toLocaleTimeString("he-IL", {
+    hour: "2-digit",
+    minute: "2-digit",
   })
 }
 
@@ -39,12 +42,10 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { isLoggedIn, login } = useAuth()
   const { data: crosswords, isLoading } = useCrosswords()
-  const archiveMutation = useArchiveCrossword()
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("draft")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [repairStatus, setRepairStatus] = useState<string | null>(null)
 
   if (!isLoggedIn) {
     return (
@@ -65,7 +66,7 @@ export default function HomePage() {
 
   const filtered = (crosswords || []).filter((cw: Crossword) => {
     if (statusFilter !== "all" && cw.status !== statusFilter) return false
-    if (searchQuery && !cw.title?.includes(searchQuery)) return false
+    if (searchQuery && !cw.title?.includes(searchQuery) && !cw.topic?.includes(searchQuery) && !cw.description?.includes(searchQuery)) return false
     return true
   })
 
@@ -78,31 +79,10 @@ export default function HomePage() {
         <h1 className="text-2xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
           התשבצים שלי
         </h1>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1 text-xs"
-            onClick={async () => {
-              setRepairStatus("מתקן...")
-              try {
-                const fixed = await repairMissingUserIds()
-                setRepairStatus(`תוקנו ${fixed} תשבצים`)
-                if (fixed > 0) window.location.reload()
-              } catch {
-                setRepairStatus("שגיאה בתיקון")
-              }
-            }}
-            disabled={repairStatus === "מתקן..."}
-          >
-            <Wrench className="w-3 h-3" />
-            {repairStatus || "תקן תשבצים חסרים"}
-          </Button>
-          <Button onClick={() => navigate("/editor")} className="gap-2">
-            <Plus className="w-4 h-4" />
-            תשבץ חדש
-          </Button>
-        </div>
+        <Button onClick={() => navigate("/editor")} className="gap-2">
+          <Plus className="w-4 h-4" />
+          תשבץ חדש
+        </Button>
       </div>
 
       {/* Filters + Search */}
@@ -155,7 +135,7 @@ export default function HomePage() {
             {/* List header */}
             <div className="flex items-center justify-between px-4 py-2 bg-secondary/50 border-b text-xs text-muted-foreground font-medium">
               <span>שם</span>
-              <span>תאריך</span>
+              <span>עדכון אחרון</span>
             </div>
             {/* List items */}
             <div className="divide-y max-h-[calc(100vh-280px)] overflow-y-auto">
@@ -163,53 +143,61 @@ export default function HomePage() {
                 <div
                   key={cw.id}
                   className={[
-                    "flex items-center justify-between px-4 py-3 cursor-pointer transition-colors",
+                    "px-4 py-3 cursor-pointer transition-colors",
                     selected?.id === cw.id ? "bg-secondary" : "hover:bg-secondary/30",
                   ].join(" ")}
                   onMouseEnter={() => setSelectedId(cw.id || null)}
                   onClick={() => navigate(`/editor?id=${cw.id}`)}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-medium truncate">
-                      {cw.title || "ללא שם"}
-                    </span>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
-                      {STATUS_LABELS[cw.status]}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(cw.updatedAt)}
-                    </span>
-                    <div className="flex gap-0.5">
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/editor?id=${cw.id}`) }}
-                        title="ערוך"
-                      >
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={(e) => { e.stopPropagation(); openPrintWindow(cw) }}
-                        title="הדפס"
-                      >
-                        <Printer className="w-3 h-3" />
-                      </Button>
-                      {cw.status !== "archived" && (
+                  {/* Line 1: title, status, date, actions */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm font-medium truncate">
+                        {cw.title || "ללא שם"}
+                      </span>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
+                        {STATUS_LABELS[cw.status]}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs text-muted-foreground">
+                        {formatDate(cw.updatedAt)}
+                      </span>
+                      <div className="flex gap-0.5">
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          onClick={(e) => { e.stopPropagation(); cw.id && archiveMutation.mutate(cw.id) }}
-                          title="ארכיון"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/editor?id=${cw.id}`) }}
+                          title="ערוך"
                         >
-                          <Archive className="w-3 h-3" />
+                          <Pencil className="w-3 h-3" />
                         </Button>
-                      )}
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={(e) => { e.stopPropagation(); openPrintWindow(cw) }}
+                          title="הדפס"
+                        >
+                          <Printer className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
+                  {/* Line 2: topic tag + description */}
+                  {(cw.topic || cw.description) && (
+                    <div className="flex items-center gap-2 mt-0.5 min-w-0">
+                      {cw.topic && (
+                        <Badge className="text-[10px] px-2 py-0 shrink-0 rounded-full bg-[#C8963E]/15 text-[#96700E] border-[#C8963E]/30 hover:bg-[#C8963E]/15">
+                          {cw.topic}
+                        </Badge>
+                      )}
+                      {cw.description && (
+                        <span className="text-xs text-muted-foreground truncate">
+                          {cw.description}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

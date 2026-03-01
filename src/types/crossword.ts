@@ -32,6 +32,7 @@ export interface LayoutWord {
 export interface Crossword {
   id?: string
   title: string
+  topic?: string
   description?: string
   grid_size: number
   grid: CrosswordCell[][]
@@ -45,6 +46,7 @@ export interface Crossword {
   updatedAt?: { seconds: number; nanoseconds: number }
   userId?: string
   userEmail?: string
+  answers_hash?: string
   layout_result?: LayoutWord[]
   layout_rows?: number
   layout_cols?: number

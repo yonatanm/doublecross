@@ -40,6 +40,16 @@ function rawCluesToText(clues: RawClue[]): string {
   return clues.map((c) => `${c.answer}-${c.clue}`).join("\n")
 }
 
+/** Simple deterministic hash of the answers list (order-independent). */
+function answersHash(clues: RawClue[]): string {
+  const sorted = clues.map((c) => c.answer).sort().join("|")
+  let h = 0
+  for (let i = 0; i < sorted.length; i++) {
+    h = ((h << 5) - h + sorted.charCodeAt(i)) | 0
+  }
+  return (h >>> 0).toString(36)
+}
+
 interface Proposal {
   result: GeneratorResult
   highlightedCells: string[]
@@ -71,6 +81,8 @@ export default function EditorPage() {
 שעון-מכשיר למדידת זמן`
 
   const [title, setTitle] = useState("")
+  const [topic, setTopic] = useState("")
+  const [description, setDescription] = useState("")
   const [status, setStatus] = useState<Crossword["status"]>("draft")
   const [difficulty, setDifficulty] = useState<Crossword["difficulty"]>("medium")
   const titleInitRef = useRef(!editId)
@@ -83,7 +95,7 @@ export default function EditorPage() {
   const initialLoadRef = useRef(!!editId)
   const [isGenerating, setIsGenerating] = useState(false)
   const [showClues, setShowClues] = useState(true)
-  const [focusedCells, setFocusedCells] = useState<string[]>([])
+  const [focusedCells, setFocusedCells] = useState<string[][]>([])
 
   // Set default title for new crosswords (deduplicated against existing titles)
   useEffect(() => {
@@ -114,6 +126,8 @@ export default function EditorPage() {
     if (existingCrossword) {
       initialLoadRef.current = true
       setTitle(existingCrossword.title || "")
+      setTopic(existingCrossword.topic || "")
+      setDescription(existingCrossword.description || "")
       setStatus(existingCrossword.status || "draft")
       setDifficulty(existingCrossword.difficulty || "medium")
       if (existingCrossword.raw_clues?.length) {
@@ -209,11 +223,14 @@ export default function EditorPage() {
       const rawClues = parseRawClues(rawCluesText)
       const data: Omit<Crossword, "id"> = {
         title,
+        topic: topic || undefined,
+        description: description || undefined,
         status,
         difficulty,
         grid_size: genResult?.cols || 0,
         grid: genResult?.grid || [],
         raw_clues: rawClues,
+        answers_hash: answersHash(rawClues),
         clues_across: genResult?.clues_across || [],
         clues_down: genResult?.clues_down || [],
         highlighted_cells: hCells,
@@ -237,12 +254,14 @@ export default function EditorPage() {
 
     return () => clearTimeout(autoSaveTimerRef.current)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, status, difficulty, rawCluesText, proposals, activeProposalIndex, isGenerating])
+  }, [title, topic, description, status, difficulty, rawCluesText, proposals, activeProposalIndex, isGenerating])
 
   const handlePrint = () => {
     if (!generatorResult) return
     const cw: Crossword = {
       title,
+      topic: topic || undefined,
+      description: description || undefined,
       status,
       difficulty,
       grid_size: generatorResult.cols,
@@ -318,16 +337,18 @@ export default function EditorPage() {
     const words = map.get(rawClueIdx)
     if (!words) { setFocusedCells([]); return }
 
-    const cells: string[] = []
+    const groups: string[][] = []
     for (const w of words) {
+      const wordCells: string[] = []
       for (let i = 0; i < w.answer.length; i++) {
         const r = w.orientation === "down" ? w.starty - 1 + i : w.starty - 1
         // After RTL flip, across words go right-to-left (startx - i)
         const c = w.orientation === "across" ? w.startx - 1 - i : w.startx - 1
-        cells.push(`${r}-${c}`)
+        wordCells.push(`${r}-${c}`)
       }
+      groups.push(wordCells)
     }
-    setFocusedCells(cells)
+    setFocusedCells(groups)
   }, [generatorResult, clueIndexToLayoutWords])
 
   // Gallery scroll
@@ -443,6 +464,28 @@ export default function EditorPage() {
               הדפס
             </Button>
           )}
+        </div>
+      </div>
+
+      {/* Topic & Description */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <Label className="text-xs text-muted-foreground shrink-0">נושא</Label>
+          <Input
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="למשל: חגים, טבע, ספורט..."
+            className="h-7 text-xs w-40 rounded-full px-3 border-[#C8963E]/40 focus-visible:ring-[#C8963E]/30"
+          />
+        </div>
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <Label className="text-xs text-muted-foreground shrink-0">תיאור</Label>
+          <Input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="תיאור קצר..."
+            className="h-7 text-xs flex-1 max-w-sm"
+          />
         </div>
       </div>
 

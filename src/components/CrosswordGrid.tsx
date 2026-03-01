@@ -6,7 +6,7 @@ interface CrosswordGridProps {
   rows: number
   layoutResult: LayoutWord[]
   highlightedCells: string[]
-  focusedCells?: string[]
+  focusedCells?: string[][]
   onCellClick: (pos: string) => void
   interactive: boolean
   showLetters: boolean
@@ -21,6 +21,7 @@ export default function CrosswordGrid({
   layoutResult,
   highlightedCells,
   focusedCells = [],
+
   onCellClick,
   interactive,
   showLetters,
@@ -32,53 +33,86 @@ export default function CrosswordGrid({
     return word?.position
   }
 
+  // Compute focused word overlay bounding boxes (one per word group)
+  const focusOverlays = focusedCells
+    .filter((group) => group.length > 0)
+    .map((group) => {
+      const positions = group.map((pos) => {
+        const [r, c] = pos.split("-").map(Number)
+        return { r, c }
+      })
+      const minR = Math.min(...positions.map((p) => p.r))
+      const maxR = Math.max(...positions.map((p) => p.r))
+      const minC = Math.min(...positions.map((p) => p.c))
+      const maxC = Math.max(...positions.map((p) => p.c))
+      return {
+        top: minR * cellSize,
+        left: minC * cellSize,
+        width: (maxC - minC + 1) * cellSize,
+        height: (maxR - minR + 1) * cellSize,
+      }
+    })
+
   return (
-    <div
-      className="crossword-grid inline-grid"
-      style={{
-        gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`,
-        fontSize: `${Math.max(8, cellSize * 0.45)}px`,
-      }}
-    >
-      {Array.from({ length: rows }, (_, r) =>
-        Array.from({ length: cols }, (_, c) => c).map((c) => {
-          const cell = grid[r]?.[c]
-          if (!cell) return null
-          const pos = `${r}-${c}`
-          const isHighlighted = highlightedCells.includes(pos)
-          const isFocused = focusedCells.includes(pos)
-          const label = findLabel(r, c)
+    <div className="relative inline-block">
+      <div
+        className="crossword-grid inline-grid"
+        style={{
+          gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`,
+          fontSize: `${Math.max(8, cellSize * 0.45)}px`,
+        }}
+      >
+        {Array.from({ length: rows }, (_, r) =>
+          Array.from({ length: cols }, (_, c) => c).map((c) => {
+            const cell = grid[r]?.[c]
+            if (!cell) return null
+            const pos = `${r}-${c}`
+            const isHighlighted = highlightedCells.includes(pos)
+            const label = findLabel(r, c)
 
-          if (cell.isBlocked) {
+            if (cell.isBlocked) {
+              return (
+                <span key={pos} className="crossword-cell blocked" style={{ width: cellSize, height: cellSize }} />
+              )
+            }
+
+            const shouldShowLetter = interactive || (showLetters && isHighlighted)
+
             return (
-              <span key={pos} className="crossword-cell blocked" style={{ width: cellSize, height: cellSize }} />
+              <span
+                key={pos}
+                className={[
+                  "crossword-cell",
+                  interactive ? "interactive cursor-pointer" : "",
+                  isHighlighted ? "highlighted" : "",
+                ].join(" ")}
+                style={{ width: cellSize, height: cellSize }}
+                onClick={() => interactive && onCellClick(pos)}
+              >
+                {shouldShowLetter && cell.letter && (
+                  <span>{cell.letter}</span>
+                )}
+                {showNumbers && label != null && (
+                  <span className="cell-number">{label}</span>
+                )}
+              </span>
             )
-          }
-
-          const shouldShowLetter = interactive || (showLetters && isHighlighted)
-
-          return (
-            <span
-              key={pos}
-              className={[
-                "crossword-cell",
-                interactive ? "interactive cursor-pointer" : "",
-                isHighlighted ? "highlighted" : "",
-                isFocused ? "focused" : "",
-              ].join(" ")}
-              style={{ width: cellSize, height: cellSize }}
-              onClick={() => interactive && onCellClick(pos)}
-            >
-              {shouldShowLetter && cell.letter && (
-                <span>{cell.letter}</span>
-              )}
-              {showNumbers && label != null && (
-                <span className="cell-number">{label}</span>
-              )}
-            </span>
-          )
-        })
-      )}
+          })
+        )}
+      </div>
+      {focusOverlays.map((ov, i) => (
+        <div
+          key={i}
+          className="absolute pointer-events-none rounded-sm"
+          style={{
+            top: ov.top,
+            left: ov.left,
+            width: ov.width,
+            height: ov.height,
+            border: `3px solid #22c55e`,
+          }}
+        />
+      ))}
     </div>
   )
 }
