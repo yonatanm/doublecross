@@ -13,14 +13,14 @@ A Hebrew RTL crossword puzzle builder web app. Users create crosswords by enteri
 - **Vite 6** + **React 19** + **TypeScript 5.8**
 - **Tailwind CSS v4** + **shadcn/ui** (components in `src/components/ui/`)
 - **Firebase v12** modular SDK (NOT compat) — auth + Firestore
-- **react-router-dom v7** — routing with `basename="/one-horizontal/"`
+- **react-router-dom v7** — routing with `basename="/doublecross/"`
 - **@tanstack/react-query v5** — data fetching/caching
 - **layout-engine** — inline crossword placement engine (in `src/lib/layout-engine.ts`, ported from crossword-layout-generator)
 - **lucide-react** — icons
 
 ## Architecture
 - `@/` import alias maps to `./src/*` (configured in tsconfig + vite.config)
-- `base: '/one-horizontal/'` in vite.config.ts for GitHub Pages
+- `base: '/doublecross/'` in vite.config.ts for GitHub Pages
 - `dir="rtl"` on `<html>` — all UI is right-to-left Hebrew
 - Firebase config loaded from `.env.local` via `VITE_FIREBASE_*` env vars
 - Firestore collection name: `"crossword"` — complex fields (grid, clues, layout_result) are stored as JSON strings to avoid Firestore's nested array limitation
@@ -61,7 +61,7 @@ docs/
 - **Cell position numbers**: red (#C82828), scaled with `0.55em` — consistent across editor, preview, and print
 
 ## Deployment
-- **Live URL**: https://yonatanm.github.io/one-horizontal/
+- **Live URL**: https://yonatanm.github.io/doublecross/
 - **GitHub Pages** via Actions workflow: `.github/workflows/deploy.yml`
 - Triggers on push to `master` (or manual `workflow_dispatch`)
 - Build job: checkout → setup node 20 → `npm ci` → inject env from secrets → `npm run build` → upload `dist/` as pages artifact

@@ -20,7 +20,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthContext.Provider value={authValue}>
-        <BrowserRouter basename="/one-horizontal/">
+        <BrowserRouter basename="/doublecross/">
           <div className="min-h-screen bg-background">
             <Header />
             <main className="max-w-7xl mx-auto px-3 py-6">

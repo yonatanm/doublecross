@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export default defineConfig({
-  base: '/one-horizontal/',
+  base: '/doublecross/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
