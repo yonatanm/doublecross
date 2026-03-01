@@ -430,20 +430,24 @@ export default function EditorPage() {
           {proposals.length > 1 && (
             <div className="relative">
               {canScrollRight && (
-                <button
-                  onClick={() => scrollGallery("right")}
-                  className="absolute right-0 top-0 bottom-0 z-10 flex items-center px-1 bg-gradient-to-l from-white via-white/90 to-transparent cursor-pointer"
-                >
-                  <ChevronsRight className="w-5 h-5 text-gray-500" />
-                </button>
+                <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pointer-events-none bg-gradient-to-l from-white via-white/90 to-transparent px-1">
+                  <button
+                    onClick={() => scrollGallery("right")}
+                    className="pointer-events-auto cursor-pointer rounded-full bg-white/80 shadow p-1 hover:bg-white"
+                  >
+                    <ChevronsRight className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
               )}
               {canScrollLeft && (
-                <button
-                  onClick={() => scrollGallery("left")}
-                  className="absolute left-0 top-0 bottom-0 z-10 flex items-center px-1 bg-gradient-to-r from-white via-white/90 to-transparent cursor-pointer"
-                >
-                  <ChevronsLeft className="w-5 h-5 text-gray-500" />
-                </button>
+                <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pointer-events-none bg-gradient-to-r from-white via-white/90 to-transparent px-1">
+                  <button
+                    onClick={() => scrollGallery("left")}
+                    className="pointer-events-auto cursor-pointer rounded-full bg-white/80 shadow p-1 hover:bg-white"
+                  >
+                    <ChevronsLeft className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
               )}
               <div
                 ref={galleryRef}
