@@ -16,9 +16,9 @@ export function generateProposals(
   rawClues: RawClue[],
   options?: GenerateProposalsOptions,
 ): RankedProposal[] {
-  const attemptsPerVariant = options?.attemptsPerVariant ?? 10
+  const attemptsPerVariant = options?.attemptsPerVariant ?? 20
   const maxVariants = options?.maxVariants ?? 16
-  const topK = options?.topK ?? 5
+  const topK = options?.topK ?? 10
 
   // 1. Normalize Hebrew answers
   const cleaned = rawClues.map((c) => ({

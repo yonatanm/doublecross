@@ -31,8 +31,10 @@ Single-word answers are unchanged across all variants.
 
 ## Engine Calls
 
-For each variant, we call the layout engine `attemptsPerVariant` times (default 10).
-Each attempt shuffles the word order randomly, producing a different layout.
+For each variant, we call the layout engine `attemptsPerVariant` times (default 20),
+each as an independent single-attempt run. Each attempt shuffles the word order
+randomly, producing a different layout. All results are collected individually
+(not reduced to a single best per variant) so the gallery has diverse proposals.
 
 Total engine passes = `min(2^M, maxVariants) × attemptsPerVariant`.
 
@@ -102,7 +104,7 @@ If two variants produce the same grid, only the higher-scoring one is kept.
 ## Ranking and Top-K
 
 All unique results across all variants and attempts are sorted by `adjustedOverall`
-descending. The top K (default 5) are returned as `RankedProposal[]`.
+descending. The top K (default 10) are returned as `RankedProposal[]`.
 
 Each proposal includes:
 - The full `GeneratorResult` (grid, clues, layout data)
@@ -113,19 +115,19 @@ Each proposal includes:
 
 | Scenario | Variants | Attempts | Total passes | Est. time |
 |----------|----------|----------|-------------|-----------|
-| 15 words, 0 multi-word | 1 | 10 | 10 | ~30ms |
-| 15 words, 2 multi-word | 4 | 10 | 40 | ~120ms |
-| 25 words, 3 multi-word | 8 | 10 | 80 | ~560ms |
-| 25 words, 5 multi-word | 16 (cap) | 10 | 160 | ~1.1s |
+| 15 words, 0 multi-word | 1 | 20 | 20 | ~60ms |
+| 15 words, 2 multi-word | 4 | 20 | 80 | ~240ms |
+| 25 words, 3 multi-word | 8 | 20 | 160 | ~1.1s |
+| 25 words, 5 multi-word | 16 (cap) | 20 | 320 | ~2.2s |
 
-All under 2 seconds — no Web Worker needed.
+Most under 2 seconds — may consider Web Worker for large inputs with many multi-word answers.
 
 ## Editor UI Model
 
-Each click of "שבץ מילים" generates up to K proposals sorted by score, replacing
-any previous proposals. The user browses them via a thumbnail gallery strip
-(mini crossword grids) or prev/next arrows. Each proposal has its own
-`highlightedCells` state. No session history — each generation is a fresh batch.
+Each click of "שבץ מילים" generates up to K (default 10) proposals sorted by score,
+replacing any previous proposals. The user browses them via a thumbnail gallery strip
+(mini crossword grids), prev/next arrows, or keyboard left/right arrows. Each proposal
+has its own `highlightedCells` state. No session history — each generation is a fresh batch.
 
 Loading from Firestore creates a single-element proposals array.
 
