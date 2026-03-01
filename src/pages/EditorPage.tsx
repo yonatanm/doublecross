@@ -273,7 +273,8 @@ export default function EditorPage() {
     for (const w of words) {
       for (let i = 0; i < w.answer.length; i++) {
         const r = w.orientation === "down" ? w.starty - 1 + i : w.starty - 1
-        const c = w.orientation === "across" ? w.startx - 1 + i : w.startx - 1
+        // After RTL flip, across words go right-to-left (startx - i)
+        const c = w.orientation === "across" ? w.startx - 1 - i : w.startx - 1
         cells.push(`${r}-${c}`)
       }
     }
