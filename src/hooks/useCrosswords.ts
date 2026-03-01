@@ -1,0 +1,53 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  getUserCrosswords,
+  getCrossword,
+  saveCrossword,
+  overwriteCrossword,
+  archiveCrossword,
+} from "@/lib/firestore"
+import { useAuth } from "./useAuth"
+import type { Crossword } from "@/types/crossword"
+
+export function useCrosswords() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ["crosswords", user?.uid],
+    queryFn: () => getUserCrosswords(user!.uid),
+    enabled: !!user,
+  })
+}
+
+export function useCrossword(id: string | null) {
+  return useQuery({
+    queryKey: ["crossword", id],
+    queryFn: () => getCrossword(id!),
+    enabled: !!id,
+  })
+}
+
+export function useSaveCrossword() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, data }: { id?: string; data: Omit<Crossword, "id"> }) => {
+      if (id) {
+        await overwriteCrossword(id, data)
+        return id
+      }
+      return saveCrossword(data)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["crosswords"] })
+    },
+  })
+}
+
+export function useArchiveCrossword() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => archiveCrossword(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["crosswords"] })
+    },
+  })
+}
