@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { Save, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff } from "lucide-react"
+import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -75,7 +75,10 @@ export default function EditorPage() {
   const [rawCluesText, setRawCluesText] = useState(editId ? "" : DEFAULT_CLUES)
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [activeProposalIndex, setActiveProposalIndex] = useState(-1)
-  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const docIdRef = useRef<string | null>(editId)
+  const initialLoadRef = useRef(!!editId)
   const [isGenerating, setIsGenerating] = useState(false)
   const [showClues, setShowClues] = useState(true)
   const [focusedCells, setFocusedCells] = useState<string[]>([])
@@ -88,6 +91,7 @@ export default function EditorPage() {
   // Load existing crossword
   useEffect(() => {
     if (existingCrossword) {
+      initialLoadRef.current = true
       setTitle(existingCrossword.title || "")
       setStatus(existingCrossword.status || "draft")
       setDifficulty(existingCrossword.difficulty || "medium")
@@ -164,31 +168,55 @@ export default function EditorPage() {
     })
   }
 
-  const save = async () => {
+  // Auto-save with debounce
+  useEffect(() => {
     if (!title.trim()) return
-    const rawClues = parseRawClues(rawCluesText)
-    const data: Omit<Crossword, "id"> = {
-      title,
-      status,
-      difficulty,
-      grid_size: generatorResult?.cols || 0,
-      grid: generatorResult?.grid || [],
-      raw_clues: rawClues,
-      clues_across: generatorResult?.clues_across || [],
-      clues_down: generatorResult?.clues_down || [],
-      highlighted_cells: highlightedCells,
-      layout_result: generatorResult?.layout_result,
-      layout_rows: generatorResult?.rows,
-      layout_cols: generatorResult?.cols,
+    if (isGenerating) return
+    if (initialLoadRef.current) {
+      initialLoadRef.current = false
+      setAutoSaveStatus("saved")
+      return
     }
 
-    const id = await saveMutation.mutateAsync({ id: editId || undefined, data })
-    setSaveSuccess(true)
-    setTimeout(() => setSaveSuccess(false), 3000)
-    if (!editId) {
-      navigate(`/editor?id=${id}`, { replace: true })
-    }
-  }
+    setAutoSaveStatus("idle")
+    clearTimeout(autoSaveTimerRef.current)
+
+    autoSaveTimerRef.current = setTimeout(async () => {
+      const proposal = activeProposalIndex >= 0 ? proposals[activeProposalIndex] : null
+      const genResult = proposal?.result ?? null
+      const hCells = proposal?.highlightedCells ?? []
+      const rawClues = parseRawClues(rawCluesText)
+      const data: Omit<Crossword, "id"> = {
+        title,
+        status,
+        difficulty,
+        grid_size: genResult?.cols || 0,
+        grid: genResult?.grid || [],
+        raw_clues: rawClues,
+        clues_across: genResult?.clues_across || [],
+        clues_down: genResult?.clues_down || [],
+        highlighted_cells: hCells,
+        layout_result: genResult?.layout_result,
+        layout_rows: genResult?.rows,
+        layout_cols: genResult?.cols,
+      }
+
+      setAutoSaveStatus("saving")
+      try {
+        const id = await saveMutation.mutateAsync({ id: docIdRef.current || undefined, data })
+        if (!docIdRef.current) {
+          docIdRef.current = id
+          navigate(`/editor?id=${id}`, { replace: true })
+        }
+        setAutoSaveStatus("saved")
+      } catch {
+        setAutoSaveStatus("idle")
+      }
+    }, 1500)
+
+    return () => clearTimeout(autoSaveTimerRef.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, status, difficulty, rawCluesText, proposals, activeProposalIndex, isGenerating])
 
   const handlePrint = () => {
     if (!generatorResult) return
@@ -386,14 +414,21 @@ export default function EditorPage() {
         </div>
 
         <div className="flex items-end gap-2">
-          <Button
-            onClick={save}
-            disabled={!title.trim() || saveMutation.isPending}
-            className="gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {saveMutation.isPending ? "שומר..." : "שמור"}
-          </Button>
+          {/* Auto-save status indicator */}
+          <div className="flex items-center gap-1.5 text-xs h-9 px-2">
+            {autoSaveStatus === "saving" && (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                <span className="text-muted-foreground">שומר...</span>
+              </>
+            )}
+            {autoSaveStatus === "saved" && (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-emerald-600">נשמר</span>
+              </>
+            )}
+          </div>
           {generatorResult && (
             <Button variant="outline" onClick={handlePrint} className="gap-2">
               <Printer className="w-4 h-4" />
@@ -402,12 +437,6 @@ export default function EditorPage() {
           )}
         </div>
       </div>
-
-      {saveSuccess && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md px-4 py-2 text-sm">
-          התשבץ נשמר בהצלחה
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-8 overflow-hidden">
         {/* Left Column: Clues Input */}
