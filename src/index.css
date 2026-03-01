@@ -172,12 +172,12 @@
 .cell-number {
   position: absolute;
   top: 1px;
-  right: 3px;
-  font-size: 9px;
-  font-weight: 600;
+  right: 2px;
+  font-size: 0.55em;
+  font-weight: 700;
   font-family: 'Heebo', sans-serif;
   line-height: 1;
-  color: #78716C;
+  color: #C82828;
 }
 
 /* Print styles */

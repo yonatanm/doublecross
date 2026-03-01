@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Search } from "lucide-react"
+import { Plus, Search, Pencil, Printer, Archive } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import CrosswordCard from "@/components/CrosswordCard"
+import CrosswordGrid from "@/components/CrosswordGrid"
 import { useCrosswords, useArchiveCrossword } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { openPrintWindow } from "@/lib/print-crossword"
@@ -19,6 +19,21 @@ const FILTERS: { key: StatusFilter; label: string }[] = [
   { key: "archived", label: "ארכיון" },
 ]
 
+const STATUS_LABELS: Record<Crossword["status"], string> = {
+  draft: "טיוטה",
+  published: "פורסם",
+  archived: "ארכיון",
+}
+
+function formatDate(timestamp?: { seconds: number }): string {
+  if (!timestamp) return ""
+  return new Date(timestamp.seconds * 1000).toLocaleDateString("he-IL", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
+}
+
 export default function HomePage() {
   const navigate = useNavigate()
   const { isLoggedIn, login } = useAuth()
@@ -27,6 +42,7 @@ export default function HomePage() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   if (!isLoggedIn) {
     return (
@@ -53,10 +69,12 @@ export default function HomePage() {
     return true
   })
 
+  const selected = filtered.find((cw) => cw.id === selectedId) || filtered[0] || null
+
   return (
     <div>
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
           התשבצים שלי
         </h1>
@@ -67,7 +85,7 @@ export default function HomePage() {
       </div>
 
       {/* Filters + Search */}
-      <div className="flex items-center gap-4 mb-6 flex-wrap">
+      <div className="flex items-center gap-4 mb-5 flex-wrap">
         <div className="flex gap-1.5">
           {FILTERS.map((f) => (
             <Badge
@@ -110,16 +128,100 @@ export default function HomePage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((cw: Crossword) => (
-            <CrosswordCard
-              key={cw.id}
-              crossword={cw}
-              onEdit={() => navigate(`/editor?id=${cw.id}`)}
-              onPrint={() => openPrintWindow(cw)}
-              onArchive={() => cw.id && archiveMutation.mutate(cw.id)}
-            />
-          ))}
+        <div className="grid grid-cols-[420px_1fr] gap-4">
+          {/* Right: List */}
+          <div className="border rounded-lg overflow-hidden">
+            {/* List header */}
+            <div className="flex items-center justify-between px-4 py-2 bg-secondary/50 border-b text-xs text-muted-foreground font-medium">
+              <span>שם</span>
+              <span>תאריך</span>
+            </div>
+            {/* List items */}
+            <div className="divide-y max-h-[calc(100vh-280px)] overflow-y-auto">
+              {filtered.map((cw: Crossword) => (
+                <div
+                  key={cw.id}
+                  className={[
+                    "flex items-center justify-between px-4 py-3 cursor-pointer transition-colors",
+                    selected?.id === cw.id ? "bg-secondary" : "hover:bg-secondary/30",
+                  ].join(" ")}
+                  onClick={() => setSelectedId(cw.id || null)}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium truncate">
+                      {cw.title || "ללא שם"}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
+                      {STATUS_LABELS[cw.status]}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(cw.updatedAt)}
+                    </span>
+                    <div className="flex gap-0.5">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/editor?id=${cw.id}`) }}
+                        title="ערוך"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={(e) => { e.stopPropagation(); openPrintWindow(cw) }}
+                        title="הדפס"
+                      >
+                        <Printer className="w-3 h-3" />
+                      </Button>
+                      {cw.status !== "archived" && (
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={(e) => { e.stopPropagation(); cw.id && archiveMutation.mutate(cw.id) }}
+                          title="ארכיון"
+                        >
+                          <Archive className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Left: Preview */}
+          <div className="bg-card border rounded-lg p-6 flex flex-col items-center min-h-[400px]">
+            {selected?.grid && selected.layout_result ? (
+              <>
+                <h2
+                  className="text-xl font-bold mb-4"
+                  style={{ fontFamily: "'Frank Ruhl Libre', serif" }}
+                >
+                  {selected.title}
+                </h2>
+                <CrosswordGrid
+                  grid={selected.grid}
+                  cols={selected.layout_cols || selected.grid[0]?.length || 0}
+                  rows={selected.layout_rows || selected.grid.length}
+                  layoutResult={selected.layout_result}
+                  highlightedCells={selected.highlighted_cells || []}
+                  onCellClick={() => {}}
+                  interactive={true}
+                  showLetters={false}
+                  cellSize={22}
+                  showNumbers={false}
+                />
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                בחרו תשבץ מהרשימה
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

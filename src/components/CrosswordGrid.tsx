@@ -9,6 +9,8 @@ interface CrosswordGridProps {
   onCellClick: (pos: string) => void
   interactive: boolean
   showLetters: boolean
+  cellSize?: number
+  showNumbers?: boolean
 }
 
 export default function CrosswordGrid({
@@ -20,6 +22,8 @@ export default function CrosswordGrid({
   onCellClick,
   interactive,
   showLetters,
+  cellSize = 40,
+  showNumbers = true,
 }: CrosswordGridProps) {
   const findLabel = (r: number, c: number) => {
     const word = layoutResult.find((d) => d.starty === r + 1 && d.startx === c + 1)
@@ -30,7 +34,8 @@ export default function CrosswordGrid({
     <div
       className="crossword-grid inline-grid"
       style={{
-        gridTemplateColumns: `repeat(${cols}, 40px)`,
+        gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`,
+        fontSize: `${Math.max(8, cellSize * 0.45)}px`,
       }}
     >
       {Array.from({ length: rows }, (_, r) =>
@@ -43,7 +48,7 @@ export default function CrosswordGrid({
 
           if (cell.isBlocked) {
             return (
-              <span key={pos} className="crossword-cell blocked" />
+              <span key={pos} className="crossword-cell blocked" style={{ width: cellSize, height: cellSize }} />
             )
           }
 
@@ -57,12 +62,13 @@ export default function CrosswordGrid({
                 interactive ? "interactive cursor-pointer" : "",
                 isHighlighted ? "highlighted" : "",
               ].join(" ")}
+              style={{ width: cellSize, height: cellSize }}
               onClick={() => interactive && onCellClick(pos)}
             >
               {shouldShowLetter && cell.letter && (
                 <span>{cell.letter}</span>
               )}
-              {label != null && (
+              {showNumbers && label != null && (
                 <span className="cell-number">{label}</span>
               )}
             </span>

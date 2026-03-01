@@ -125,8 +125,8 @@ export function openPrintWindow(crossword: Crossword) {
       right: 2px;
       font-size: ${numFontSize}px;
       font-family: 'Heebo', sans-serif;
-      font-weight: 600;
-      color: #666;
+      font-weight: 700;
+      color: #C82828;
     }
     .clues {
       display: grid;

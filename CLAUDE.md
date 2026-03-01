@@ -52,6 +52,9 @@ src/
 - **Crossword generator** (`src/lib/crossword-generator.ts`): shuffles clues, calls `crossword-layout-generator`, applies RTL x-coordinate flip (`startx = cols + 1 - startx`), renumbers positions
 - **Print** (`src/lib/print-crossword.ts`): opens a new window with standalone HTML that auto-triggers `window.print()`. Highlighted cells show their letter on white background; other cells are empty. Uses `print-color-adjust: exact` to preserve black backgrounds. Cell size is computed dynamically to fill ~75% of A4 page
 - **Editor undo/redo**: history array of `{result, highlightedCells}` entries with an index pointer
+- **Home page**: master-detail layout — list on the right (420px), crossword preview on the left (22px cells, no numbers). Preview shows all letters with `interactive={true}` + no-op click
+- **CrosswordGrid** accepts `cellSize` (default 40) and `showNumbers` (default true) props for reuse across views
+- **Cell position numbers**: red (#C82828), scaled with `0.55em` — consistent across editor, preview, and print
 
 ## Deployment
 - **Live URL**: https://yonatanm.github.io/one-horizontal/

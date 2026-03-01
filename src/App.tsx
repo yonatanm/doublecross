@@ -23,7 +23,7 @@ export default function App() {
         <BrowserRouter basename="/one-horizontal/">
           <div className="min-h-screen bg-background">
             <Header />
-            <main className="max-w-6xl mx-auto px-6 py-8">
+            <main className="max-w-7xl mx-auto px-3 py-6">
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/editor" element={<EditorPage />} />
