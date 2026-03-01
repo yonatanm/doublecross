@@ -10,9 +10,8 @@ rather than a single layout.
 Raw Clues → Variant Enumeration → Engine Calls (× attempts) → Scoring → Dedup → Top-K
 ```
 
-Each click produces a **generation session** with up to K proposals (default 5).
-The user navigates between proposals with arrows, and between sessions (generation runs)
-with separate arrows.
+Each click produces up to K proposals (default 5), shown as a thumbnail gallery strip.
+The user clicks a thumbnail or uses prev/next arrows to browse proposals.
 
 ## Variant Enumeration (וריאנטים)
 
@@ -123,13 +122,12 @@ All under 2 seconds — no Web Worker needed.
 
 ## Editor UI Model
 
-The editor uses a two-level navigation model:
+Each click of "שבץ מילים" generates up to K proposals sorted by score, replacing
+any previous proposals. The user browses them via a thumbnail gallery strip
+(mini crossword grids) or prev/next arrows. Each proposal has its own
+`highlightedCells` state. No session history — each generation is a fresh batch.
 
-- **Session** = one click of "יצירת תשבץ" → produces up to K proposals
-- **Proposal** = one ranked layout within a session
-
-Session history is capped at 20. Navigating forward past the last session triggers
-a new generation. Each proposal has its own `highlightedCells` state.
+Loading from Firestore creates a single-element proposals array.
 
 ## Files
 
@@ -137,4 +135,4 @@ a new generation. Each proposal has its own `highlightedCells` state.
 - `src/lib/crossword-generator.ts` — `buildGeneratorResult()` (post-engine: island removal, split enforcement, RTL flip, grid build), `generateFromVariant()`, `VariantClue` type
 - `src/lib/layout-engine.ts` — core placement engine (inline, ported from crossword-layout-generator)
 - `src/types/crossword.ts` — `RankedProposal` type
-- `src/pages/EditorPage.tsx` — sessions + proposal navigation UI
+- `src/pages/EditorPage.tsx` — proposal gallery UI with thumbnail strip

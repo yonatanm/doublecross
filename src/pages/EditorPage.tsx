@@ -47,11 +47,6 @@ interface Proposal {
   variantLabel: string
 }
 
-interface GenerationSession {
-  proposals: Proposal[]
-  activeProposalIndex: number
-}
-
 export default function EditorPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -78,15 +73,12 @@ export default function EditorPage() {
   const [status, setStatus] = useState<Crossword["status"]>("draft")
   const [difficulty, setDifficulty] = useState<Crossword["difficulty"]>("medium")
   const [rawCluesText, setRawCluesText] = useState(editId ? "" : DEFAULT_CLUES)
-  const [sessions, setSessions] = useState<GenerationSession[]>([])
-  const [activeSessionIndex, setActiveSessionIndex] = useState(-1)
-  const activeSessionIndexRef = useRef(activeSessionIndex)
-  activeSessionIndexRef.current = activeSessionIndex
+  const [proposals, setProposals] = useState<Proposal[]>([])
+  const [activeProposalIndex, setActiveProposalIndex] = useState(-1)
   const [saveSuccess, setSaveSuccess] = useState(false)
 
   // Derived state
-  const activeSession = activeSessionIndex >= 0 ? sessions[activeSessionIndex] ?? null : null
-  const activeProposal = activeSession?.proposals[activeSession.activeProposalIndex] ?? null
+  const activeProposal = activeProposalIndex >= 0 ? proposals[activeProposalIndex] ?? null : null
   const generatorResult = activeProposal?.result ?? null
   const highlightedCells = activeProposal?.highlightedCells ?? []
 
@@ -109,96 +101,41 @@ export default function EditorPage() {
           rows: existingCrossword.layout_rows || existingCrossword.grid.length,
           cols: existingCrossword.layout_cols || existingCrossword.grid[0]?.length || 0,
         }
-        const session: GenerationSession = {
-          proposals: [{
-            result,
-            highlightedCells: existingCrossword.highlighted_cells || [],
-            adjustedScore: 0,
-            variantLabel: "",
-          }],
-          activeProposalIndex: 0,
-        }
-        setSessions([session])
-        setActiveSessionIndex(0)
+        setProposals([{
+          result,
+          highlightedCells: existingCrossword.highlighted_cells || [],
+          adjustedScore: 0,
+          variantLabel: "",
+        }])
+        setActiveProposalIndex(0)
       }
     }
   }, [existingCrossword])
-
-  const MAX_SESSIONS = 20
 
   const generate = useCallback(() => {
     const rawClues = parseRawClues(rawCluesText)
     if (rawClues.length < 2) return
 
-    const proposals = generateProposals(rawClues)
-    const session: GenerationSession = {
-      proposals: proposals.map((p) => ({
-        result: p.result,
-        highlightedCells: [],
-        adjustedScore: p.adjustedScore,
-        variantLabel: p.variantLabel,
-      })),
-      activeProposalIndex: 0,
-    }
-
-    setSessions((prev) => {
-      const idx = activeSessionIndexRef.current
-      const newSessions = [...prev.slice(0, idx + 1), session]
-      if (newSessions.length > MAX_SESSIONS) {
-        const overflow = newSessions.length - MAX_SESSIONS
-        setActiveSessionIndex(newSessions.length - overflow - 1)
-        return newSessions.slice(overflow)
-      }
-      setActiveSessionIndex(newSessions.length - 1)
-      return newSessions
-    })
+    const ranked = generateProposals(rawClues)
+    setProposals(ranked.map((p) => ({
+      result: p.result,
+      highlightedCells: [],
+      adjustedScore: p.adjustedScore,
+      variantLabel: p.variantLabel,
+    })))
+    setActiveProposalIndex(0)
   }, [rawCluesText])
 
-  const goBack = useCallback(() => {
-    if (activeSessionIndex > 0) {
-      setActiveSessionIndex(activeSessionIndex - 1)
-    }
-  }, [activeSessionIndex])
-
-  const goForward = useCallback(() => {
-    if (activeSessionIndex < sessions.length - 1) {
-      setActiveSessionIndex(activeSessionIndex + 1)
-    } else {
-      generate()
-    }
-  }, [activeSessionIndex, sessions.length, generate])
-
-  const changeProposal = useCallback((delta: number) => {
-    if (!activeSession) return
-    const newIdx = activeSession.activeProposalIndex + delta
-    if (newIdx < 0 || newIdx >= activeSession.proposals.length) return
-    setSessions((prev) => {
-      const updated = [...prev]
-      updated[activeSessionIndex] = {
-        ...updated[activeSessionIndex],
-        activeProposalIndex: newIdx,
-      }
-      return updated
-    })
-  }, [activeSession, activeSessionIndex])
-
   const toggleCell = (pos: string) => {
-    if (!activeSession) return
-    const proposalIdx = activeSession.activeProposalIndex
+    if (activeProposalIndex < 0) return
 
-    setSessions((prev) => {
+    setProposals((prev) => {
       const updated = [...prev]
-      const session = { ...updated[activeSessionIndex] }
-      const proposals = [...session.proposals]
-      const proposal = { ...proposals[proposalIdx] }
-
+      const proposal = { ...updated[activeProposalIndex] }
       proposal.highlightedCells = proposal.highlightedCells.includes(pos)
         ? proposal.highlightedCells.filter((p) => p !== pos)
         : [...proposal.highlightedCells, pos]
-
-      proposals[proposalIdx] = proposal
-      session.proposals = proposals
-      updated[activeSessionIndex] = session
+      updated[activeProposalIndex] = proposal
       return updated
     })
   }
@@ -250,6 +187,26 @@ export default function EditorPage() {
 
   const rawClues = parseRawClues(rawCluesText)
   const canGenerate = rawClues.length >= 2 && title.trim().length > 0
+
+  // Compute which textarea lines are unplaced clues
+  const unplacedClueTexts = new Set(generatorResult?.unplacedClues.map((c) => c.clue) ?? [])
+  const textareaLines = rawCluesText.split("\n")
+  const lineWarnings = textareaLines.map((line) => {
+    const trimmed = line.trim()
+    if (!trimmed || !trimmed.includes("-")) return false
+    const clueText = trimmed.substring(trimmed.indexOf("-") + 1).trim()
+    return unplacedClueTexts.has(clueText)
+  })
+  const hasUnplaced = lineWarnings.some(Boolean)
+
+  // Scroll-sync refs for textarea ↔ indicator column
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const indicatorRef = useRef<HTMLDivElement>(null)
+  const handleTextareaScroll = () => {
+    if (textareaRef.current && indicatorRef.current) {
+      indicatorRef.current.scrollTop = textareaRef.current.scrollTop
+    }
+  }
 
   if (!isLoggedIn) {
     return (
@@ -345,13 +302,36 @@ export default function EditorPage() {
                 פורמט: תשובה-הגדרה (שורה לכל הגדרה)
               </span>
             </div>
-            <Textarea
-              value={rawCluesText}
-              onChange={(e) => setRawCluesText(e.target.value)}
-              placeholder={`חתול-בעל חיים ביתי\nשמש-כוכב מרכזי\nמים-נוזל חיים`}
-              className="min-h-[300px] font-mono text-sm leading-relaxed resize-y"
-              dir="rtl"
-            />
+            <div className="flex gap-0">
+              {hasUnplaced && (
+                <div
+                  ref={indicatorRef}
+                  className="overflow-hidden shrink-0 pt-2"
+                  style={{ width: "22px" }}
+                >
+                  {textareaLines.map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-center"
+                      style={{ height: "calc(0.875rem * 1.625)" }}
+                    >
+                      {lineWarnings[i] && (
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Textarea
+                ref={textareaRef}
+                value={rawCluesText}
+                onChange={(e) => setRawCluesText(e.target.value)}
+                onScroll={handleTextareaScroll}
+                placeholder={`חתול-בעל חיים ביתי\nשמש-כוכב מרכזי\nמים-נוזל חיים`}
+                className="min-h-[300px] font-mono text-sm leading-relaxed resize-y flex-1"
+                dir="rtl"
+              />
+            </div>
           </div>
 
           {/* Generate controls */}
@@ -361,47 +341,19 @@ export default function EditorPage() {
               disabled={!canGenerate}
               className="gap-2"
             >
-              יצירת תשבץ
+              שבץ מילים
             </Button>
 
-            {/* Session navigation */}
-            <div className="flex gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={goBack}
-                disabled={activeSessionIndex <= 0}
-                title="הרצה קודמת"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={goForward}
-                disabled={!canGenerate}
-                title="הרצה הבאה"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-            </div>
-            {activeSessionIndex >= 0 && (
-              <span className="text-xs text-muted-foreground">
-                גרסה {activeSessionIndex + 1} מתוך {sessions.length}
-              </span>
-            )}
-
-            {/* Proposal navigation */}
-            {activeSession && activeSession.proposals.length > 1 && (
+            {/* Proposal navigation arrows */}
+            {proposals.length > 1 && (
               <>
-                <span className="text-muted-foreground text-xs">|</span>
                 <div className="flex gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
-                    onClick={() => changeProposal(-1)}
-                    disabled={activeSession.activeProposalIndex <= 0}
+                    onClick={() => setActiveProposalIndex((i) => Math.max(0, i - 1))}
+                    disabled={activeProposalIndex <= 0}
                     title="הצעה קודמת"
                   >
                     <ChevronRight className="w-3 h-3" />
@@ -410,19 +362,71 @@ export default function EditorPage() {
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
-                    onClick={() => changeProposal(1)}
-                    disabled={activeSession.activeProposalIndex >= activeSession.proposals.length - 1}
+                    onClick={() => setActiveProposalIndex((i) => Math.min(proposals.length - 1, i + 1))}
+                    disabled={activeProposalIndex >= proposals.length - 1}
                     title="הצעה הבאה"
                   >
                     <ChevronLeft className="w-3 h-3" />
                   </Button>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  הצעה {activeSession.activeProposalIndex + 1} מתוך {activeSession.proposals.length}
+                  הצעה {activeProposalIndex + 1} מתוך {proposals.length}
                 </span>
               </>
             )}
           </div>
+
+          {/* Thumbnail gallery strip */}
+          {proposals.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto py-1">
+              {proposals.map((p, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveProposalIndex(i)}
+                  className={`shrink-0 cursor-pointer rounded-md p-1.5 transition-all ${
+                    i === activeProposalIndex
+                      ? "ring-2 ring-[#C8963E] bg-amber-50"
+                      : "ring-1 ring-gray-200 hover:ring-gray-400"
+                  }`}
+                >
+                  <CrosswordGrid
+                    grid={p.result.grid}
+                    cols={p.result.cols}
+                    rows={p.result.rows}
+                    layoutResult={p.result.layout_result}
+                    highlightedCells={p.highlightedCells}
+                    onCellClick={() => {}}
+                    interactive={false}
+                    showNumbers={false}
+                    showLetters={false}
+                    cellSize={6}
+                  />
+                  <div className="text-[10px] text-muted-foreground text-center mt-1">
+                    {Math.round(p.adjustedScore * 100)}%
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Score & variant info */}
+          {generatorResult && activeProposal && (
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              <div>
+                ציון כולל: {Math.round(activeProposal.adjustedScore * 100)}%
+                {" · "}שובצו {rawClues.length > 0 ? Math.round(((rawClues.length - generatorResult.unplacedClues.length) / rawClues.length) * 100) : 0}% מההגדרות ({rawClues.length - generatorResult.unplacedClues.length}/{rawClues.length})
+                {generatorResult.score && (
+                  <>
+                    {" · "}צפיפות: {Math.round(generatorResult.score.density * 100)}%
+                    {" · "}הצלבות: {Math.round(generatorResult.score.interconnectedness * 100)}%
+                  </>
+                )}
+              </div>
+              {activeProposal.variantLabel && (
+                <div>{activeProposal.variantLabel}</div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right Column: Grid Preview */}
@@ -454,34 +458,6 @@ export default function EditorPage() {
                   />
                 </div>
               </div>
-
-              {generatorResult?.score && (
-                <div className="text-xs text-muted-foreground mt-2">
-                  ציון: {Math.round(generatorResult.score.overall * 100)}%
-                  · שובצו: {Math.round(generatorResult.score.placementRatio * 100)}%
-                  · צפיפות: {Math.round(generatorResult.score.density * 100)}%
-                  {activeProposal?.variantLabel && (
-                    <> · {activeProposal.variantLabel}</>
-                  )}
-                </div>
-              )}
-
-              {/* Unplaced clues warning */}
-              {generatorResult.unplacedClues.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-md px-4 py-3">
-                  <div className="flex items-center gap-2 text-amber-800 text-sm font-medium mb-1">
-                    <AlertTriangle className="w-4 h-4" />
-                    הגדרות שלא שובצו
-                  </div>
-                  <div className="space-y-0.5">
-                    {generatorResult.unplacedClues.map((c, i) => (
-                      <div key={i} className="text-sm text-amber-700">
-                        {c.answer} — {c.clue}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Clues display */}
               <CluesDisplay
