@@ -47,9 +47,7 @@ export default function HomePage() {
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-20 h-20 bg-secondary rounded-2xl flex items-center justify-center mb-6">
-          <span className="text-4xl" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>א</span>
-        </div>
+        <img src={import.meta.env.BASE_URL + "cw.png"} alt="לוגו" className="w-20 h-20 rounded-2xl mb-6" />
         <h1 className="text-3xl font-bold mb-3" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
           אחד מאוזן
         </h1>

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { Grid3X3, Plus, LogIn, LogOut } from "lucide-react"
+import { LayoutGrid, Plus, LogIn, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/hooks/useAuth"
@@ -17,9 +17,7 @@ export default function Header() {
         {/* Right side: Logo + Nav */}
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 bg-primary rounded flex items-center justify-center">
-              <Grid3X3 className="w-5 h-5 text-primary-foreground" strokeWidth={2.5} />
-            </div>
+            <img src={import.meta.env.BASE_URL + "cw.png"} alt="לוגו" className="w-9 h-9 rounded" />
             <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
               אחד מאוזן
             </span>
@@ -32,7 +30,7 @@ export default function Header() {
                 size="sm"
                 className="gap-2 text-sm"
               >
-                <Grid3X3 className="w-4 h-4" />
+                <LayoutGrid className="w-4 h-4" />
                 התשבצים שלי
               </Button>
             </Link>
