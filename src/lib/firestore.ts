@@ -7,7 +7,6 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
   Timestamp,
   updateDoc,
 } from "firebase/firestore"
@@ -79,11 +78,17 @@ export async function getCrossword(id: string): Promise<Crossword | null> {
 export async function getUserCrosswords(userId: string): Promise<Crossword[]> {
   const q = query(
     collection(db, COLLECTION),
-    where("userId", "==", userId),
-    orderBy("updatedAt", "desc")
+    where("userId", "==", userId)
   )
   const snapshot = await getDocs(q)
-  return snapshot.docs.map((d) => deserializeFromFirestore({ id: d.id, ...d.data() }))
+  const results = snapshot.docs.map((d) => deserializeFromFirestore({ id: d.id, ...d.data() }))
+  // Sort client-side to avoid requiring a Firestore composite index
+  results.sort((a, b) => {
+    const aTime = a.updatedAt?.seconds ?? 0
+    const bTime = b.updatedAt?.seconds ?? 0
+    return bTime - aTime
+  })
+  return results
 }
 
 export async function archiveCrossword(id: string): Promise<void> {

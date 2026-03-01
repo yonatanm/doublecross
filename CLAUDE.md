@@ -23,7 +23,8 @@ A Hebrew RTL crossword puzzle builder web app. Users create crosswords by enteri
 - `base: '/one-horizontal/'` in vite.config.ts for GitHub Pages
 - `dir="rtl"` on `<html>` — all UI is right-to-left Hebrew
 - Firebase config loaded from `.env.local` via `VITE_FIREBASE_*` env vars
-- Firestore collection name: `"crossword"`
+- Firestore collection name: `"crossword"` — complex fields (grid, clues, layout_result) are stored as JSON strings to avoid Firestore's nested array limitation
+- Firestore queries use client-side sorting to avoid requiring composite indexes
 - Auth: Google sign-in via AuthContext provider pattern
 
 ## Key directories
