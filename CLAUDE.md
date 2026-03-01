@@ -52,6 +52,21 @@ src/
 - **Print** (`src/lib/print-crossword.ts`): opens a new window with standalone HTML that auto-triggers `window.print()`. Highlighted cells show their letter on white background; other cells are empty. Uses `print-color-adjust: exact` to preserve black backgrounds. Cell size is computed dynamically to fill ~75% of A4 page
 - **Editor undo/redo**: history array of `{result, highlightedCells}` entries with an index pointer
 
+## Deployment
+- **Live URL**: https://yonatanm.github.io/one-horizontal/
+- **GitHub Pages** via Actions workflow: `.github/workflows/deploy.yml`
+- Triggers on push to `master` (or manual `workflow_dispatch`)
+- Build job: checkout → setup node 20 → `npm ci` → inject env from secrets → `npm run build` → upload `dist/` as pages artifact
+- Deploy job: deploys the artifact to GitHub Pages
+- **Repo secrets** (set via `gh secret set`):
+  - `VITE_FIREBASE_API_KEY`
+  - `VITE_FIREBASE_AUTH_DOMAIN`
+  - `VITE_FIREBASE_PROJECT_ID`
+  - `VITE_FIREBASE_STORAGE_BUCKET`
+  - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+  - `VITE_FIREBASE_APP_ID`
+- Firebase Console must have `yonatanm.github.io` in Authentication → Authorized domains
+
 ## Don't
 - Don't use Firebase compat SDK — use modular imports only
 - Don't add dark mode
