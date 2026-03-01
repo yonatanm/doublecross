@@ -43,8 +43,11 @@ export function generateProposals(
   for (let mask = 0; mask < totalVariants; mask++) {
     const variantClues = buildVariantClues(cleaned, multiWordIndices, mask)
     const label = buildVariantLabel(cleaned, multiWordIndices, mask)
-    const result = generateFromVariant(variantClues, attemptsPerVariant)
-    allResults.push({ result, label })
+    // Run each attempt separately so we collect diverse layouts for the gallery
+    for (let a = 0; a < attemptsPerVariant; a++) {
+      const result = generateFromVariant(variantClues, 1)
+      allResults.push({ result, label })
+    }
   }
 
   // 4. Deduplicate by grid fingerprint (keep higher-scoring)
