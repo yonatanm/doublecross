@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Search, Pencil, Printer, Archive } from "lucide-react"
+import { Plus, Search, Pencil, Printer, Archive, Wrench } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -8,6 +8,7 @@ import CrosswordGrid from "@/components/CrosswordGrid"
 import { useCrosswords, useArchiveCrossword } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { openPrintWindow } from "@/lib/print-crossword"
+import { repairMissingUserIds } from "@/lib/firestore"
 import type { Crossword } from "@/types/crossword"
 
 type StatusFilter = "all" | "draft" | "published" | "archived"
@@ -43,6 +44,7 @@ export default function HomePage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [repairStatus, setRepairStatus] = useState<string | null>(null)
 
   if (!isLoggedIn) {
     return (
@@ -76,10 +78,31 @@ export default function HomePage() {
         <h1 className="text-2xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
           התשבצים שלי
         </h1>
-        <Button onClick={() => navigate("/editor")} className="gap-2">
-          <Plus className="w-4 h-4" />
-          תשבץ חדש
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1 text-xs"
+            onClick={async () => {
+              setRepairStatus("מתקן...")
+              try {
+                const fixed = await repairMissingUserIds()
+                setRepairStatus(`תוקנו ${fixed} תשבצים`)
+                if (fixed > 0) window.location.reload()
+              } catch {
+                setRepairStatus("שגיאה בתיקון")
+              }
+            }}
+            disabled={repairStatus === "מתקן..."}
+          >
+            <Wrench className="w-3 h-3" />
+            {repairStatus || "תקן תשבצים חסרים"}
+          </Button>
+          <Button onClick={() => navigate("/editor")} className="gap-2">
+            <Plus className="w-4 h-4" />
+            תשבץ חדש
+          </Button>
+        </div>
       </div>
 
       {/* Filters + Search */}
