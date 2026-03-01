@@ -1,7 +1,5 @@
 import type { RawClue, CrosswordCell, NumberedClue, LayoutWord, GeneratorResult } from "@/types/crossword"
-
-// @ts-expect-error — CJS module without types
-import clg from "crossword-layout-generator"
+import { generateLayout, type LayoutEngineResult } from "@/lib/layout-engine"
 
 // Hebrew final-letter normalization
 const FINAL_LETTERS: Record<string, string> = {
@@ -24,99 +22,105 @@ export function cleanAnswer(answer: string): string {
     .join("")
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
-
 function formatAnswerLength(answer: string): string {
   const words = answer.split(" ").reverse()
   if (words.length === 1) return `(${words[0].length})`
   return `(${words.map((w) => w.length).join(",")})`
 }
 
-export function generateCrosswordLayout(rawClues: RawClue[]): GeneratorResult {
-  // 1. Normalize Hebrew answers
-  const cleaned = rawClues.map((c) => ({
-    clue: c.clue,
-    answer: cleanAnswer(c.answer),
-  }))
+/**
+ * A clue prepared for the layout engine, with metadata for reassembly.
+ * For split multi-word answers, each fragment gets its own VariantClue.
+ * For joined multi-word answers, the concatenated form is a single VariantClue.
+ */
+export interface VariantClue {
+  clue: string
+  answer: string        // the engine-level word (fragment or joined)
+  identifier: number    // index into the original RawClue[]
+  subId: number         // fragment index (0 for single/joined)
+  origAnswer: string    // the original multi-word answer (for display)
+}
 
-  // 2. Shuffle for variety
-  const shuffled = shuffle(cleaned)
-
-  // 3. Handle multi-word answers: split by space, track with identifiers
-  interface SpaceAwareClue {
-    clue: string
-    answer: string
-    identifier: number
-    subId: number
-    origAnswer: string
+/**
+ * Post-engine processing: filter unplaced, RTL flip, grid build, numbering, clue extraction.
+ * Takes raw engine output + variant clues and produces a full GeneratorResult.
+ */
+export function buildGeneratorResult(
+  engineResult: LayoutEngineResult,
+  variantClues: VariantClue[],
+): GeneratorResult {
+  // Build variant lookup early — used for split enforcement and metadata attachment
+  const variantMap = new Map<string, VariantClue>()
+  for (const vc of variantClues) {
+    variantMap.set(`${vc.clue}|${vc.answer}`, vc)
   }
 
-  const spaceAware: SpaceAwareClue[] = []
-  shuffled.forEach((item, i) => {
-    const answer = item.answer
-    const words = answer.split(" ")
-    if (words.length <= 1) {
-      spaceAware.push({
-        clue: item.clue,
-        answer: answer.replaceAll(" ", ""),
-        identifier: i,
-        subId: 0,
-        origAnswer: answer,
-      })
-    } else {
-      words.forEach((word, j) => {
-        spaceAware.push({
-          clue: item.clue,
-          answer: word,
-          identifier: i,
-          subId: j,
-          origAnswer: answer,
-        })
-      })
-    }
-  })
-
-  // 4. Call generator
-  const layout = clg.generateLayout(spaceAware)
-
-  // 5. Filter out unplaced entries
-  const unplacedRaw = layout.result.filter(
-    (d: LayoutWord) => d.startx < 1 || d.starty < 1 || !d.orientation || d.orientation === "none"
+  // 1. Filter out unplaced entries
+  const unplacedRaw = engineResult.result.filter(
+    (d) => !d.startx || d.startx < 1 || !d.starty || d.starty < 1 || !d.orientation || d.orientation === "none"
   )
   const unplacedClues: RawClue[] = Array.from(
     new Map<string, RawClue>(
-      unplacedRaw.map((d: LayoutWord) => [d.clue, { clue: d.clue, answer: d.answer }])
+      unplacedRaw.map((d) => [d.clue, { clue: d.clue, answer: d.answer }])
     ).values()
   )
 
-  let result: LayoutWord[] = layout.result.filter(
-    (d: LayoutWord) => d.startx > 0 && d.starty > 0 && d.orientation !== "none"
-  )
+  let result = engineResult.result.filter(
+    (d) => d.startx && d.startx > 0 && d.starty && d.starty > 0 && d.orientation !== "none"
+  ) as LayoutWord[]
 
-  const cols: number = layout.cols
-  const rows: number = layout.rows
+  // 1b. Enforce split completeness: if a multi-word answer was split,
+  // ALL its fragments must be placed. Remove partially-placed splits.
+  const fragmentsNeeded = new Map<number, number>()
+  for (const vc of variantClues) {
+    fragmentsNeeded.set(vc.identifier, (fragmentsNeeded.get(vc.identifier) ?? 0) + 1)
+  }
+  const fragmentsPlaced = new Map<number, number>()
+  for (const d of result) {
+    const vc = variantMap.get(`${d.clue}|${d.answer}`)
+    if (vc) {
+      fragmentsPlaced.set(vc.identifier, (fragmentsPlaced.get(vc.identifier) ?? 0) + 1)
+    }
+  }
+  const incompleteIds = new Set<number>()
+  for (const [id, needed] of fragmentsNeeded) {
+    if (needed > 1 && (fragmentsPlaced.get(id) ?? 0) < needed) {
+      incompleteIds.add(id)
+    }
+  }
+  if (incompleteIds.size > 0) {
+    // Move incomplete fragments from placed → unplaced
+    for (const d of result) {
+      const vc = variantMap.get(`${d.clue}|${d.answer}`)
+      if (vc && incompleteIds.has(vc.identifier)) {
+        if (!unplacedClues.some((u) => u.clue === d.clue)) {
+          unplacedClues.push({ clue: d.clue, answer: vc.origAnswer })
+        }
+      }
+    }
+    result = result.filter((d) => {
+      const vc = variantMap.get(`${d.clue}|${d.answer}`)
+      return !vc || !incompleteIds.has(vc.identifier)
+    })
+  }
 
-  // 6. RTL flip: mirror startx
+  const cols: number = engineResult.cols
+  const rows: number = engineResult.rows
+
+  // 2. RTL flip: mirror startx
   result = result.map((d: LayoutWord) => ({
     ...d,
     origStartx: d.startx,
     startx: cols + 1 - d.startx,
   }))
 
-  // 7. Sort: top-to-bottom, right-to-left (RTL)
+  // 3. Sort: top-to-bottom, right-to-left (RTL)
   result.sort((a, b) => {
     if (a.starty !== b.starty) return a.starty - b.starty
     return -(a.startx - b.startx)
   })
 
-  // 8. Re-assign sequential position numbers
+  // 4. Re-assign sequential position numbers
   let posCounter = 0
   let prevX = -1
   let prevY = -1
@@ -129,7 +133,7 @@ export function generateCrosswordLayout(rawClues: RawClue[]): GeneratorResult {
     d.position = posCounter
   })
 
-  // 9. Build CrosswordCell[][] grid
+  // 5. Build CrosswordCell[][] grid
   const grid: CrosswordCell[][] = []
   for (let r = 0; r < rows; r++) {
     const row: CrosswordCell[] = []
@@ -164,14 +168,24 @@ export function generateCrosswordLayout(rawClues: RawClue[]): GeneratorResult {
     }
   })
 
-  // 10. Extract numbered clues
+  // 6. Attach variant metadata (identifier, subId, origAnswer) to layout words
+  result.forEach((d) => {
+    const vc = variantMap.get(`${d.clue}|${d.answer}`)
+    if (vc) {
+      d.identifier = vc.identifier
+      d.subId = vc.subId
+      d.origAnswer = vc.origAnswer
+    }
+  })
+
+  // 7. Extract numbered clues
   const clues_across: NumberedClue[] = result
     .filter((d) => d.orientation === "across")
     .map((d) => ({
       number: d.position,
       clue: d.clue,
       answer: d.answer,
-      answerLength: formatAnswerLength((d as unknown as SpaceAwareClue).origAnswer || d.answer),
+      answerLength: formatAnswerLength((d.origAnswer as string) || d.answer),
     }))
 
   const clues_down: NumberedClue[] = result
@@ -180,7 +194,7 @@ export function generateCrosswordLayout(rawClues: RawClue[]): GeneratorResult {
       number: d.position,
       clue: d.clue,
       answer: d.answer,
-      answerLength: formatAnswerLength((d as unknown as SpaceAwareClue).origAnswer || d.answer),
+      answerLength: formatAnswerLength((d.origAnswer as string) || d.answer),
     }))
 
   return {
@@ -191,5 +205,20 @@ export function generateCrosswordLayout(rawClues: RawClue[]): GeneratorResult {
     layout_result: result,
     rows,
     cols,
+    score: engineResult.score,
   }
 }
+
+/**
+ * Run the layout engine on a set of variant clues (already prepared),
+ * with multiple shuffle attempts, and return the best GeneratorResult.
+ */
+export function generateFromVariant(
+  variantClues: VariantClue[],
+  attempts: number,
+): GeneratorResult {
+  const engineInput = variantClues.map((vc) => ({ clue: vc.clue, answer: vc.answer }))
+  const engineResult = generateLayout(engineInput, { attempts })
+  return buildGeneratorResult(engineResult, variantClues)
+}
+

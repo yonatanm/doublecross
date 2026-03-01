@@ -15,7 +15,7 @@ A Hebrew RTL crossword puzzle builder web app. Users create crosswords by enteri
 - **Firebase v12** modular SDK (NOT compat) — auth + Firestore
 - **react-router-dom v7** — routing with `basename="/one-horizontal/"`
 - **@tanstack/react-query v5** — data fetching/caching
-- **crossword-layout-generator** — CJS module for grid layout
+- **layout-engine** — inline crossword placement engine (in `src/lib/layout-engine.ts`, ported from crossword-layout-generator)
 - **lucide-react** — icons
 
 ## Architecture
@@ -30,12 +30,14 @@ A Hebrew RTL crossword puzzle builder web app. Users create crosswords by enteri
 ## Key directories
 ```
 src/
-├── types/          # TypeScript interfaces (Crossword, RawClue, etc.)
-├── lib/            # Utilities (firebase, firestore CRUD, crossword generator, print)
+├── types/          # TypeScript interfaces (Crossword, RawClue, RankedProposal, etc.)
+├── lib/            # Utilities (firebase, firestore CRUD, layout engine/strategy/generator, print)
 ├── hooks/          # useAuth, useCrosswords (React Query)
 ├── pages/          # HomePage (listing), EditorPage (create/edit)
 ├── components/     # Header, CrosswordGrid, CluesDisplay, CrosswordCard
 └── components/ui/  # shadcn/ui primitives (don't edit manually)
+docs/
+└── layout-strategy.md  # Detailed layout generation strategy documentation
 ```
 
 ## Coding conventions
@@ -49,9 +51,11 @@ src/
 - Hebrew final letters (ך→כ, ם→מ, ן→נ, ף→פ, ץ→צ) are normalized in `cleanAnswer()`
 
 ## Important patterns
-- **Crossword generator** (`src/lib/crossword-generator.ts`): shuffles clues, calls `crossword-layout-generator`, applies RTL x-coordinate flip (`startx = cols + 1 - startx`), renumbers positions
+- **Layout strategy** (`src/lib/layout-strategy.ts`): orchestrates multi-variant generation — enumerates split/join combinations for multi-word answers (2^M bitmask, capped at 16), runs the engine with multiple shuffle attempts per variant, deduplicates grids, ranks by adjusted score, returns top-K proposals. See `docs/layout-strategy.md` for full details
+- **Crossword generator** (`src/lib/crossword-generator.ts`): `buildGeneratorResult()` handles post-engine processing — filters unplaced, enforces split completeness (all fragments of a split multi-word answer must be placed), applies RTL x-coordinate flip (`startx = cols + 1 - startx`), builds grid, renumbers positions. `generateFromVariant()` calls the engine and pipes through `buildGeneratorResult()`
+- **Layout engine** (`src/lib/layout-engine.ts`): inline placement engine (ported from crossword-layout-generator). Multi-attempt with scoring. Exports `DEFAULT_LAYOUT_WEIGHTS` used by both engine and strategy layer
 - **Print** (`src/lib/print-crossword.ts`): opens a new window with standalone HTML that auto-triggers `window.print()`. Highlighted cells show their letter on white background; other cells are empty. Uses `print-color-adjust: exact` to preserve black backgrounds. Cell size is computed dynamically to fill ~75% of A4 page
-- **Editor undo/redo**: history array of `{result, highlightedCells}` entries with an index pointer
+- **Editor sessions/proposals**: two-level navigation model — sessions (generation runs) navigated with ◀▶ arrows, proposals (ranked layouts within a session) navigated with smaller arrows. Session history capped at 20. Each proposal has its own `highlightedCells`. Loading from Firestore creates a single session with a single proposal
 - **Home page**: master-detail layout — list on the right (420px), crossword preview on the left (22px cells, no numbers). Preview shows all letters with `interactive={true}` + no-op click
 - **CrosswordGrid** accepts `cellSize` (default 40) and `showNumbers` (default true) props for reuse across views
 - **Cell position numbers**: red (#C82828), scaled with `0.55em` — consistent across editor, preview, and print

@@ -58,4 +58,11 @@ export interface GeneratorResult {
   layout_result: LayoutWord[]
   rows: number
   cols: number
+  score?: import("@/lib/layout-engine").LayoutScore
+}
+
+export interface RankedProposal {
+  result: GeneratorResult
+  adjustedScore: number
+  variantLabel: string
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import { Save, ChevronRight, ChevronLeft, AlertTriangle, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import CrosswordGrid from "@/components/CrosswordGrid"
 import CluesDisplay from "@/components/CluesDisplay"
 import { useCrossword, useSaveCrossword } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
-import { generateCrosswordLayout } from "@/lib/crossword-generator"
+import { generateProposals } from "@/lib/layout-strategy"
 import { openPrintWindow } from "@/lib/print-crossword"
 import type { RawClue, Crossword, GeneratorResult } from "@/types/crossword"
 
@@ -40,9 +40,16 @@ function rawCluesToText(clues: RawClue[]): string {
   return clues.map((c) => `${c.answer}-${c.clue}`).join("\n")
 }
 
-interface HistoryEntry {
+interface Proposal {
   result: GeneratorResult
   highlightedCells: string[]
+  adjustedScore: number
+  variantLabel: string
+}
+
+interface GenerationSession {
+  proposals: Proposal[]
+  activeProposalIndex: number
 }
 
 export default function EditorPage() {
@@ -71,11 +78,17 @@ export default function EditorPage() {
   const [status, setStatus] = useState<Crossword["status"]>("draft")
   const [difficulty, setDifficulty] = useState<Crossword["difficulty"]>("medium")
   const [rawCluesText, setRawCluesText] = useState(editId ? "" : DEFAULT_CLUES)
-  const [generatorResult, setGeneratorResult] = useState<GeneratorResult | null>(null)
-  const [highlightedCells, setHighlightedCells] = useState<string[]>([])
-  const [history, setHistory] = useState<HistoryEntry[]>([])
-  const [historyIndex, setHistoryIndex] = useState(-1)
+  const [sessions, setSessions] = useState<GenerationSession[]>([])
+  const [activeSessionIndex, setActiveSessionIndex] = useState(-1)
+  const activeSessionIndexRef = useRef(activeSessionIndex)
+  activeSessionIndexRef.current = activeSessionIndex
   const [saveSuccess, setSaveSuccess] = useState(false)
+
+  // Derived state
+  const activeSession = activeSessionIndex >= 0 ? sessions[activeSessionIndex] ?? null : null
+  const activeProposal = activeSession?.proposals[activeSession.activeProposalIndex] ?? null
+  const generatorResult = activeProposal?.result ?? null
+  const highlightedCells = activeProposal?.highlightedCells ?? []
 
   // Load existing crossword
   useEffect(() => {
@@ -83,7 +96,6 @@ export default function EditorPage() {
       setTitle(existingCrossword.title || "")
       setStatus(existingCrossword.status || "draft")
       setDifficulty(existingCrossword.difficulty || "medium")
-      setHighlightedCells(existingCrossword.highlighted_cells || [])
       if (existingCrossword.raw_clues?.length) {
         setRawCluesText(rawCluesToText(existingCrossword.raw_clues))
       }
@@ -97,59 +109,98 @@ export default function EditorPage() {
           rows: existingCrossword.layout_rows || existingCrossword.grid.length,
           cols: existingCrossword.layout_cols || existingCrossword.grid[0]?.length || 0,
         }
-        setGeneratorResult(result)
-        setHistory([{ result, highlightedCells: existingCrossword.highlighted_cells || [] }])
-        setHistoryIndex(0)
+        const session: GenerationSession = {
+          proposals: [{
+            result,
+            highlightedCells: existingCrossword.highlighted_cells || [],
+            adjustedScore: 0,
+            variantLabel: "",
+          }],
+          activeProposalIndex: 0,
+        }
+        setSessions([session])
+        setActiveSessionIndex(0)
       }
     }
   }, [existingCrossword])
+
+  const MAX_SESSIONS = 20
 
   const generate = useCallback(() => {
     const rawClues = parseRawClues(rawCluesText)
     if (rawClues.length < 2) return
 
-    const result = generateCrosswordLayout(rawClues)
-    setGeneratorResult(result)
-    setHighlightedCells([])
+    const proposals = generateProposals(rawClues)
+    const session: GenerationSession = {
+      proposals: proposals.map((p) => ({
+        result: p.result,
+        highlightedCells: [],
+        adjustedScore: p.adjustedScore,
+        variantLabel: p.variantLabel,
+      })),
+      activeProposalIndex: 0,
+    }
 
-    const entry: HistoryEntry = { result, highlightedCells: [] }
-    const newHistory = [...history.slice(0, historyIndex + 1), entry]
-    setHistory(newHistory)
-    setHistoryIndex(newHistory.length - 1)
-  }, [rawCluesText, history, historyIndex])
+    setSessions((prev) => {
+      const idx = activeSessionIndexRef.current
+      const newSessions = [...prev.slice(0, idx + 1), session]
+      if (newSessions.length > MAX_SESSIONS) {
+        const overflow = newSessions.length - MAX_SESSIONS
+        setActiveSessionIndex(newSessions.length - overflow - 1)
+        return newSessions.slice(overflow)
+      }
+      setActiveSessionIndex(newSessions.length - 1)
+      return newSessions
+    })
+  }, [rawCluesText])
 
   const goBack = useCallback(() => {
-    if (historyIndex > 0) {
-      const prev = history[historyIndex - 1]
-      setGeneratorResult(prev.result)
-      setHighlightedCells(prev.highlightedCells)
-      setHistoryIndex(historyIndex - 1)
+    if (activeSessionIndex > 0) {
+      setActiveSessionIndex(activeSessionIndex - 1)
     }
-  }, [history, historyIndex])
+  }, [activeSessionIndex])
 
   const goForward = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const next = history[historyIndex + 1]
-      setGeneratorResult(next.result)
-      setHighlightedCells(next.highlightedCells)
-      setHistoryIndex(historyIndex + 1)
+    if (activeSessionIndex < sessions.length - 1) {
+      setActiveSessionIndex(activeSessionIndex + 1)
     } else {
       generate()
     }
-  }, [history, historyIndex, generate])
+  }, [activeSessionIndex, sessions.length, generate])
+
+  const changeProposal = useCallback((delta: number) => {
+    if (!activeSession) return
+    const newIdx = activeSession.activeProposalIndex + delta
+    if (newIdx < 0 || newIdx >= activeSession.proposals.length) return
+    setSessions((prev) => {
+      const updated = [...prev]
+      updated[activeSessionIndex] = {
+        ...updated[activeSessionIndex],
+        activeProposalIndex: newIdx,
+      }
+      return updated
+    })
+  }, [activeSession, activeSessionIndex])
 
   const toggleCell = (pos: string) => {
-    const updated = highlightedCells.includes(pos)
-      ? highlightedCells.filter((p) => p !== pos)
-      : [...highlightedCells, pos]
-    setHighlightedCells(updated)
+    if (!activeSession) return
+    const proposalIdx = activeSession.activeProposalIndex
 
-    // Update current history entry
-    if (historyIndex >= 0 && history[historyIndex]) {
-      const newHistory = [...history]
-      newHistory[historyIndex] = { ...newHistory[historyIndex], highlightedCells: updated }
-      setHistory(newHistory)
-    }
+    setSessions((prev) => {
+      const updated = [...prev]
+      const session = { ...updated[activeSessionIndex] }
+      const proposals = [...session.proposals]
+      const proposal = { ...proposals[proposalIdx] }
+
+      proposal.highlightedCells = proposal.highlightedCells.includes(pos)
+        ? proposal.highlightedCells.filter((p) => p !== pos)
+        : [...proposal.highlightedCells, pos]
+
+      proposals[proposalIdx] = proposal
+      session.proposals = proposals
+      updated[activeSessionIndex] = session
+      return updated
+    })
   }
 
   const save = async () => {
@@ -304,7 +355,7 @@ export default function EditorPage() {
           </div>
 
           {/* Generate controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               onClick={generate}
               disabled={!canGenerate}
@@ -312,13 +363,15 @@ export default function EditorPage() {
             >
               יצירת תשבץ
             </Button>
+
+            {/* Session navigation */}
             <div className="flex gap-1">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={goBack}
-                disabled={historyIndex <= 0}
-                title="הקודם"
+                disabled={activeSessionIndex <= 0}
+                title="הרצה קודמת"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -327,15 +380,47 @@ export default function EditorPage() {
                 size="icon"
                 onClick={goForward}
                 disabled={!canGenerate}
-                title="הבא"
+                title="הרצה הבאה"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
             </div>
-            {historyIndex >= 0 && (
+            {activeSessionIndex >= 0 && (
               <span className="text-xs text-muted-foreground">
-                גרסה {historyIndex + 1} מתוך {history.length}
+                גרסה {activeSessionIndex + 1} מתוך {sessions.length}
               </span>
+            )}
+
+            {/* Proposal navigation */}
+            {activeSession && activeSession.proposals.length > 1 && (
+              <>
+                <span className="text-muted-foreground text-xs">|</span>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => changeProposal(-1)}
+                    disabled={activeSession.activeProposalIndex <= 0}
+                    title="הצעה קודמת"
+                  >
+                    <ChevronRight className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => changeProposal(1)}
+                    disabled={activeSession.activeProposalIndex >= activeSession.proposals.length - 1}
+                    title="הצעה הבאה"
+                  >
+                    <ChevronLeft className="w-3 h-3" />
+                  </Button>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  הצעה {activeSession.activeProposalIndex + 1} מתוך {activeSession.proposals.length}
+                </span>
+              </>
             )}
           </div>
         </div>
@@ -369,6 +454,17 @@ export default function EditorPage() {
                   />
                 </div>
               </div>
+
+              {generatorResult?.score && (
+                <div className="text-xs text-muted-foreground mt-2">
+                  ציון: {Math.round(generatorResult.score.overall * 100)}%
+                  · שובצו: {Math.round(generatorResult.score.placementRatio * 100)}%
+                  · צפיפות: {Math.round(generatorResult.score.density * 100)}%
+                  {activeProposal?.variantLabel && (
+                    <> · {activeProposal.variantLabel}</>
+                  )}
+                </div>
+              )}
 
               {/* Unplaced clues warning */}
               {generatorResult.unplacedClues.length > 0 && (

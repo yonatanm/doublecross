@@ -14,7 +14,6 @@
     "@tanstack/react-query": "^5.90.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "crossword-layout-generator": "^0.1.1",
     "firebase": "^12.10.0",
     "lucide-react": "^0.575.0",
     "radix-ui": "^1.4.3",
