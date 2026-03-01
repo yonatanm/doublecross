@@ -1,6 +1,11 @@
 import type { Crossword } from "@/types/crossword"
 
-export function openPrintWindow(crossword: Crossword) {
+interface PrintOptions {
+  separateClues?: boolean
+}
+
+export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}) {
+  const { separateClues = false } = options
   const {
     title,
     description,
@@ -86,6 +91,27 @@ export function openPrintWindow(crossword: Crossword) {
     return `<div class="clue-col"><h3>${heading}</h3>${items}</div>`
   }
 
+  // When separateClues is true, grid fills the page and clues go on page 2
+  // Recalculate cell size for separate mode — grid can use ~90% of page height
+  let gridCellSize = cellSize
+  let gridFontSize = fontSize
+  let gridNumFontSize = numFontSize
+  if (separateClues) {
+    const fullGridHeightMm = pageHeightMm * 0.88
+    const fullCellFromHeight = fullGridHeightMm / rows
+    const fullCellFromWidth = gridWidthMm / cols
+    const fullCellSizeMm = Math.min(fullCellFromHeight, fullCellFromWidth)
+    gridCellSize = Math.floor(fullCellSizeMm * 3.78)
+    gridFontSize = Math.max(10, Math.floor(gridCellSize * 0.45))
+    gridNumFontSize = Math.max(6, Math.floor(gridCellSize * 0.22))
+  }
+
+  const cluesSection = `<div class="clues${separateClues ? " clues-page" : ""}">
+    ${separateClues ? `<h1>${title || ""}</h1>` : ""}
+    ${renderClues(clues_across || [], "מאוזן")}
+    ${renderClues(clues_down || [], "מאונך")}
+  </div>`
+
   const html = `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -124,20 +150,20 @@ export function openPrintWindow(crossword: Crossword) {
     .grid-container {
       display: flex;
       justify-content: center;
-      margin-bottom: 24px;
+      margin-bottom: ${separateClues ? "0" : "24px"};
     }
     .grid {
       border-collapse: collapse;
       direction: ltr;
     }
     .grid td {
-      width: ${cellSize}px;
-      height: ${cellSize}px;
+      width: ${gridCellSize}px;
+      height: ${gridCellSize}px;
       text-align: center;
       vertical-align: middle;
       position: relative;
       font-family: 'Frank Ruhl Libre', serif;
-      font-size: ${fontSize}px;
+      font-size: ${gridFontSize}px;
       font-weight: 500;
       padding: 0;
     }
@@ -154,7 +180,7 @@ export function openPrintWindow(crossword: Crossword) {
       position: absolute;
       top: 1px;
       right: 2px;
-      font-size: ${numFontSize}px;
+      font-size: ${gridNumFontSize}px;
       font-family: 'Heebo', sans-serif;
       font-weight: 700;
       color: #C82828;
@@ -164,6 +190,14 @@ export function openPrintWindow(crossword: Crossword) {
       grid-template-columns: 1fr 1fr;
       gap: 24px;
       margin-top: 8px;
+    }
+    .clues-page {
+      page-break-before: always;
+      padding-top: 12px;
+    }
+    .clues-page h1 {
+      grid-column: 1 / -1;
+      margin-bottom: 12px;
     }
     .clue-col h3 {
       font-family: 'Frank Ruhl Libre', serif;
@@ -190,10 +224,7 @@ export function openPrintWindow(crossword: Crossword) {
   <div class="grid-container">
     <table class="grid">${gridHtml}</table>
   </div>
-  <div class="clues">
-    ${renderClues(clues_across || [], "מאוזן")}
-    ${renderClues(clues_down || [], "מאונך")}
-  </div>
+  ${cluesSection}
   <script>window.onload = () => window.print();</script>
 </body>
 </html>`

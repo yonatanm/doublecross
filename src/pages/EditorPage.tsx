@@ -333,7 +333,7 @@ export default function EditorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, topic, description, status, difficulty, rawCluesText, proposals, activeProposalIndex, isGenerating])
 
-  const handlePrint = () => {
+  const handlePrint = (separateClues = false) => {
     if (!generatorResult) return
     const cw: Crossword = {
       title,
@@ -353,11 +353,24 @@ export default function EditorPage() {
       createdAt: existingCrossword?.createdAt,
       updatedAt: existingCrossword?.updatedAt,
     }
-    openPrintWindow(cw)
+    openPrintWindow(cw, { separateClues })
   }
 
   const rawClues = parseRawClues(rawCluesText)
   const canGenerate = rawClues.length >= 2 && title.trim().length > 0
+
+  // Estimate whether clues overflow a single A4 page
+  const printNeedsTwoPages = (() => {
+    if (!generatorResult) return false
+    const { rows: gr, cols: gc, clues_across: ca, clues_down: cd } = generatorResult
+    const pageH = 273 * 3.78 // A4 usable height in px
+    const cellMm = Math.min((273 * 0.72) / gr, 186 / gc)
+    const gridH = gr * cellMm * 3.78
+    const headerH = 80
+    const clueLineH = 21 // 13px font * 1.6 line-height
+    const cluesH = Math.max(ca?.length ?? 0, cd?.length ?? 0) * clueLineH + 30
+    return gridH + headerH + cluesH + 40 > pageH
+  })()
 
   // Compute which textarea lines are unplaced clues
   const unplacedClueTexts = new Set(generatorResult?.unplacedClues.map((c) => c.clue) ?? [])
@@ -575,9 +588,9 @@ export default function EditorPage() {
               </>
             )}
           </div>
-          <Button variant="outline" onClick={handlePrint} disabled={!generatorResult} className="gap-2" data-tour="print-area">
+          <Button variant="outline" onClick={() => handlePrint(printNeedsTwoPages)} disabled={!generatorResult} className="gap-2" data-tour="print-area">
             <Printer className="w-4 h-4" />
-            הדפס
+            הדפס{printNeedsTwoPages ? " (2 עמודים)" : ""}
           </Button>
         </div>
       </div>

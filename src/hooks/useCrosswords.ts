@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   getUserCrosswords,
+  getAllCrosswords,
   getCrossword,
   saveCrossword,
   overwriteCrossword,
@@ -9,11 +10,14 @@ import {
 import { useAuth } from "./useAuth"
 import type { Crossword } from "@/types/crossword"
 
+const ADMIN_EMAIL = "yonatanm@gmail.com"
+
 export function useCrosswords() {
   const { user } = useAuth()
+  const isAdmin = user?.email === ADMIN_EMAIL
   return useQuery({
-    queryKey: ["crosswords", user?.uid],
-    queryFn: () => getUserCrosswords(user!.uid),
+    queryKey: ["crosswords", isAdmin ? "all" : user?.uid],
+    queryFn: () => isAdmin ? getAllCrosswords() : getUserCrosswords(user!.uid),
     enabled: !!user,
   })
 }

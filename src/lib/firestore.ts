@@ -99,6 +99,17 @@ export async function getUserCrosswords(userId: string): Promise<Crossword[]> {
   return results
 }
 
+export async function getAllCrosswords(): Promise<Crossword[]> {
+  const snapshot = await getDocs(collection(db, COLLECTION))
+  const results = snapshot.docs.map((d) => deserializeFromFirestore({ id: d.id, ...d.data() }))
+  results.sort((a, b) => {
+    const aTime = a.updatedAt?.seconds ?? 0
+    const bTime = b.updatedAt?.seconds ?? 0
+    return bTime - aTime
+  })
+  return results
+}
+
 export async function archiveCrossword(id: string): Promise<void> {
   await updateCrossword(id, { status: "archived" })
 }
