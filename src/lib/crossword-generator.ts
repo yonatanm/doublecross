@@ -276,23 +276,60 @@ export function buildGeneratorResult(
     }
   })
 
-  // 7. Extract numbered clues
+  // 7. Build split-fragment cross-references
+  // Group placed words by identifier to find split siblings
+  const fragmentsByIdentifier = new Map<number, typeof result>()
+  for (const d of result) {
+    if (d.identifier === undefined) continue
+    const group = fragmentsByIdentifier.get(d.identifier)
+    if (group) group.push(d)
+    else fragmentsByIdentifier.set(d.identifier, [d])
+  }
+
+  const orientationLabel = (o: string) => o === "across" ? "מאוזן" : "מאונך"
+
+  const isSplitSecondary = (d: typeof result[0]): boolean => {
+    if (d.identifier === undefined) return false
+    const siblings = fragmentsByIdentifier.get(d.identifier)
+    if (!siblings || siblings.length <= 1) return false
+    const sorted = [...siblings].sort((a, b) => (a.subId ?? 0) - (b.subId ?? 0))
+    return d !== sorted[0]
+  }
+
+  const buildSplitClue = (d: typeof result[0]): string => {
+    if (d.identifier === undefined) return d.clue
+    const siblings = fragmentsByIdentifier.get(d.identifier)
+    if (!siblings || siblings.length <= 1) return d.clue
+    // Sort by subId so first fragment (subId=0) gets the definition
+    const sorted = [...siblings].sort((a, b) => (a.subId ?? 0) - (b.subId ?? 0))
+    if (d === sorted[0]) {
+      // First fragment: show definition + references to all other fragments
+      const refs = sorted.slice(1).map(s => `${s.position} ${orientationLabel(s.orientation)}`)
+      return `${d.clue} (יחד עם ${refs.join(" ו")})`
+    } else {
+      // Later fragments: "see" the first fragment
+      const first = sorted[0]
+      return `ראה ${first.position} ${orientationLabel(first.orientation)}`
+    }
+  }
+
+  // 8. Extract numbered clues
   const clues_across: NumberedClue[] = result
     .filter((d) => d.orientation === "across")
     .map((d) => ({
       number: d.position,
-      clue: d.clue,
+      clue: buildSplitClue(d),
       answer: d.answer,
-      answerLength: formatAnswerLength((d.origAnswer as string) || d.answer),
+      answerLength: isSplitSecondary(d) ? "" : formatAnswerLength((d.origAnswer as string) || d.answer),
     }))
 
   const clues_down: NumberedClue[] = result
     .filter((d) => d.orientation === "down")
     .map((d) => ({
       number: d.position,
-      clue: d.clue,
+      clue: buildSplitClue(d),
       answer: d.answer,
-      answerLength: formatAnswerLength((d.origAnswer as string) || d.answer),
+      answerLength: isSplitSecondary(d) ? "" : formatAnswerLength((d.origAnswer as string) || d.answer),
     }))
 
   return {
