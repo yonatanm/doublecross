@@ -172,6 +172,10 @@
   background-color: #C5D996;
 }
 
+.crossword-cell.focused {
+  background-color: #FDEAB6;
+}
+
 .cell-number {
   position: absolute;
   top: 1px;

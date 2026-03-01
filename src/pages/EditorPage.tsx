@@ -18,7 +18,7 @@ import { useCrossword, useSaveCrossword } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { generateProposals } from "@/lib/layout-strategy"
 import { openPrintWindow } from "@/lib/print-crossword"
-import type { RawClue, Crossword, GeneratorResult } from "@/types/crossword"
+import type { RawClue, Crossword, GeneratorResult, LayoutWord } from "@/types/crossword"
 
 function parseRawClues(text: string): RawClue[] {
   if (!text.trim()) return []
@@ -78,6 +78,7 @@ export default function EditorPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [showClues, setShowClues] = useState(true)
+  const [focusedCells, setFocusedCells] = useState<string[]>([])
 
   // Derived state
   const activeProposal = activeProposalIndex >= 0 ? proposals[activeProposalIndex] ?? null : null
@@ -230,6 +231,54 @@ export default function EditorPage() {
       indicatorRef.current.scrollTop = textareaRef.current.scrollTop
     }
   }
+
+  // Textarea line → grid cell highlighting
+  // Build a map from raw clue index → layout words (using identifier field)
+  const clueIndexToLayoutWords = useCallback(() => {
+    if (!generatorResult) return new Map<number, LayoutWord[]>()
+    const map = new Map<number, typeof generatorResult.layout_result>()
+    for (const w of generatorResult.layout_result) {
+      if (w.identifier === undefined) continue
+      const group = map.get(w.identifier)
+      if (group) group.push(w)
+      else map.set(w.identifier, [w])
+    }
+    return map
+  }, [generatorResult])
+
+  const handleTextareaCursor = useCallback(() => {
+    const el = textareaRef.current
+    if (!el || !generatorResult) { setFocusedCells([]); return }
+    const pos = el.selectionStart ?? 0
+    // Find which raw clue line the cursor is on
+    const lineIndex = el.value.substring(0, pos).split("\n").length - 1
+    // Map textarea line index to raw clue index (skip blank/invalid lines)
+    const lines = el.value.split("\n")
+    let rawClueIdx = -1
+    for (let i = 0; i <= lineIndex; i++) {
+      const trimmed = lines[i]?.trim() || ""
+      if (trimmed && trimmed.includes("-")) {
+        rawClueIdx++
+      }
+    }
+    const currentLine = lines[lineIndex]?.trim() || ""
+    if (!currentLine || !currentLine.includes("-")) { setFocusedCells([]); return }
+
+    // Look up layout words by identifier (= raw clue index)
+    const map = clueIndexToLayoutWords()
+    const words = map.get(rawClueIdx)
+    if (!words) { setFocusedCells([]); return }
+
+    const cells: string[] = []
+    for (const w of words) {
+      for (let i = 0; i < w.answer.length; i++) {
+        const r = w.orientation === "down" ? w.starty - 1 + i : w.starty - 1
+        const c = w.orientation === "across" ? w.startx - 1 + i : w.startx - 1
+        cells.push(`${r}-${c}`)
+      }
+    }
+    setFocusedCells(cells)
+  }, [generatorResult, clueIndexToLayoutWords])
 
   // Gallery scroll
   const galleryRef = useRef<HTMLDivElement>(null)
@@ -396,6 +445,10 @@ export default function EditorPage() {
                 value={rawCluesText}
                 onChange={(e) => setRawCluesText(e.target.value)}
                 onScroll={handleTextareaScroll}
+                onSelect={handleTextareaCursor}
+                onClick={handleTextareaCursor}
+                onKeyUp={handleTextareaCursor}
+                onBlur={() => setFocusedCells([])}
                 placeholder={`חתול-בעל חיים ביתי\nשמש-כוכב מרכזי\nמים-נוזל חיים`}
                 className="min-h-[300px] font-mono text-sm leading-relaxed resize-none flex-1"
                 dir="rtl"
@@ -542,6 +595,7 @@ export default function EditorPage() {
                     rows={generatorResult.rows}
                     layoutResult={generatorResult.layout_result}
                     highlightedCells={highlightedCells}
+                    focusedCells={focusedCells}
                     onCellClick={toggleCell}
                     interactive={true}
                     showLetters={false}

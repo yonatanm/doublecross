@@ -6,6 +6,7 @@ interface CrosswordGridProps {
   rows: number
   layoutResult: LayoutWord[]
   highlightedCells: string[]
+  focusedCells?: string[]
   onCellClick: (pos: string) => void
   interactive: boolean
   showLetters: boolean
@@ -19,6 +20,7 @@ export default function CrosswordGrid({
   rows,
   layoutResult,
   highlightedCells,
+  focusedCells = [],
   onCellClick,
   interactive,
   showLetters,
@@ -44,6 +46,7 @@ export default function CrosswordGrid({
           if (!cell) return null
           const pos = `${r}-${c}`
           const isHighlighted = highlightedCells.includes(pos)
+          const isFocused = focusedCells.includes(pos)
           const label = findLabel(r, c)
 
           if (cell.isBlocked) {
@@ -61,6 +64,7 @@ export default function CrosswordGrid({
                 "crossword-cell",
                 interactive ? "interactive cursor-pointer" : "",
                 isHighlighted ? "highlighted" : "",
+                isFocused ? "focused" : "",
               ].join(" ")}
               style={{ width: cellSize, height: cellSize }}
               onClick={() => interactive && onCellClick(pos)}
