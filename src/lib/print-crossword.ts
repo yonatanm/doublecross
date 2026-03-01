@@ -102,7 +102,6 @@ export function openPrintWindow(crossword: Crossword) {
     .cell {
       width: ${cellSize}px;
       height: ${cellSize}px;
-      border: 1.5px solid #1A1A1A;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -111,10 +110,12 @@ export function openPrintWindow(crossword: Crossword) {
       font-size: ${fontSize}px;
       font-weight: 500;
     }
+    .cell:not(.blocked) {
+      outline: 1.5px solid #1A1A1A;
+      outline-offset: -0.75px;
+    }
     .cell.blocked {
-      background: #1A1A1A !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+      background: transparent !important;
     }
     .cell.hint {
       background: white;
@@ -148,8 +149,8 @@ export function openPrintWindow(crossword: Crossword) {
     }
     @media print {
       body { padding: 12px; }
-      .cell { border: 1.5px solid #000 !important; }
-      .cell.blocked { background: #000 !important; }
+      .cell:not(.blocked) { outline: 1.5px solid #000 !important; outline-offset: -0.75px; }
+      .cell.blocked { background: transparent !important; }
     }
   </style>
 </head>

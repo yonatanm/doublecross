@@ -139,7 +139,6 @@
 .crossword-cell {
   width: 40px;
   height: 40px;
-  border: 1.5px solid #1A1A1A;
   position: relative;
   display: flex;
   align-items: center;
@@ -152,9 +151,13 @@
   transition: background-color 0.15s ease;
 }
 
+.crossword-cell:not(.blocked) {
+  outline: 1.5px solid #1A1A1A;
+  outline-offset: -0.75px;
+}
+
 .crossword-cell.blocked {
-  background-color: #1A1A1A;
-  border-color: #1A1A1A;
+  background-color: transparent;
 }
 
 .crossword-cell.interactive:not(.blocked):hover {

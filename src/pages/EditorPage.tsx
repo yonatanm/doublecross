@@ -238,12 +238,14 @@ export default function EditorPage() {
       setCanScrollRight(false)
       return
     }
-    // scrollLeft sign varies by browser in RTL; use absolute value comparison
-    const sl = Math.abs(el.scrollLeft)
-    const maxScroll = el.scrollWidth - el.clientWidth
-    // In RTL, scrollLeft=0 means fully right (start). As user scrolls left, |scrollLeft| grows.
-    setCanScrollRight(sl > 1) // items hidden to the right (RTL start side)
-    setCanScrollLeft(sl < maxScroll - 1) // items hidden to the left (RTL end side)
+    // Check if first/last child is fully visible to determine scroll arrows
+    const children = el.children
+    if (children.length === 0) return
+    const containerRect = el.getBoundingClientRect()
+    const firstRect = children[0].getBoundingClientRect()
+    const lastRect = children[children.length - 1].getBoundingClientRect()
+    setCanScrollRight(firstRect.right > containerRect.right + 1)
+    setCanScrollLeft(lastRect.left < containerRect.left - 1)
   }, [])
 
   useEffect(() => {
@@ -253,9 +255,19 @@ export default function EditorPage() {
   const scrollGallery = (direction: "left" | "right") => {
     const el = galleryRef.current
     if (!el) return
-    const amount = el.clientWidth * 0.6
-    // In RTL, positive scrollBy moves content leftward (toward end)
-    el.scrollBy({ left: direction === "left" ? amount : -amount, behavior: "smooth" })
+    const children = Array.from(el.children) as HTMLElement[]
+    if (children.length === 0) return
+    const containerRect = el.getBoundingClientRect()
+
+    if (direction === "right") {
+      // Find first child whose right edge is beyond the container's right edge
+      const target = children.find(c => c.getBoundingClientRect().right > containerRect.right + 1)
+      target?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" })
+    } else {
+      // Find last child whose left edge is before the container's left edge
+      const target = [...children].reverse().find(c => c.getBoundingClientRect().left < containerRect.left - 1)
+      target?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "end" })
+    }
   }
 
   if (!isLoggedIn) {
@@ -428,31 +440,18 @@ export default function EditorPage() {
 
           {/* Thumbnail gallery strip */}
           {proposals.length > 1 && (
-            <div className="relative">
-              {canScrollRight && (
-                <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pointer-events-none bg-gradient-to-l from-white via-white/90 to-transparent px-1">
-                  <button
-                    onClick={() => scrollGallery("right")}
-                    className="pointer-events-auto cursor-pointer rounded-full bg-white/80 shadow p-1 hover:bg-white"
-                  >
-                    <ChevronsRight className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              )}
-              {canScrollLeft && (
-                <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pointer-events-none bg-gradient-to-r from-white via-white/90 to-transparent px-1">
-                  <button
-                    onClick={() => scrollGallery("left")}
-                    className="pointer-events-auto cursor-pointer rounded-full bg-white/80 shadow p-1 hover:bg-white"
-                  >
-                    <ChevronsLeft className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              )}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => scrollGallery("right")}
+                disabled={!canScrollRight}
+                className="shrink-0 p-1 rounded-full hover:bg-gray-100 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
+              >
+                <ChevronsRight className="w-4 h-4 text-gray-500" />
+              </button>
               <div
                 ref={galleryRef}
                 onScroll={updateGalleryScroll}
-                className="flex gap-2 overflow-x-auto py-1 scrollbar-none"
+                className="flex gap-2 overflow-x-auto py-1 flex-1 min-w-0"
                 style={{ scrollbarWidth: "none" }}
               >
                 {proposals.map((p, i) => (
@@ -483,6 +482,13 @@ export default function EditorPage() {
                   </button>
                 ))}
               </div>
+              <button
+                onClick={() => scrollGallery("left")}
+                disabled={!canScrollLeft}
+                className="shrink-0 p-1 rounded-full hover:bg-gray-100 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
+              >
+                <ChevronsLeft className="w-4 h-4 text-gray-500" />
+              </button>
             </div>
           )}
 
