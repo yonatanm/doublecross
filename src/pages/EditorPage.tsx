@@ -340,7 +340,7 @@ export default function EditorPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-8 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-8 overflow-hidden">
         {/* Left Column: Clues Input */}
         <div className="space-y-4 min-w-0">
           <div>
