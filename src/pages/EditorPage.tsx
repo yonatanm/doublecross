@@ -340,9 +340,9 @@ export default function EditorPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-8 overflow-hidden">
         {/* Left Column: Clues Input */}
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0">
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label className="text-sm font-medium">
@@ -503,7 +503,7 @@ export default function EditorPage() {
         </div>
 
         {/* Right Column: Grid Preview */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {generatorResult ? (
             <>
               <div>
@@ -518,7 +518,7 @@ export default function EditorPage() {
                     לחצו על תא כדי לסמן רמז
                   </span>
                 </div>
-                <div className="bg-card border rounded-lg p-4 inline-block">
+                <div className="bg-card border rounded-lg p-4 inline-block max-w-full overflow-auto">
                   <CrosswordGrid
                     grid={generatorResult.grid}
                     cols={generatorResult.cols}
