@@ -89,6 +89,7 @@ export default function EditorPage() {
   const [rawCluesText, setRawCluesText] = useState(editId ? "" : DEFAULT_CLUES)
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [activeProposalIndex, setActiveProposalIndex] = useState(-1)
+  const [proposalsHash, setProposalsHash] = useState("")
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const docIdRef = useRef<string | null>(editId)
@@ -133,7 +134,24 @@ export default function EditorPage() {
       if (existingCrossword.raw_clues?.length) {
         setRawCluesText(rawCluesToText(existingCrossword.raw_clues))
       }
-      if (existingCrossword.grid && existingCrossword.layout_result) {
+      // Restore all proposals if hash matches, otherwise just the active one
+      const currentHash = existingCrossword.answers_hash || ""
+      const savedHash = existingCrossword.proposals_hash || ""
+      let restored = false
+
+      if (savedHash && savedHash === currentHash && existingCrossword.saved_proposals) {
+        try {
+          const parsed = JSON.parse(existingCrossword.saved_proposals) as Proposal[]
+          if (parsed.length > 0) {
+            setProposals(parsed)
+            setActiveProposalIndex(0)
+            setProposalsHash(savedHash)
+            restored = true
+          }
+        } catch { /* ignore bad data */ }
+      }
+
+      if (!restored && existingCrossword.grid && existingCrossword.layout_result) {
         const result: GeneratorResult = {
           grid: existingCrossword.grid,
           clues_across: existingCrossword.clues_across,
@@ -150,6 +168,7 @@ export default function EditorPage() {
           variantLabel: "",
         }])
         setActiveProposalIndex(0)
+        setProposalsHash(currentHash)
       }
     }
   }, [existingCrossword])
@@ -169,6 +188,7 @@ export default function EditorPage() {
         variantLabel: p.variantLabel,
       })))
       setActiveProposalIndex(0)
+      setProposalsHash(answersHash(rawClues))
       setIsGenerating(false)
     }))
   }, [rawCluesText])
@@ -231,6 +251,8 @@ export default function EditorPage() {
         grid: genResult?.grid || [],
         raw_clues: rawClues,
         answers_hash: answersHash(rawClues),
+        proposals_hash: proposalsHash || undefined,
+        saved_proposals: proposals.length > 0 ? JSON.stringify(proposals) : undefined,
         clues_across: genResult?.clues_across || [],
         clues_down: genResult?.clues_down || [],
         highlighted_cells: hCells,

@@ -47,6 +47,8 @@ export interface Crossword {
   userId?: string
   userEmail?: string
   answers_hash?: string
+  proposals_hash?: string
+  saved_proposals?: string
   layout_result?: LayoutWord[]
   layout_rows?: number
   layout_cols?: number
