@@ -279,7 +279,6 @@ export default function EditorPage() {
 
   // Auto-save with debounce
   useEffect(() => {
-    if (!title.trim()) return
     if (parseRawClues(rawCluesText).length === 0) return
     if (isGenerating) return
     if (initialLoadRef.current) {
@@ -296,8 +295,18 @@ export default function EditorPage() {
       const genResult = proposal?.result ?? null
       const hCells = proposal?.highlightedCells ?? []
       const rawClues = parseRawClues(rawCluesText)
+      const saveTitle = title.trim() || (() => {
+        const d = new Date()
+        const dd = String(d.getDate()).padStart(2, "0")
+        const mm = String(d.getMonth() + 1).padStart(2, "0")
+        return `תשבץ-${dd}-${mm}-${d.getFullYear()}`
+      })()
+      if (!title.trim()) {
+        titleInitRef.current = false  // prevent title-gen effect from overriding
+        setTitle(saveTitle)
+      }
       const data: Omit<Crossword, "id"> = {
-        title,
+        title: saveTitle,
         topic,
         description,
         status,
@@ -325,6 +334,9 @@ export default function EditorPage() {
         const id = await saveMutation.mutateAsync({ id: docIdRef.current || undefined, data })
         if (!docIdRef.current) {
           docIdRef.current = id
+          // Prevent load-from-Firestore effect and auto-save cascade after first creation
+          firestoreLoadedRef.current = true
+          initialLoadRef.current = true
           navigate(`/editor?id=${id}`, { replace: true })
         }
         setAutoSaveStatus("saved")

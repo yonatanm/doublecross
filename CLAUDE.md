@@ -1,7 +1,7 @@
 # CLAUDE.md — One Horizontal (אחד מאוזן)
 
 ## What is this project?
-A Hebrew RTL crossword puzzle builder web app. Users create crosswords by entering clue-answer pairs, auto-generate a grid layout, highlight hint cells, and print the result. 100% client-side, hosted on GitHub Pages.
+A Hebrew RTL crossword puzzle builder and solver web app. Users create crosswords by entering clue-answer pairs, auto-generate a grid layout, highlight hint cells, and print the result. Published crosswords can be shared via link for anyone to solve online — no login required. 100% client-side, hosted on GitHub Pages.
 
 ## Commands
 - `npm run dev` — start dev server
@@ -17,6 +17,8 @@ A Hebrew RTL crossword puzzle builder web app. Users create crosswords by enteri
 - **@tanstack/react-query v5** — data fetching/caching
 - **layout-engine** — inline crossword placement engine (in `src/lib/layout-engine.ts`, ported from crossword-layout-generator)
 - **lucide-react** — icons
+- **sonner** — toast notifications
+- **canvas-confetti** — confetti celebration effect on puzzle completion
 
 ## Architecture
 - `@/` import alias maps to `./src/*` (configured in tsconfig + vite.config)
@@ -28,6 +30,9 @@ A Hebrew RTL crossword puzzle builder web app. Users create crosswords by enteri
 - Auth: Google sign-in via AuthContext provider pattern
 - **Ownership preservation**: `saveCrossword()` stamps the current user as owner (new documents only). `overwriteCrossword()` passes through whatever owner fields are in the crossword object — the caller (EditorPage auto-save) is responsible for including the original owner from `existingCrossword`
 - Main content container uses `max-w-6xl px-6` matching the header for aligned edges
+- **Solve mode routing**: `/solve/:id` route lives outside the standard Header+main layout (has its own minimal header). Share URLs use `?solve=ID` query param on root path (returns 200 for WhatsApp/social OG tag previews), with client-side redirect to `/solve/:id`
+- **Firestore public reads**: Published crosswords are readable without auth. Firestore security rules must include `allow read: if resource.data.status == "published"`. Solve page uses `getCrosswordFresh()` (`getDocFromServer`) to bypass Firestore local cache
+- **Open Graph meta tags**: `index.html` has OG tags (title, description, image) for WhatsApp/social link previews
 
 ## Key directories
 ```
@@ -35,7 +40,7 @@ src/
 ├── types/          # TypeScript interfaces (Crossword, RawClue, RankedProposal, etc.)
 ├── lib/            # Utilities (firebase, firestore CRUD, layout engine/strategy/generator, print)
 ├── hooks/          # useAuth, useCrosswords (React Query)
-├── pages/          # HomePage (listing), EditorPage (create/edit)
+├── pages/          # HomePage (listing), EditorPage (create/edit), SolvePage (public solving)
 ├── components/     # Header, CrosswordGrid, CluesDisplay, CrosswordCard
 └── components/ui/  # shadcn/ui primitives (don't edit manually)
 docs/
@@ -59,8 +64,12 @@ docs/
 - **Print** (`src/lib/print-crossword.ts`): opens a new window with standalone HTML that auto-triggers `window.print()`. Highlighted cells show their letter on white background; other cells are empty. Uses `print-color-adjust: exact` to preserve black backgrounds. Cell size is computed dynamically to fill ~75% of A4 page
 - **Editor proposals**: flat proposal gallery — each "שבץ מילים" click generates up to 10 proposals sorted by score, replacing any previous batch. Proposals shown as a thumbnail strip (mini grids, cellSize=6) with prev/next arrows + keyboard left/right. Each proposal has its own `highlightedCells`. Loading from Firestore creates a single proposal. Unplaced clues show a warning banner in the header + per-line ⚠ icons with tooltips in the textarea
 - **Home page**: master-detail layout — list on the right (420px), crossword preview on the left (22px cells, no numbers). Preview shows all letters with `interactive={true}` + no-op click
-- **CrosswordGrid** accepts `cellSize` (default 40) and `showNumbers` (default true) props for reuse across views
+- **CrosswordGrid** accepts `cellSize` (default 40) and `showNumbers` (default true) props for reuse across views. Also supports solve-mode props: `solveMode`, `userLetters`, `focusedPos`, `solveDirection`, `hintCells`, `wordCells`, `correctCells`
 - **Cell position numbers**: red (#C82828), scaled with `0.55em` — consistent across editor, preview, and print
+- **Solve mode** (`src/pages/SolvePage.tsx`): standalone page for solving published crosswords. Keyboard-driven Hebrew input (א-ת), arrow key navigation, click-to-focus with direction toggle on same-cell click. Direction auto-corrects when a cell only belongs to one word orientation. Pre-fills hint cells from `highlighted_cells` (read-only). Progress saved to localStorage. Validates with final-letter normalization. On completion: confetti + ta-da chime (Web Audio API). On all-filled-but-wrong: red error banner. Banners live in the sticky header to avoid layout shift
+- **Interior blocked cells**: empty cells with letter cells on all 4 sides render as black (`blocked-interior` class) in both CrosswordGrid and print. Uses `hasLetterAllSides()` — simple 4-neighbor check, NOT flood-fill
+- **Auto-save**: triggers on first valid clue row (line with `-` separator). No title required — generates fallback date-based title (`תשבץ-DD-MM-YYYY`) if title is empty. Debounced at 1.5s
+- **Share flow**: published crosswords show a share icon button (copies `?solve=ID` URL to clipboard with toast) in both EditorPage and HomePage list items
 
 ## Deployment
 - **Live URL**: https://yonatanm.github.io/doublecross/
