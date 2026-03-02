@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useParams, Link } from "react-router-dom"
-import { Loader2, PartyPopper } from "lucide-react"
+import { Loader2, PartyPopper, AlertCircle } from "lucide-react"
 import confetti from "canvas-confetti"
 import CrosswordGrid from "@/components/CrosswordGrid"
-import { getCrossword } from "@/lib/firestore"
+import { getCrosswordFresh } from "@/lib/firestore"
 import type { Crossword, LayoutWord } from "@/types/crossword"
 
 // Hebrew final-letter normalization (for lenient validation)
@@ -24,6 +24,33 @@ function storageKey(id: string): string {
   return `solve-progress:${id}`
 }
 
+/** Play a short ta-da fanfare using Web Audio API. */
+function playTaDa() {
+  try {
+    const ctx = new AudioContext()
+    const now = ctx.currentTime
+    const notes = [
+      { freq: 523.25, start: 0, dur: 0.12 },     // C5
+      { freq: 659.25, start: 0.12, dur: 0.12 },   // E5
+      { freq: 783.99, start: 0.24, dur: 0.12 },   // G5
+      { freq: 1046.50, start: 0.38, dur: 0.45 },  // C6 (held)
+    ]
+    for (const n of notes) {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = "triangle"
+      osc.frequency.value = n.freq
+      gain.gain.setValueAtTime(0.18, now + n.start)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur)
+      osc.connect(gain).connect(ctx.destination)
+      osc.start(now + n.start)
+      osc.stop(now + n.start + n.dur + 0.05)
+    }
+    // Clean up after all notes finish
+    setTimeout(() => ctx.close(), 1500)
+  } catch { /* audio not available */ }
+}
+
 export default function SolvePage() {
   const { id } = useParams<{ id: string }>()
   const [crossword, setCrossword] = useState<Crossword | null>(null)
@@ -41,7 +68,7 @@ export default function SolvePage() {
   useEffect(() => {
     if (!id) return
     setLoading(true)
-    getCrossword(id)
+    getCrosswordFresh(id)
       .then((cw) => {
         if (!cw) {
           setError("התשבץ לא נמצא")
@@ -113,6 +140,17 @@ export default function SolvePage() {
     return map
   }, [crossword])
 
+  // Auto-correct direction: if focused cell has no word in current direction, switch
+  useEffect(() => {
+    if (!focusedPos) return
+    const words = cellToWords.get(focusedPos) || []
+    if (words.length === 0) return
+    const hasCurrentDir = words.some((w) => w.orientation === direction)
+    if (!hasCurrentDir) {
+      setDirection(words[0].orientation as "across" | "down")
+    }
+  }, [focusedPos, cellToWords, direction])
+
   // Get word cell positions for currently focused word
   const currentWordCells = useMemo(() => {
     if (!focusedPos || !cellToWords) return new Set<string>()
@@ -123,10 +161,14 @@ export default function SolvePage() {
     return new Set(getWordCellPositions(word))
   }, [focusedPos, direction, cellToWords])
 
-  // Check completion
+  // Check completion / mistakes
+  const [hasMistakes, setHasMistakes] = useState(false)
+
   useEffect(() => {
     if (!crossword?.grid || completed) return
     const grid = crossword.grid
+    let allFilled = true
+    let anyWrong = false
     for (let r = 0; r < grid.length; r++) {
       for (let c = 0; c < (grid[r]?.length || 0); c++) {
         const cell = grid[r][c]
@@ -134,21 +176,29 @@ export default function SolvePage() {
         const pos = `${r}-${c}`
         if (hintCells.has(pos)) continue
         const userLetter = userLetters[pos]
-        if (!userLetter) return
-        if (normalizeLetter(userLetter) !== normalizeLetter(cell.letter || "")) return
+        if (!userLetter) { allFilled = false; continue }
+        if (normalizeLetter(userLetter) !== normalizeLetter(cell.letter || "")) {
+          anyWrong = true
+        }
       }
     }
-    // All cells match
-    setCompleted(true)
-    // Fire confetti burst
-    const duration = 2000
-    const end = Date.now() + duration
-    const frame = () => {
-      confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.7 } })
-      confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 } })
-      if (Date.now() < end) requestAnimationFrame(frame)
+
+    if (allFilled && !anyWrong) {
+      setCompleted(true)
+      setHasMistakes(false)
+      playTaDa()
+      // Fire confetti burst
+      const duration = 2000
+      const end = Date.now() + duration
+      const frame = () => {
+        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.7 } })
+        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.7 } })
+        if (Date.now() < end) requestAnimationFrame(frame)
+      }
+      frame()
+    } else {
+      setHasMistakes(allFilled && anyWrong)
     }
-    frame()
   }, [userLetters, crossword, hintCells, completed])
 
   // Find next/prev cell in current direction
@@ -362,8 +412,11 @@ export default function SolvePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Minimal header */}
-      <header className="border-b border-border/60 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
+      {/* Header with status indicator */}
+      <header className={[
+        "border-b backdrop-blur-sm sticky top-0 z-50 transition-colors",
+        completed ? "bg-emerald-50 border-emerald-200" : hasMistakes ? "bg-red-50 border-red-200" : "bg-card/80 border-border/60",
+      ].join(" ")}>
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img src={import.meta.env.BASE_URL + "cw.png"} alt="לוגו" className="w-8 h-8 rounded" />
@@ -371,6 +424,19 @@ export default function SolvePage() {
               אחד מאוזן
             </span>
           </Link>
+          {completed && (
+            <div className="flex items-center gap-2 text-emerald-700 font-medium text-sm">
+              <PartyPopper className="w-4 h-4" />
+              <span>כל הכבוד! פתרתם את התשבץ!</span>
+              <PartyPopper className="w-4 h-4" />
+            </div>
+          )}
+          {hasMistakes && !completed && (
+            <div className="flex items-center gap-2 text-red-600 font-medium text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>יש טעויות בפתרון</span>
+            </div>
+          )}
         </div>
       </header>
 
@@ -382,15 +448,6 @@ export default function SolvePage() {
         >
           {crossword.title}
         </h1>
-
-        {/* Completion banner */}
-        {completed && (
-          <div className="flex items-center justify-center gap-3 mb-6 py-3 px-6 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <PartyPopper className="w-5 h-5 text-emerald-600" />
-            <span className="text-emerald-800 font-medium">כל הכבוד! פתרתם את התשבץ!</span>
-            <PartyPopper className="w-5 h-5 text-emerald-600" />
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-8">
           {/* Grid */}

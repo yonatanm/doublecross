@@ -4,6 +4,7 @@ import {
   addDoc,
   setDoc,
   getDoc,
+  getDocFromServer,
   getDocs,
   deleteDoc,
   query,
@@ -78,6 +79,14 @@ export async function overwriteCrossword(id: string, crossword: Omit<Crossword, 
 export async function getCrossword(id: string): Promise<Crossword | null> {
   const docRef = doc(db, COLLECTION, id)
   const docSnap = await getDoc(docRef)
+  if (!docSnap.exists()) return null
+  return deserializeFromFirestore({ id: docSnap.id, ...docSnap.data() })
+}
+
+/** Always fetch from server, bypassing Firestore local cache. */
+export async function getCrosswordFresh(id: string): Promise<Crossword | null> {
+  const docRef = doc(db, COLLECTION, id)
+  const docSnap = await getDocFromServer(docRef)
   if (!docSnap.exists()) return null
   return deserializeFromFirestore({ id: docSnap.id, ...docSnap.data() })
 }
