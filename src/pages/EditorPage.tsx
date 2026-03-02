@@ -57,7 +57,7 @@ export default function EditorPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const editId = searchParams.get("id")
-  const { isLoggedIn, user } = useAuth()
+  const { isLoggedIn, isAdmin } = useAuth()
 
   const { data: existingCrossword, isLoading } = useCrossword(editId)
   const { data: allCrosswords } = useCrosswords()
@@ -752,7 +752,7 @@ export default function EditorPage() {
           )}
 
           {/* Score & variant info (dev or admin only) */}
-          {proposals.length > 0 && generatorResult && activeProposal && (import.meta.env.DEV || user?.email === "yonatanm@gmail.com") && (
+          {proposals.length > 0 && generatorResult && activeProposal && (import.meta.env.DEV || isAdmin) && (
             <div className="text-xs text-muted-foreground space-y-0.5">
               <div>
                 ציון כולל: {Math.round(activeProposal.adjustedScore * 100)}%

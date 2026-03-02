@@ -10,11 +10,8 @@ import {
 import { useAuth } from "./useAuth"
 import type { Crossword } from "@/types/crossword"
 
-const ADMIN_EMAIL = "yonatanm@gmail.com"
-
 export function useCrosswords() {
-  const { user } = useAuth()
-  const isAdmin = user?.email === ADMIN_EMAIL
+  const { user, isAdmin } = useAuth()
   return useQuery({
     queryKey: ["crosswords", isAdmin ? "all" : user?.uid],
     queryFn: () => isAdmin ? getAllCrosswords() : getUserCrosswords(user!.uid),
