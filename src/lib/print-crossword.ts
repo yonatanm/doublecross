@@ -32,7 +32,8 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   // Cell size limited by whichever dimension is tighter
   const cellFromHeight = gridHeightMm / rows
   const cellFromWidth = gridWidthMm / cols
-  const cellSizeMm = Math.min(cellFromHeight, cellFromWidth)
+  const maxCellMm = 7
+  const cellSizeMm = Math.min(cellFromHeight, cellFromWidth, maxCellMm)
   // Convert mm to px (96dpi: 1mm ≈ 3.78px)
   const cellSize = Math.floor(cellSizeMm * 3.78)
   const fontSize = Math.max(10, Math.floor(cellSize * 0.45))
@@ -100,7 +101,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     const fullGridHeightMm = pageHeightMm * 0.88
     const fullCellFromHeight = fullGridHeightMm / rows
     const fullCellFromWidth = gridWidthMm / cols
-    const fullCellSizeMm = Math.min(fullCellFromHeight, fullCellFromWidth)
+    const fullCellSizeMm = Math.min(fullCellFromHeight, fullCellFromWidth, maxCellMm)
     gridCellSize = Math.floor(fullCellSizeMm * 3.78)
     gridFontSize = Math.max(10, Math.floor(gridCellSize * 0.45))
     gridNumFontSize = Math.max(6, Math.floor(gridCellSize * 0.22))
