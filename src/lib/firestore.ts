@@ -52,6 +52,8 @@ export async function saveCrossword(crossword: Omit<Crossword, "id">): Promise<s
     updatedAt: Timestamp.now(),
     userId: user?.uid,
     userEmail: user?.email,
+    userDisplayName: user?.displayName || undefined,
+    userPhotoURL: user?.photoURL || undefined,
   }
   const docRef = await addDoc(collection(db, COLLECTION), data)
   return docRef.id
@@ -73,6 +75,8 @@ export async function overwriteCrossword(id: string, crossword: Omit<Crossword, 
     updatedAt: Timestamp.now(),
     userId: user?.uid,
     userEmail: user?.email,
+    userDisplayName: user?.displayName || undefined,
+    userPhotoURL: user?.photoURL || undefined,
   })
 }
 

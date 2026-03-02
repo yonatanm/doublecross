@@ -46,6 +46,8 @@ export interface Crossword {
   updatedAt?: { seconds: number; nanoseconds: number }
   userId?: string
   userEmail?: string
+  userDisplayName?: string
+  userPhotoURL?: string
   answers_hash?: string
   proposals_hash?: string
   saved_proposals?: string

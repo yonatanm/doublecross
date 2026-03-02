@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Plus, Search, Printer, Trash2 } from "lucide-react"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -171,9 +172,13 @@ export default function HomePage() {
                   onMouseEnter={() => setSelectedId(cw.id || null)}
                   onClick={() => navigate(`/editor?id=${cw.id}`)}
                 >
-                  {/* Line 1: title, status, date, actions */}
+                  {/* Line 1: avatar, title, status, date, actions */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
+                      <Avatar size="sm" title={cw.userDisplayName || cw.userEmail || ""}>
+                        <AvatarImage src={cw.userPhotoURL} alt="" />
+                        <AvatarFallback>{(cw.userEmail || "?")[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
                       <span className="text-sm font-medium truncate">
                         {cw.title || "ללא שם"}
                       </span>
