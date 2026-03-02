@@ -4,6 +4,7 @@ import { AuthContext, useAuthProvider } from "@/hooks/useAuth"
 import Header from "@/components/Header"
 import HomePage from "@/pages/HomePage"
 import EditorPage from "@/pages/EditorPage"
+import VersionPage from "@/pages/VersionPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +28,7 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/editor" element={<EditorPage />} />
+                <Route path="/version" element={<VersionPage />} />
               </Routes>
             </main>
           </div>

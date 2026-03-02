@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/hooks/useAuth"
 
 export default function Header() {
-  const { user, isLoggedIn, login, logout } = useAuth()
+  const { user, isLoggedIn, isAdmin, login, logout } = useAuth()
   const location = useLocation()
 
   const isActive = (path: string) =>
@@ -39,6 +39,9 @@ export default function Header() {
 
         {/* Left side: Help + Auth */}
         <div className="flex items-center gap-3">
+          {isAdmin && (
+            <span className="text-[10px] text-muted-foreground font-mono">{__GIT_SHA__} · {__GIT_DATE__}</span>
+          )}
           <Button
             variant="ghost"
             size="sm"
