@@ -520,8 +520,8 @@ export default function EditorPage() {
     <div className="space-y-6">
       <GuidedTour page="editor" open={walkthrough.isOpen} onClose={walkthrough.close} />
       {/* Editor Header */}
-      <div className="flex items-end justify-between gap-3 flex-wrap">
-        <div className="flex items-end gap-3 flex-1 min-w-0 flex-wrap">
+      <div className="flex items-end gap-3 flex-wrap">
+        <div className="flex items-end gap-3 min-w-0 flex-wrap">
           <div className="min-w-[180px] max-w-sm flex-1">
             <Label htmlFor="title" className="text-xs text-muted-foreground mb-1 block">
               שם התשבץ
@@ -544,7 +544,7 @@ export default function EditorPage() {
               className="h-9 text-xs w-32"
             />
           </div>
-          <div className="flex-1 min-w-[120px] max-w-xs">
+          <div className="min-w-[120px] w-72">
             <Label className="text-xs text-muted-foreground mb-1 block">תיאור</Label>
             <Input
               value={description}
@@ -555,47 +555,58 @@ export default function EditorPage() {
           </div>
         </div>
 
-        <div className="flex items-end gap-2">
-          {/* Status toggle */}
-          <div className="flex gap-0.5 h-9 items-center">
-            {([
-              { value: "draft", label: "טיוטה", Icon: Pencil },
-              { value: "published", label: "פורסם", Icon: Globe },
-              { value: "archived", label: "ארכיון", Icon: Archive },
-            ] as const).map(({ value, label, Icon }) => (
-              <button
-                key={value}
-                onClick={() => setStatus(value)}
-                className={`flex items-center gap-1 px-2.5 h-8 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                  status === value
-                    ? "bg-secondary text-foreground border border-border"
-                    : "text-muted-foreground hover:bg-secondary/50"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
-              </button>
-            ))}
-          </div>
-          {/* Auto-save status indicator */}
-          <div className="flex items-center justify-center gap-1.5 text-xs h-9 w-16">
-            {autoSaveStatus === "saving" && (
+        <div className="flex flex-col items-end gap-1 ms-auto">
+          <div className="flex items-center gap-2 text-xs h-5">
+            {/* Unplaced clues warning */}
+            {hasUnplaced && (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                <span className="text-muted-foreground">שומר...</span>
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                <span className="text-amber-600">לא כל המילים נכנסו לתשבץ</span>
               </>
             )}
-            {autoSaveStatus === "saved" && (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-emerald-600">נשמר</span>
-              </>
-            )}
+            {/* Auto-save status indicator — fixed width to prevent layout shift */}
+            <span className="inline-flex items-center gap-1.5 w-14">
+              {autoSaveStatus === "saving" && (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                  <span className="text-muted-foreground">שומר...</span>
+                </>
+              )}
+              {autoSaveStatus === "saved" && (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="text-emerald-600">נשמר</span>
+                </>
+              )}
+            </span>
           </div>
-          <Button variant="outline" onClick={() => handlePrint(printNeedsTwoPages)} disabled={!generatorResult} className="gap-2" data-tour="print-area">
-            <Printer className="w-4 h-4" />
-            הדפס{printNeedsTwoPages ? " (2 עמודים)" : ""}
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Status toggle */}
+            <div className="flex gap-0.5 h-9 items-center">
+              {([
+                { value: "draft", label: "טיוטה", Icon: Pencil },
+                { value: "published", label: "פורסם", Icon: Globe },
+                { value: "archived", label: "ארכיון", Icon: Archive },
+              ] as const).map(({ value, label, Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setStatus(value)}
+                  className={`flex items-center gap-1 px-2.5 h-8 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                    status === value
+                      ? "bg-secondary text-foreground border border-border"
+                      : "text-muted-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+            <Button variant="outline" onClick={() => handlePrint(printNeedsTwoPages)} disabled={!generatorResult} className="gap-2" data-tour="print-area">
+              <Printer className="w-4 h-4" />
+              הדפס{printNeedsTwoPages ? " (2 עמודים)" : ""}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -624,7 +635,9 @@ export default function EditorPage() {
                     style={{ height: "calc(0.875rem * 1.625)" }}
                   >
                     {lineWarnings[i] && (
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                      <span title="מילה זו לא נכנסה לתשבץ">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                      </span>
                     )}
                   </div>
                 ))}
