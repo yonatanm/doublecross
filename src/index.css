@@ -164,6 +164,10 @@ html {
   background-color: transparent;
 }
 
+.crossword-cell.blocked-interior {
+  background-color: #1A1A1A;
+}
+
 .crossword-cell.interactive:not(.blocked):hover {
   background-color: #F5F0E8;
 }

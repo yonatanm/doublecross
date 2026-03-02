@@ -16,7 +16,6 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     layout_result,
     layout_cols: cols,
     layout_rows: rows,
-    createdAt,
     updatedAt,
   } = crossword
 
@@ -33,11 +32,20 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   const cellFromHeight = gridHeightMm / rows
   const cellFromWidth = gridWidthMm / cols
   const maxCellMm = 7
-  const cellSizeMm = Math.min(cellFromHeight, cellFromWidth, maxCellMm)
+  const cellSizeMm = Math.min(cellFromHeight, cellFromWidth, maxCellMm) * 0.95
   // Convert mm to px (96dpi: 1mm ≈ 3.78px)
   const cellSize = Math.floor(cellSizeMm * 3.78)
   const fontSize = Math.max(10, Math.floor(cellSize * 0.45))
-  const numFontSize = Math.max(6, Math.floor(cellSize * 0.22))
+  const numFontSize = Math.max(6, Math.floor(cellSize * 0.22 * 2))
+
+  // Check if a blocked cell has letter cells on all 4 sides
+  const hasLetterAllSides = (r: number, c: number) => {
+    const has = (nr: number, nc: number) => {
+      const cell = grid[nr]?.[nc]
+      return cell && !cell.isBlocked && !!cell.letter
+    }
+    return has(r - 1, c) && has(r + 1, c) && has(r, c - 1) && has(r, c + 1)
+  }
 
   // Build grid HTML as a <table> with border-collapse for uniform single borders
   let gridHtml = ""
@@ -45,8 +53,9 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     gridHtml += "<tr>"
     for (let c = 0; c < cols; c++) {
       const cell = grid[r]?.[c]
-      if (!cell || cell.isBlocked) {
-        gridHtml += `<td class="blocked"></td>`
+      if (!cell || cell.isBlocked || !cell.letter) {
+        const cls = hasLetterAllSides(r, c) ? "blocked-interior" : "blocked"
+        gridHtml += `<td class="${cls}"></td>`
       } else {
         const pos = `${r}-${c}`
         const isHighlighted = (highlighted_cells || []).includes(pos)
@@ -75,13 +84,11 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     return `${dd}/${mm}/${d.getFullYear()} ${hh}:${min}`
   }
 
-  const descriptionHtml = description ? `<p class="description">${description}</p>` : ""
-
-  const dateParts: string[] = []
-  if (createdAt) dateParts.push(`נוצר בתאריך: ${fmtDate(createdAt)}`)
-  if (updatedAt) dateParts.push(`שונה לאחרונה: ${fmtDate(updatedAt)}`)
-  const datesHtml = dateParts.length > 0
-    ? `<div class="dates">${dateParts.join("  ·  ")}</div>`
+  const subParts: string[] = []
+  if (description) subParts.push(description)
+  if (updatedAt) subParts.push(`שונה לאחרונה: ${fmtDate(updatedAt)}`)
+  const sublineHtml = subParts.length > 0
+    ? `<div class="subline">${subParts.join("  ·  ")}</div>`
     : ""
 
   // Build clues HTML
@@ -101,10 +108,10 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     const fullGridHeightMm = pageHeightMm * 0.88
     const fullCellFromHeight = fullGridHeightMm / rows
     const fullCellFromWidth = gridWidthMm / cols
-    const fullCellSizeMm = Math.min(fullCellFromHeight, fullCellFromWidth, maxCellMm)
+    const fullCellSizeMm = Math.min(fullCellFromHeight, fullCellFromWidth, maxCellMm) * 0.95
     gridCellSize = Math.floor(fullCellSizeMm * 3.78)
     gridFontSize = Math.max(10, Math.floor(gridCellSize * 0.45))
-    gridNumFontSize = Math.max(6, Math.floor(gridCellSize * 0.22))
+    gridNumFontSize = Math.max(6, Math.floor(gridCellSize * 0.22 * 2))
   }
 
   const cluesSection = `<div class="clues${separateClues ? " clues-page" : ""}">
@@ -136,17 +143,11 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       margin-bottom: 4px;
       text-align: center;
     }
-    .description {
+    .subline {
       text-align: center;
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 4px;
-    }
-    .dates {
-      text-align: center;
-      font-size: 11px;
-      color: #888;
-      margin-bottom: 16px;
+      font-size: 12px;
+      color: #777;
+      margin-bottom: 12px;
     }
     .grid-container {
       display: flex;
@@ -174,6 +175,10 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     .grid td.blocked {
       border: none;
     }
+    .grid td.blocked-interior {
+      background: #1A1A1A;
+      border: 1.5px solid #1A1A1A;
+    }
     .grid td.hint {
       background: white;
     }
@@ -189,8 +194,8 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     .clues {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-top: 8px;
+      gap: 16px;
+      margin-top: 6px;
     }
     .clues-page {
       page-break-before: always;
@@ -198,19 +203,19 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     }
     .clues-page h1 {
       grid-column: 1 / -1;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
     .clue-col h3 {
       font-family: 'Frank Ruhl Libre', serif;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 700;
       border-bottom: 1px solid #ccc;
-      padding-bottom: 4px;
-      margin-bottom: 8px;
+      padding-bottom: 3px;
+      margin-bottom: 4px;
     }
     .clue {
-      font-size: 13px;
-      line-height: 1.6;
+      font-size: 11px;
+      line-height: 1.35;
     }
     @media print {
       body { padding: 12px; }
@@ -220,8 +225,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
 </head>
 <body>
   <h1>${title || ""}</h1>
-  ${descriptionHtml}
-  ${datesHtml}
+  ${sublineHtml}
   <div class="grid-container">
     <table class="grid">${gridHtml}</table>
   </div>

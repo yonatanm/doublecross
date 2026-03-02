@@ -369,12 +369,12 @@ export default function EditorPage() {
     if (!generatorResult) return false
     const { rows: gr, cols: gc, clues_across: ca, clues_down: cd } = generatorResult
     const pageH = 273 * 3.78 // A4 usable height in px
-    const cellMm = Math.min((273 * 0.72) / gr, 186 / gc)
+    const cellMm = Math.min((273 * 0.72) / gr, 186 / gc, 7) * 0.95
     const gridH = gr * cellMm * 3.78
-    const headerH = 80
-    const clueLineH = 21 // 13px font * 1.6 line-height
-    const cluesH = Math.max(ca?.length ?? 0, cd?.length ?? 0) * clueLineH + 30
-    return gridH + headerH + cluesH + 40 > pageH
+    const headerH = 60
+    const clueLineH = 15 // 11px font * 1.35 line-height
+    const cluesH = Math.max(ca?.length ?? 0, cd?.length ?? 0) * clueLineH + 24
+    return gridH + headerH + cluesH + 30 > pageH
   })()
 
   // Compute which textarea lines are unplaced clues
@@ -609,7 +609,7 @@ export default function EditorPage() {
                 size="icon"
                 title="העתק קישור לפתרון"
                 onClick={() => {
-                  const url = `${window.location.origin}${import.meta.env.BASE_URL}solve/${docIdRef.current}`
+                  const url = `${window.location.origin}${import.meta.env.BASE_URL}?solve=${docIdRef.current}`
                   navigator.clipboard.writeText(url).then(() => toast.success("הקישור הועתק"))
                 }}
               >
@@ -624,7 +624,7 @@ export default function EditorPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-8 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-6 overflow-hidden">
         {/* Left Column: Clues Input */}
         <div className="space-y-4 min-w-0">
           <div>
@@ -818,7 +818,7 @@ export default function EditorPage() {
                     לחצו על תא כדי לסמן רמז
                   </span>
                 </div>
-                <div className="bg-card border rounded-lg p-4 inline-block max-w-full overflow-auto" data-tour="crossword-grid">
+                <div className="bg-card border rounded-lg p-4 inline-block max-w-full" data-tour="crossword-grid">
                   <CrosswordGrid
                     grid={generatorResult.grid}
                     cols={generatorResult.cols}
@@ -829,6 +829,7 @@ export default function EditorPage() {
                     onCellClick={toggleCell}
                     interactive={true}
                     showLetters={false}
+                    cellSize={Math.min(40, Math.floor(700 / generatorResult.cols))}
                   />
                 </div>
               </div>

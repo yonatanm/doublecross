@@ -201,7 +201,7 @@ export default function HomePage() {
                           size="icon-xs"
                           onClick={(e) => {
                             e.stopPropagation()
-                            const url = `${window.location.origin}${import.meta.env.BASE_URL}solve/${cw.id}`
+                            const url = `${window.location.origin}${import.meta.env.BASE_URL}?solve=${cw.id}`
                             navigator.clipboard.writeText(url).then(() => toast.success("הקישור הועתק"))
                           }}
                           title="העתק קישור לפתרון"

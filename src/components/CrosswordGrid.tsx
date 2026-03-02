@@ -1,5 +1,15 @@
 import type { CrosswordCell, LayoutWord } from "@/types/crossword"
 
+/** Check if a cell has letters in all 4 neighbors. */
+function hasLetterAllSides(grid: CrosswordCell[][], r: number, c: number, rows: number, cols: number): boolean {
+  const hasLetter = (nr: number, nc: number) => {
+    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) return false
+    const cell = grid[nr]?.[nc]
+    return cell && !cell.isBlocked && !!cell.letter
+  }
+  return hasLetter(r - 1, c) && hasLetter(r + 1, c) && hasLetter(r, c - 1) && hasLetter(r, c + 1)
+}
+
 interface CrosswordGridProps {
   grid: CrosswordCell[][]
   cols: number
@@ -85,9 +95,10 @@ export default function CrosswordGrid({
             const isHighlighted = highlightedCells.includes(pos)
             const label = findLabel(r, c)
 
-            if (cell.isBlocked) {
+            if (cell.isBlocked || !cell.letter) {
+              const isInterior = hasLetterAllSides(grid, r, c, rows, cols)
               return (
-                <span key={pos} className="crossword-cell blocked" style={{ width: cellSize, height: cellSize }} />
+                <span key={pos} className={`crossword-cell ${isInterior ? "blocked-interior" : "blocked"}`} style={{ width: cellSize, height: cellSize }} />
               )
             }
 
