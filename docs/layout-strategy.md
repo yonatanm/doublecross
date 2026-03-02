@@ -129,6 +129,10 @@ replacing any previous proposals. The user browses them via a thumbnail gallery 
 (mini crossword grids), prev/next arrows, or keyboard left/right arrows. Each proposal
 has its own `highlightedCells` state. No session history — each generation is a fresh batch.
 
+If any clues could not be placed, the editor shows:
+- A warning banner in the header: "לא כל המילים נכנסו לתשבץ"
+- Per-line warning icons (⚠) next to each unplaced clue in the textarea, with a tooltip on hover
+
 Loading from Firestore creates a single-element proposals array.
 
 ## Files

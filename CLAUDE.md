@@ -26,6 +26,8 @@ A Hebrew RTL crossword puzzle builder web app. Users create crosswords by enteri
 - Firestore collection name: `"crossword"` — complex fields (grid, clues, layout_result) are stored as JSON strings to avoid Firestore's nested array limitation
 - Firestore queries use client-side sorting to avoid requiring composite indexes
 - Auth: Google sign-in via AuthContext provider pattern
+- **Ownership preservation**: `saveCrossword()` stamps the current user as owner (new documents only). `overwriteCrossword()` passes through whatever owner fields are in the crossword object — the caller (EditorPage auto-save) is responsible for including the original owner from `existingCrossword`
+- Main content container uses `max-w-6xl px-6` matching the header for aligned edges
 
 ## Key directories
 ```
@@ -55,7 +57,7 @@ docs/
 - **Crossword generator** (`src/lib/crossword-generator.ts`): `buildGeneratorResult()` handles post-engine processing — filters unplaced, enforces no-islands (keeps largest connected component only), enforces split completeness (all fragments of a split multi-word answer must be placed), applies RTL x-coordinate flip (`startx = cols + 1 - startx`), builds grid, renumbers positions. `generateFromVariant()` calls the engine and pipes through `buildGeneratorResult()`
 - **Layout engine** (`src/lib/layout-engine.ts`): inline placement engine (ported from crossword-layout-generator). Multi-attempt with scoring. Exports `DEFAULT_LAYOUT_WEIGHTS` used by both engine and strategy layer
 - **Print** (`src/lib/print-crossword.ts`): opens a new window with standalone HTML that auto-triggers `window.print()`. Highlighted cells show their letter on white background; other cells are empty. Uses `print-color-adjust: exact` to preserve black backgrounds. Cell size is computed dynamically to fill ~75% of A4 page
-- **Editor proposals**: flat proposal gallery — each "שבץ מילים" click generates up to 10 proposals sorted by score, replacing any previous batch. Proposals shown as a thumbnail strip (mini grids, cellSize=6) with prev/next arrows + keyboard left/right. Each proposal has its own `highlightedCells`. Loading from Firestore creates a single proposal
+- **Editor proposals**: flat proposal gallery — each "שבץ מילים" click generates up to 10 proposals sorted by score, replacing any previous batch. Proposals shown as a thumbnail strip (mini grids, cellSize=6) with prev/next arrows + keyboard left/right. Each proposal has its own `highlightedCells`. Loading from Firestore creates a single proposal. Unplaced clues show a warning banner in the header + per-line ⚠ icons with tooltips in the textarea
 - **Home page**: master-detail layout — list on the right (420px), crossword preview on the left (22px cells, no numbers). Preview shows all letters with `interactive={true}` + no-op click
 - **CrosswordGrid** accepts `cellSize` (default 40) and `showNumbers` (default true) props for reuse across views
 - **Cell position numbers**: red (#C82828), scaled with `0.55em` — consistent across editor, preview, and print
