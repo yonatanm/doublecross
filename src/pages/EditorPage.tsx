@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
-import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Globe, Archive } from "lucide-react"
+import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Globe, Archive, Share2 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -602,6 +603,19 @@ export default function EditorPage() {
                 </button>
               ))}
             </div>
+            {status === "published" && docIdRef.current && (
+              <Button
+                variant="outline"
+                size="icon"
+                title="העתק קישור לפתרון"
+                onClick={() => {
+                  const url = `${window.location.origin}${import.meta.env.BASE_URL}solve/${docIdRef.current}`
+                  navigator.clipboard.writeText(url).then(() => toast.success("הקישור הועתק"))
+                }}
+              >
+                <Share2 className="w-4 h-4" />
+              </Button>
+            )}
             <Button variant="outline" onClick={() => handlePrint(printNeedsTwoPages)} disabled={!generatorResult} className="gap-2" data-tour="print-area">
               <Printer className="w-4 h-4" />
               הדפס{printNeedsTwoPages ? " (2 עמודים)" : ""}

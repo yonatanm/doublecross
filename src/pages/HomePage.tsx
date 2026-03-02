@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Search, Printer, Trash2 } from "lucide-react"
+import { Plus, Search, Printer, Trash2, Share2 } from "lucide-react"
+import { toast } from "sonner"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -194,6 +195,20 @@ export default function HomePage() {
                       <span className="text-xs text-muted-foreground">
                         {formatDate(cw.updatedAt)}
                       </span>
+                      {cw.status === "published" && (
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            const url = `${window.location.origin}${import.meta.env.BASE_URL}solve/${cw.id}`
+                            navigator.clipboard.writeText(url).then(() => toast.success("הקישור הועתק"))
+                          }}
+                          title="העתק קישור לפתרון"
+                        >
+                          <Share2 className="w-3 h-3" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon-xs"

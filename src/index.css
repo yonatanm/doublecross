@@ -187,6 +187,26 @@ html {
   color: #C82828;
 }
 
+/* Solve mode styles */
+.crossword-cell.solve-hint {
+  background-color: #DBEAFE;
+}
+
+.crossword-cell.solve-focused {
+  background-color: #FEF3C7;
+  outline: 2.5px solid #C8963E !important;
+  outline-offset: -1.25px !important;
+  z-index: 2;
+}
+
+.crossword-cell.solve-word {
+  background-color: #FEF9C3;
+}
+
+.crossword-cell.solve-correct {
+  background-color: #D1FAE5;
+}
+
 /* Print styles */
 @media print {
   body { background: white !important; }
