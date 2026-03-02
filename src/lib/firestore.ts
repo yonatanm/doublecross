@@ -68,15 +68,10 @@ export async function updateCrossword(id: string, data: Partial<Crossword>): Pro
 }
 
 export async function overwriteCrossword(id: string, crossword: Omit<Crossword, "id">): Promise<void> {
-  const user = auth.currentUser
   const docRef = doc(db, COLLECTION, id)
   await setDoc(docRef, {
     ...serializeForFirestore(crossword),
     updatedAt: Timestamp.now(),
-    userId: user?.uid,
-    userEmail: user?.email,
-    userDisplayName: user?.displayName || undefined,
-    userPhotoURL: user?.photoURL || undefined,
   })
 }
 

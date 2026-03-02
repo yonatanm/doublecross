@@ -313,6 +313,10 @@ export default function EditorPage() {
         layout_result: genResult?.layout_result || [],
         layout_rows: genResult?.rows || 0,
         layout_cols: genResult?.cols || 0,
+        userId: existingCrossword?.userId,
+        userEmail: existingCrossword?.userEmail,
+        userDisplayName: existingCrossword?.userDisplayName,
+        userPhotoURL: existingCrossword?.userPhotoURL,
       }
 
       setAutoSaveStatus("saving")
