@@ -45,7 +45,7 @@ function formatDate(timestamp?: { seconds: number }): string {
 export default function HomePage() {
   const navigate = useNavigate()
   const { isLoggedIn, login } = useAuth()
-  const { data: crosswords, isLoading, refetch } = useCrosswords()
+  const { data: crosswords, isLoading, error, refetch } = useCrosswords()
   const walkthrough = useWalkthrough("home")
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("draft")
@@ -134,7 +134,11 @@ export default function HomePage() {
       </div>
 
       {/* Content */}
-      {isLoading ? (
+      {error ? (
+        <div className="text-center py-16 text-destructive text-sm">
+          שגיאה בטעינת התשבצים: {(error as Error).message}
+        </div>
+      ) : isLoading ? (
         <div className="text-center py-16 text-muted-foreground">טוען...</div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center py-20 text-center">
