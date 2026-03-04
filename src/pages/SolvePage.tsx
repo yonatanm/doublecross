@@ -63,6 +63,7 @@ export default function SolvePage() {
   const [direction, setDirection] = useState<"across" | "down">("across")
   const [completed, setCompleted] = useState(false)
   const gridRef = useRef<HTMLDivElement>(null)
+  const hiddenInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch crossword
   useEffect(() => {
@@ -268,6 +269,30 @@ export default function SolvePage() {
     return null
   }, [crossword, focusedPos, direction, cellToWords, editableCells, userLetters])
 
+  // Focus the hidden input (triggers virtual keyboard on mobile)
+  const focusInput = useCallback(() => {
+    hiddenInputRef.current?.focus()
+  }, [])
+
+  // Handle mobile input via hidden input
+  const handleInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.currentTarget
+    const val = input.value
+    input.value = "" // always clear
+    if (!focusedPos || completed) return
+    if (!editableCells.has(focusedPos)) return
+
+    // Process each character (usually just one)
+    for (const ch of val) {
+      if (isHebrewChar(ch)) {
+        setUserLetters((prev) => ({ ...prev, [focusedPos!]: ch }))
+        const next = findNextEditable(focusedPos, direction, true)
+        if (next) setFocusedPos(next)
+        break // only take first Hebrew char
+      }
+    }
+  }, [focusedPos, direction, completed, editableCells, findNextEditable])
+
   // Keyboard handler
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!focusedPos || completed) return
@@ -372,9 +397,9 @@ export default function SolvePage() {
     } else {
       setFocusedPos(pos)
     }
-    // Focus the grid container for keyboard input
-    gridRef.current?.focus()
-  }, [focusedPos, crossword, completed])
+    // Focus the hidden input for keyboard input (mobile + desktop)
+    focusInput()
+  }, [focusedPos, crossword, completed, focusInput])
 
   // Correct cells set (for green highlighting on completion)
   const correctCells = useMemo(() => {
@@ -452,6 +477,22 @@ export default function SolvePage() {
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-8">
           {/* Grid */}
           <div className="flex justify-center">
+            {/* Hidden input to trigger virtual keyboard on mobile.
+                Must be visible-ish (1px, opacity 0) so iOS/Android actually show the keyboard. */}
+            <input
+              ref={hiddenInputRef}
+              type="text"
+              inputMode="text"
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
+              onInput={handleInput}
+              onKeyDown={handleKeyDown}
+              style={{ position: "absolute", top: 0, left: 0, width: 1, height: 1, opacity: 0, zIndex: -1, border: "none", padding: 0 }}
+              aria-hidden="true"
+            />
             <div
               ref={gridRef}
               tabIndex={0}
@@ -494,7 +535,7 @@ export default function SolvePage() {
                 if (cells.length > 0) {
                   setFocusedPos(cells[0])
                   setDirection(word.orientation as "across" | "down")
-                  gridRef.current?.focus()
+                  focusInput()
                 }
               }}
             />
@@ -511,7 +552,7 @@ export default function SolvePage() {
                 if (cells.length > 0) {
                   setFocusedPos(cells[0])
                   setDirection(word.orientation as "across" | "down")
-                  gridRef.current?.focus()
+                  focusInput()
                 }
               }}
             />

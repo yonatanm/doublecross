@@ -14,6 +14,9 @@ export default defineConfig({
     __GIT_SHA__: JSON.stringify(gitSha),
     __GIT_DATE__: JSON.stringify(gitDate),
   },
+  server: {
+    allowedHosts: true,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
