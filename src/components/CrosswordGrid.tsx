@@ -10,6 +10,7 @@ function hasLetterAllSides(grid: CrosswordCell[][], r: number, c: number, rows: 
   return hasLetter(r - 1, c) && hasLetter(r + 1, c) && hasLetter(r, c - 1) && hasLetter(r, c + 1)
 }
 
+
 interface CrosswordGridProps {
   grid: CrosswordCell[][]
   cols: number
@@ -80,80 +81,82 @@ export default function CrosswordGrid({
 
   return (
     <div className="relative inline-block">
-      <div
-        className="crossword-grid inline-grid"
+      <table
+        className="crossword-grid"
         style={{
-          gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`,
+          '--cell-size': `${cellSize}px`,
           fontSize: `${Math.max(8, cellSize * 0.45)}px`,
-        }}
+        } as React.CSSProperties}
       >
-        {Array.from({ length: rows }, (_, r) =>
-          Array.from({ length: cols }, (_, c) => c).map((c) => {
-            const cell = grid[r]?.[c]
-            if (!cell) return null
-            const pos = `${r}-${c}`
-            const isHighlighted = highlightedCells.includes(pos)
-            const label = findLabel(r, c)
+        <tbody>
+          {Array.from({ length: rows }, (_, r) => (
+            <tr key={r}>
+              {Array.from({ length: cols }, (_, c) => {
+                const cell = grid[r]?.[c]
+                if (!cell) return <td key={c} className="crossword-cell blocked" />
+                const pos = `${r}-${c}`
+                const isHighlighted = highlightedCells.includes(pos)
+                const label = findLabel(r, c)
 
-            if (cell.isBlocked || !cell.letter) {
-              const isInterior = hasLetterAllSides(grid, r, c, rows, cols)
-              return (
-                <span key={pos} className={`crossword-cell ${isInterior ? "blocked-interior" : "blocked"}`} style={{ width: cellSize, height: cellSize }} />
-              )
-            }
+                if (cell.isBlocked || !cell.letter) {
+                  const isInterior = hasLetterAllSides(grid, r, c, rows, cols)
+                  return (
+                    <td key={c} className={`crossword-cell ${isInterior ? "blocked-interior" : "blocked"}`} />
+                  )
+                }
 
-            if (solveMode) {
-              const isFocused = focusedPos === pos
-              const isHint = hintCells?.has(pos) ?? false
-              const isInWord = wordCells?.has(pos) ?? false
-              const isCorrect = correctCells?.has(pos) ?? false
-              const letter = isHint ? cell.letter : userLetters?.[pos] || ""
+                if (solveMode) {
+                  const isFocused = focusedPos === pos
+                  const isHint = hintCells?.has(pos) ?? false
+                  const isInWord = wordCells?.has(pos) ?? false
+                  const isCorrect = correctCells?.has(pos) ?? false
+                  const letter = isHint ? cell.letter : userLetters?.[pos] || ""
 
-              return (
-                <span
-                  key={pos}
-                  className={[
-                    "crossword-cell interactive cursor-pointer",
-                    isCorrect ? "solve-correct" : "",
-                    isFocused ? "solve-focused" : "",
-                    !isFocused && !isCorrect && isInWord ? "solve-word" : "",
-                    !isFocused && !isCorrect && !isInWord && isHint ? "solve-hint" : "",
-                  ].join(" ")}
-                  style={{ width: cellSize, height: cellSize }}
-                  onClick={() => onCellClick(pos)}
-                >
-                  {letter && <span>{letter}</span>}
-                  {showNumbers && label != null && (
-                    <span className="cell-number">{label}</span>
-                  )}
-                </span>
-              )
-            }
+                  return (
+                    <td
+                      key={c}
+                      className={[
+                        "crossword-cell interactive cursor-pointer",
+                        isCorrect ? "solve-correct" : "",
+                        isFocused ? "solve-focused" : "",
+                        !isFocused && !isCorrect && isInWord ? "solve-word" : "",
+                        !isFocused && !isCorrect && !isInWord && isHint ? "solve-hint" : "",
+                      ].join(" ")}
+                      onClick={() => onCellClick(pos)}
+                    >
+                      {letter && <span>{letter}</span>}
+                      {showNumbers && label != null && (
+                        <span className="cell-number">{label}</span>
+                      )}
+                    </td>
+                  )
+                }
 
-            const shouldShowLetter = interactive || (showLetters && isHighlighted)
+                const shouldShowLetter = interactive || (showLetters && isHighlighted)
 
-            return (
-              <span
-                key={pos}
-                className={[
-                  "crossword-cell",
-                  interactive ? "interactive cursor-pointer" : "",
-                  isHighlighted ? "highlighted" : "",
-                ].join(" ")}
-                style={{ width: cellSize, height: cellSize }}
-                onClick={() => interactive && onCellClick(pos)}
-              >
-                {shouldShowLetter && cell.letter && (
-                  <span>{cell.letter}</span>
-                )}
-                {showNumbers && label != null && (
-                  <span className="cell-number">{label}</span>
-                )}
-              </span>
-            )
-          })
-        )}
-      </div>
+                return (
+                  <td
+                    key={c}
+                    className={[
+                      "crossword-cell",
+                      interactive ? "interactive cursor-pointer" : "",
+                      isHighlighted ? "highlighted" : "",
+                    ].join(" ")}
+                    onClick={() => interactive && onCellClick(pos)}
+                  >
+                    {shouldShowLetter && cell.letter && (
+                      <span>{cell.letter}</span>
+                    )}
+                    {showNumbers && label != null && (
+                      <span className="cell-number">{label}</span>
+                    )}
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
       {focusOverlays.map((ov, i) => (
         <div
           key={i}

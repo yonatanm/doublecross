@@ -134,38 +134,38 @@ html {
   }
 }
 
-/* Crossword grid styles */
+/* Crossword grid styles — table with border-collapse for uniform borders */
 .crossword-grid {
-  display: grid;
-  direction: ltr; /* grid itself is LTR, we reverse columns in code */
+  border-collapse: collapse;
+  direction: ltr;
 }
 
 .crossword-cell {
-  width: 40px;
-  height: 40px;
+  width: var(--cell-size, 40px);
+  height: var(--cell-size, 40px);
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-align: center;
+  vertical-align: middle;
   font-family: 'Frank Ruhl Libre', serif;
   font-weight: 500;
-  font-size: 18px;
+  padding: 0;
   cursor: default;
   user-select: none;
   transition: background-color 0.15s ease;
 }
 
-.crossword-cell:not(.blocked) {
-  outline: 1.5px solid #1A1A1A;
-  outline-offset: -0.75px;
+.crossword-cell:not(.blocked):not(.blocked-interior) {
+  border: 1.5px solid #1A1A1A;
 }
 
 .crossword-cell.blocked {
+  border: none;
   background-color: transparent;
 }
 
 .crossword-cell.blocked-interior {
   background-color: #1A1A1A;
+  border: 1.5px solid #1A1A1A;
 }
 
 .crossword-cell.interactive:not(.blocked):hover {
@@ -198,8 +198,7 @@ html {
 
 .crossword-cell.solve-focused {
   background-color: #FEF3C7;
-  outline: 2.5px solid #C8963E !important;
-  outline-offset: -1.25px !important;
+  box-shadow: inset 0 0 0 2.5px #C8963E;
   z-index: 2;
 }
 
