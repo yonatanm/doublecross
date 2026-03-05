@@ -36,7 +36,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   // Convert mm to px (96dpi: 1mm ≈ 3.78px)
   const cellSize = Math.floor(cellSizeMm * 3.78)
   const fontSize = Math.max(10, Math.floor(cellSize * 0.45))
-  const numFontSize = Math.max(6, Math.floor(cellSize * 0.22 * 2))
+  const numFontSize = Math.max(4, Math.floor(cellSize * 0.22 * 2 * 0.75))
 
   // Check if a blocked cell has letter cells on all 4 sides
   const hasLetterAllSides = (r: number, c: number) => {
@@ -111,7 +111,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     const fullCellSizeMm = Math.min(fullCellFromHeight, fullCellFromWidth, maxCellMm) * 0.95
     gridCellSize = Math.floor(fullCellSizeMm * 3.78)
     gridFontSize = Math.max(10, Math.floor(gridCellSize * 0.45))
-    gridNumFontSize = Math.max(6, Math.floor(gridCellSize * 0.22 * 2))
+    gridNumFontSize = Math.max(4, Math.floor(gridCellSize * 0.22 * 2 * 0.75))
   }
 
   const cluesSection = `<div class="clues${separateClues ? " clues-page" : ""}">
@@ -189,7 +189,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       font-size: ${gridNumFontSize}px;
       font-family: 'Heebo', sans-serif;
       font-weight: 700;
-      color: #C82828;
+      color: #1A1A1A;
     }
     .clues {
       display: grid;
