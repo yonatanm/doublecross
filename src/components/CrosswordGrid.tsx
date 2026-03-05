@@ -10,7 +10,6 @@ function hasLetterAllSides(grid: CrosswordCell[][], r: number, c: number, rows: 
   return hasLetter(r - 1, c) && hasLetter(r + 1, c) && hasLetter(r, c - 1) && hasLetter(r, c + 1)
 }
 
-
 interface CrosswordGridProps {
   grid: CrosswordCell[][]
   cols: number
@@ -27,7 +26,6 @@ interface CrosswordGridProps {
   solveMode?: boolean
   userLetters?: Record<string, string>
   focusedPos?: string | null
-  solveDirection?: "across" | "down"
   hintCells?: Set<string>
   wordCells?: Set<string>
   correctCells?: Set<string>
@@ -59,29 +57,31 @@ export default function CrosswordGrid({
     return word?.position
   }
 
-  // Compute focused word overlay bounding boxes (one per word group)
-  const focusOverlays = focusedCells
-    .filter((group) => group.length > 0)
-    .map((group) => {
-      const positions = group.map((pos) => {
-        const [r, c] = pos.split("-").map(Number)
-        return { r, c }
-      })
-      const minR = Math.min(...positions.map((p) => p.r))
-      const maxR = Math.max(...positions.map((p) => p.r))
-      const minC = Math.min(...positions.map((p) => p.c))
-      const maxC = Math.max(...positions.map((p) => p.c))
-      return {
-        top: minR * cellSize,
-        left: minC * cellSize,
-        width: (maxC - minC + 1) * cellSize,
-        height: (maxR - minR + 1) * cellSize,
-      }
+  // Compute per-cell focus border styles (green border on outer edges of focused word groups)
+  const focusStyleMap = new Map<string, React.CSSProperties>()
+  const green = "3px solid #22c55e"
+  for (const group of focusedCells) {
+    if (group.length === 0) continue
+    const positions = group.map((pos) => {
+      const [r, c] = pos.split("-").map(Number)
+      return { r, c, pos }
     })
+    const minR = Math.min(...positions.map((p) => p.r))
+    const maxR = Math.max(...positions.map((p) => p.r))
+    const minC = Math.min(...positions.map((p) => p.c))
+    const maxC = Math.max(...positions.map((p) => p.c))
+    for (const p of positions) {
+      focusStyleMap.set(p.pos, {
+        borderTop: p.r === minR ? green : undefined,
+        borderBottom: p.r === maxR ? green : undefined,
+        borderLeft: p.c === minC ? green : undefined,
+        borderRight: p.c === maxC ? green : undefined,
+      })
+    }
+  }
 
   return (
-    <div className="relative inline-block">
-      <table
+    <table
         className="crossword-grid"
         style={{
           '--cell-size': `${cellSize}px`,
@@ -142,6 +142,7 @@ export default function CrosswordGrid({
                       interactive ? "interactive cursor-pointer" : "",
                       isHighlighted ? "highlighted" : "",
                     ].join(" ")}
+                    style={focusStyleMap.get(pos)}
                     onClick={() => interactive && onCellClick(pos)}
                   >
                     {shouldShowLetter && cell.letter && (
@@ -157,19 +158,5 @@ export default function CrosswordGrid({
           ))}
         </tbody>
       </table>
-      {focusOverlays.map((ov, i) => (
-        <div
-          key={i}
-          className="absolute pointer-events-none rounded-sm"
-          style={{
-            top: ov.top,
-            left: ov.left,
-            width: ov.width,
-            height: ov.height,
-            border: `3px solid #22c55e`,
-          }}
-        />
-      ))}
-    </div>
   )
 }

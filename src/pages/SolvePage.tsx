@@ -512,7 +512,6 @@ export default function SolvePage() {
                 solveMode={true}
                 userLetters={userLetters}
                 focusedPos={focusedPos}
-                solveDirection={direction}
                 hintCells={hintCells}
                 wordCells={currentWordCells}
                 correctCells={correctCells}
