@@ -20,13 +20,13 @@ type StatusFilter = "all" | "draft" | "published" | "archived"
 const FILTERS: { key: StatusFilter; label: string }[] = [
   { key: "all", label: "הכל" },
   { key: "draft", label: "טיוטות" },
-  { key: "published", label: "פורסמו" },
+  { key: "published", label: "מוכנים" },
   { key: "archived", label: "ארכיון" },
 ]
 
 const STATUS_LABELS: Record<Crossword["status"], string> = {
   draft: "טיוטה",
-  published: "פורסם",
+  published: "מוכן",
   archived: "ארכיון",
 }
 
