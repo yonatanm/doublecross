@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Globe, Archive, Share2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import ClueEditor from "@/components/ClueEditor"
 import { Label } from "@/components/ui/label"
 import CrosswordGrid from "@/components/CrosswordGrid"
 import CluesDisplay from "@/components/CluesDisplay"
@@ -251,8 +251,10 @@ export default function EditorPage() {
   useEffect(() => {
     if (proposals.length <= 1) return
     const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName
+      const target = e.target as HTMLElement
+      const tag = target?.tagName
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return
+      if (target?.isContentEditable) return
       if (e.key === "ArrowLeft") {
         setActiveProposalIndex((i) => Math.min(proposals.length - 1, i + 1))
       } else if (e.key === "ArrowRight") {
@@ -389,25 +391,22 @@ export default function EditorPage() {
     return gridH + headerH + cluesH + 30 > pageH
   })()
 
-  // Compute which textarea lines are unplaced clues
-  const unplacedClueTexts = new Set(generatorResult?.unplacedClues.map((c) => c.clue) ?? [])
-  const textareaLines = rawCluesText.split("\n")
-  const lineWarnings = textareaLines.map((line) => {
-    const trimmed = line.trim()
-    if (!trimmed || !trimmed.includes("-")) return false
-    const clueText = trimmed.substring(trimmed.indexOf("-") + 1).trim()
-    return unplacedClueTexts.has(clueText)
-  })
+  // Compute which textarea lines are unplaced clues (memoized to avoid new array each render)
+  const unplacedKey = useMemo(
+    () => (generatorResult?.unplacedClues.map((c) => c.clue) ?? []).join("\0"),
+    [generatorResult?.unplacedClues],
+  )
+  const lineWarnings = useMemo(() => {
+    const unplacedSet = new Set(unplacedKey ? unplacedKey.split("\0") : [])
+    return rawCluesText.split("\n").map((line) => {
+      const trimmed = line.trim()
+      if (!trimmed || !trimmed.includes("-")) return false
+      const clueText = trimmed.substring(trimmed.indexOf("-") + 1).trim()
+      return unplacedSet.has(clueText)
+    })
+  }, [rawCluesText, unplacedKey])
   const hasUnplaced = lineWarnings.some(Boolean)
 
-  // Scroll-sync refs for textarea ↔ indicator column
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const indicatorRef = useRef<HTMLDivElement>(null)
-  const handleTextareaScroll = () => {
-    if (textareaRef.current && indicatorRef.current) {
-      indicatorRef.current.scrollTop = textareaRef.current.scrollTop
-    }
-  }
 
   // Textarea line → grid cell highlighting
   // Build a map from raw clue index → layout words (using identifier field)
@@ -423,14 +422,13 @@ export default function EditorPage() {
     return map
   }, [generatorResult])
 
-  const handleTextareaCursor = useCallback(() => {
-    const el = textareaRef.current
-    if (!el || !generatorResult) { setFocusedCells([]); setFocusedClueKeys(new Set()); return }
-    const pos = el.selectionStart ?? 0
-    // Find which raw clue line the cursor is on
-    const lineIndex = el.value.substring(0, pos).split("\n").length - 1
-    // Map textarea line index to raw clue index (skip blank/invalid lines)
-    const lines = el.value.split("\n")
+  const rawCluesTextRef = useRef(rawCluesText)
+  rawCluesTextRef.current = rawCluesText
+
+  const handleCursorLine = useCallback((lineIndex: number) => {
+    if (!generatorResult) { setFocusedCells([]); setFocusedClueKeys(new Set()); return }
+    // Map line index to raw clue index (skip blank/invalid lines)
+    const lines = rawCluesTextRef.current.split("\n")
     let rawClueIdx = -1
     for (let i = 0; i <= lineIndex; i++) {
       const trimmed = lines[i]?.trim() || ""
@@ -648,38 +646,14 @@ export default function EditorPage() {
                 פורמט: תשובה-הגדרה (שורה לכל הגדרה)
               </span>
             </div>
-            <div className="flex gap-0" data-tour="clues-textarea">
-              <div
-                ref={indicatorRef}
-                className="overflow-hidden shrink-0 pt-2"
-                style={{ width: "22px" }}
-              >
-                {hasUnplaced && textareaLines.map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-center"
-                    style={{ height: "calc(0.875rem * 1.625)" }}
-                  >
-                    {lineWarnings[i] && (
-                      <span title="מילה זו לא נכנסה לתשבץ">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <Textarea
-                ref={textareaRef}
+            <div data-tour="clues-textarea">
+              <ClueEditor
                 value={rawCluesText}
-                onChange={(e) => setRawCluesText(e.target.value)}
-                onScroll={handleTextareaScroll}
-                onSelect={handleTextareaCursor}
-                onClick={handleTextareaCursor}
-                onKeyUp={handleTextareaCursor}
+                onChange={setRawCluesText}
+                lineWarnings={lineWarnings}
+                onCursorLine={handleCursorLine}
                 onBlur={() => { setFocusedCells([]); setFocusedClueKeys(new Set()) }}
                 placeholder={`חתול-בעל חיים ביתי\nבית_ספר-מקום ללמוד\nמים-נוזל חיים`}
-                className="min-h-[300px] font-mono text-sm leading-relaxed resize-none flex-1"
-                dir="rtl"
               />
             </div>
           </div>
