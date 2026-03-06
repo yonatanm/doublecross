@@ -190,7 +190,8 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       border: 1.5px solid #1A1A1A;
     }
     .grid td.hint {
-      background: white;
+      font-weight: 700;
+      font-size: ${Math.floor(gridCellSize * 0.7)}px;
     }
     .num {
       position: absolute;
