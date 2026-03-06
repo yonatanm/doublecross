@@ -195,7 +195,7 @@ export default function HomePage() {
                       <span className="text-xs text-muted-foreground">
                         {formatDate(cw.updatedAt)}
                       </span>
-                      {cw.status === "published" && (
+                      {cw.status !== "archived" && (
                         <Button
                           variant="ghost"
                           size="icon-xs"
