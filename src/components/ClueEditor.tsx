@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from "react"
+import { useRef, useState, useEffect, useCallback } from "react"
 import { cn } from "@/lib/utils"
 
 interface ClueEditorProps {
@@ -42,9 +42,9 @@ export default function ClueEditor({
     isUserInput.current = true
     const text = extractText(el)
     onChange(text)
-    // Always reformat (bold + warning icons) — covers cases where text
-    // didn't change (e.g. user deleted a warning icon) so React won't re-render.
-    reformatLines(el, lineWarningsRef.current)
+    // Rebuild DOM to ensure proper structure (one <div> per line) with bold + warning icons.
+    // Handles browser quirks where text ends up as bare text nodes outside <div> wrappers.
+    syncDomFromValue(el, text, lineWarningsRef.current)
   }, [onChange])
 
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
@@ -69,23 +69,18 @@ export default function ClueEditor({
     if (idx >= 0) onCursorLine(idx)
   }, [onCursorLine])
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback(() => {
     // After key processing, update cursor
     requestAnimationFrame(handleCursorChange)
-
-    // Prevent contentEditable from creating weird markup on Enter
-    if (e.key === "Enter") {
-      e.preventDefault()
-      document.execCommand("insertText", false, "\n")
-    }
   }, [handleCursorChange])
 
-  const isEmpty = !value
+  const [focused, setFocused] = useState(false)
+  const showPlaceholder = !value && !focused
   const fontStyle = { fontFamily: "'Heebo', sans-serif" }
 
   return (
     <div className="relative">
-      {isEmpty && placeholder && (
+      {showPlaceholder && placeholder && (
         <div
           className="absolute top-2 right-3 text-sm text-muted-foreground pointer-events-none leading-normal"
           style={fontStyle}
@@ -104,7 +99,8 @@ export default function ClueEditor({
         onPaste={handlePaste}
         onClick={handleCursorChange}
         onKeyUp={handleCursorChange}
-        onBlur={onBlur}
+        onFocus={() => setFocused(true)}
+        onBlur={() => { setFocused(false); onBlur?.() }}
         onKeyDown={handleKeyDown}
         className={cn(
           // Match shadcn textarea styles
@@ -200,68 +196,6 @@ function setCursorAtOffset(lineEl: Element, charOffset: number, sel: Selection) 
   }
 }
 
-/**
- * Reformat all lines in-place: update warning icons and bold formatting.
- * Preserves cursor position.
- */
-function reformatLines(el: HTMLElement | null, lineWarnings: boolean[]) {
-  if (!el) return
-  const sel = window.getSelection()
-
-  // Save cursor as (lineIndex, charOffset)
-  let savedLine = -1
-  let savedChar = -1
-  if (sel && sel.rangeCount > 0 && el.contains(sel.anchorNode)) {
-    let lineNode: Node | null = sel.anchorNode!
-    while (lineNode && lineNode.parentNode !== el) lineNode = lineNode.parentNode
-    if (lineNode) {
-      savedLine = Array.from(el.children).indexOf(lineNode as Element)
-      savedChar = getCharOffsetInLine(lineNode as Element, sel.anchorNode!, sel.anchorOffset)
-    }
-  }
-
-  for (let i = 0; i < el.children.length; i++) {
-    const line = el.children[i] as HTMLElement
-    const text = getLineText(line)
-
-    // Update warning icon
-    const existingIcon = line.querySelector("[data-warning-icon]")
-    const shouldWarn = lineWarnings[i] ?? false
-    if (shouldWarn && !existingIcon) {
-      line.insertBefore(createWarningIcon(), line.firstChild)
-    } else if (!shouldWarn && existingIcon) {
-      existingIcon.remove()
-    }
-
-    // Check if bold formatting needs updating
-    const dashIdx = text.indexOf("-")
-    const shouldBold = dashIdx > 0 && text.substring(0, dashIdx).trim().length > 0
-    const existingBold = line.querySelector("b")
-
-    if (shouldBold && existingBold && existingBold.textContent === text.substring(0, dashIdx)) {
-      continue // Already correct
-    }
-    if (!shouldBold && !existingBold) {
-      continue // No bold needed and none present
-    }
-
-    // Rebuild text content (preserve warning icon)
-    const icon = line.querySelector("[data-warning-icon]")
-    line.innerHTML = ""
-    if (icon) line.appendChild(icon)
-    buildLineTextNodes(line, text)
-  }
-
-  // Restore cursor
-  if (savedLine >= 0 && savedLine < el.children.length && sel) {
-    try {
-      setCursorAtOffset(el.children[savedLine] as Element, savedChar, sel)
-    } catch {
-      // Not critical
-    }
-  }
-}
-
 /** Extract plain text from a line element, skipping warning icons. */
 function getLineText(line: HTMLElement): string {
   let text = ""
@@ -278,11 +212,18 @@ function getLineText(line: HTMLElement): string {
 }
 
 function extractText(el: HTMLElement): string {
-  const children = el.children
-  if (children.length === 0) return el.textContent || ""
+  if (el.children.length === 0) return el.textContent || ""
+  // Handle mixed content: bare text nodes (browser quirk) + <div> elements
   const lines: string[] = []
-  for (let i = 0; i < children.length; i++) {
-    lines.push(getLineText(children[i] as HTMLElement))
+  for (const node of el.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || ""
+      if (text.trim()) lines.push(text)
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const elem = node as Element
+      if (elem.tagName === "BR") continue
+      lines.push(getLineText(elem as HTMLElement))
+    }
   }
   return lines.join("\n")
 }
@@ -315,6 +256,9 @@ function syncDomFromValue(
       div.appendChild(createWarningIcon())
     }
     buildLineTextNodes(div, lines[i])
+    if (!div.textContent) {
+      div.appendChild(document.createElement("br"))
+    }
     el.appendChild(div)
   }
 
