@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
-import { useSearchParams, useNavigate } from "react-router-dom"
+import { useSearchParams } from "react-router-dom"
 import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Grid3x3, Archive, Share2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -56,7 +56,6 @@ interface Proposal {
 
 export default function EditorPage() {
   const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
   const editId = searchParams.get("id")
   const { isLoggedIn, isAdmin } = useAuth()
 
@@ -339,7 +338,7 @@ export default function EditorPage() {
           // Prevent load-from-Firestore effect and auto-save cascade after first creation
           firestoreLoadedRef.current = true
           initialLoadRef.current = true
-          navigate(`/editor?id=${id}`, { replace: true })
+          window.history.replaceState(null, "", `${import.meta.env.BASE_URL}editor?id=${id}`)
         }
         setAutoSaveStatus("saved")
       } catch (err) {
