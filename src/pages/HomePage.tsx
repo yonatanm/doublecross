@@ -72,7 +72,12 @@ export default function HomePage() {
 
   const filtered = (crosswords || []).filter((cw: Crossword) => {
     if (statusFilter !== "all" && cw.status !== statusFilter) return false
-    if (searchQuery && !cw.title?.includes(searchQuery) && !cw.topic?.includes(searchQuery) && !cw.description?.includes(searchQuery)) return false
+    if (searchQuery) {
+      const q = searchQuery
+      const inMeta = cw.title?.includes(q) || cw.topic?.includes(q) || cw.description?.includes(q)
+      const inClues = cw.raw_clues?.some((rc) => rc.answer.includes(q) || rc.clue.includes(q))
+      if (!inMeta && !inClues) return false
+    }
     return true
   })
 
