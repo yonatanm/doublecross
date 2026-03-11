@@ -149,19 +149,22 @@ export async function repairMissingUserIds(): Promise<number> {
   return fixed
 }
 
-/** Delete all crosswords with status "archived" for the current user. */
-export async function deleteArchivedCrosswords(): Promise<number> {
+/** Fetch archived crosswords for review before deletion. Admin sees all, regular user sees own. */
+export async function getArchivedCrosswords(isAdmin = false): Promise<Crossword[]> {
   const user = auth.currentUser
-  if (!user) return 0
-  const q = query(
-    collection(db, COLLECTION),
-    where("userId", "==", user.uid),
-    where("status", "==", "archived"),
-  )
+  if (!user) return []
+  const constraints = [where("status", "==", "archived")]
+  if (!isAdmin) constraints.push(where("userId", "==", user.uid))
+  const q = query(collection(db, COLLECTION), ...constraints)
   const snapshot = await getDocs(q)
+  return snapshot.docs.map((d) => deserializeFromFirestore({ id: d.id, ...d.data() }))
+}
+
+/** Delete specific crosswords by ID. */
+export async function deleteCrosswordsByIds(ids: string[]): Promise<number> {
   let deleted = 0
-  for (const d of snapshot.docs) {
-    await deleteDoc(doc(db, COLLECTION, d.id))
+  for (const id of ids) {
+    await deleteDoc(doc(db, COLLECTION, id))
     deleted++
   }
   return deleted

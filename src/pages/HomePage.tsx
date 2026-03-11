@@ -12,7 +12,8 @@ import { useCrosswords } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { useWalkthrough } from "@/hooks/useWalkthrough"
 import { openPrintWindow } from "@/lib/print-crossword"
-import { deleteArchivedCrosswords } from "@/lib/firestore"
+import { getArchivedCrosswords, deleteCrosswordsByIds } from "@/lib/firestore"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import type { Crossword } from "@/types/crossword"
 
 type StatusFilter = "all" | "draft" | "published" | "archived"
@@ -45,13 +46,16 @@ function formatDate(timestamp?: { seconds: number }): string {
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { isLoggedIn, login } = useAuth()
+  const { isLoggedIn, isAdmin, login } = useAuth()
   const { data: crosswords, isLoading, error, refetch } = useCrosswords()
   const walkthrough = useWalkthrough("home")
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("draft")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
+  const [archivedItems, setArchivedItems] = useState<Crossword[]>([])
+  const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set())
 
   if (!isLoggedIn) {
     return (
@@ -68,6 +72,14 @@ export default function HomePage() {
         </Button>
       </div>
     )
+  }
+
+  const allItems = crosswords || []
+  const statusCounts: Record<StatusFilter, number> = {
+    all: allItems.length,
+    draft: allItems.filter((cw) => cw.status === "draft").length,
+    published: allItems.filter((cw) => cw.status === "published").length,
+    archived: allItems.filter((cw) => cw.status === "archived").length,
   }
 
   const filtered = (crosswords || []).filter((cw: Crossword) => {
@@ -98,9 +110,14 @@ export default function HomePage() {
               size="sm"
               className="gap-1.5 text-xs"
               onClick={async () => {
-                const count = await deleteArchivedCrosswords()
-                alert(`נמחקו ${count} תשבצים`)
-                refetch()
+                const items = await getArchivedCrosswords(isAdmin)
+                if (items.length === 0) {
+                  toast("אין תשבצים בארכיון")
+                  return
+                }
+                setArchivedItems(items)
+                setSelectedForDeletion(new Set(items.map((c) => c.id!)))
+                setArchiveDialogOpen(true)
               }}
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -124,7 +141,7 @@ export default function HomePage() {
               className="cursor-pointer px-3 py-1 text-xs"
               onClick={() => setStatusFilter(f.key)}
             >
-              {f.label}
+              {f.label} ({statusCounts[f.key]})
             </Badge>
           ))}
         </div>
@@ -275,6 +292,52 @@ export default function HomePage() {
           </div>
         </div>
       )}
+      {/* Delete archived confirmation dialog */}
+      <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>מחיקת תשבצים מהארכיון</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-2">
+            סמנו את התשבצים שברצונכם למחוק:
+          </p>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {archivedItems.map((cw) => (
+              <label key={cw.id} className="flex items-center gap-3 p-2 rounded hover:bg-muted cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedForDeletion.has(cw.id!)}
+                  onChange={(e) => {
+                    const next = new Set(selectedForDeletion)
+                    if (e.target.checked) next.add(cw.id!)
+                    else next.delete(cw.id!)
+                    setSelectedForDeletion(next)
+                  }}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm truncate">{cw.title || cw.id}</span>
+              </label>
+            ))}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setArchiveDialogOpen(false)}>
+              ביטול
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={selectedForDeletion.size === 0}
+              onClick={async () => {
+                const count = await deleteCrosswordsByIds([...selectedForDeletion])
+                toast(`נמחקו ${count} תשבצים`)
+                setArchiveDialogOpen(false)
+                refetch()
+              }}
+            >
+              מחק {selectedForDeletion.size} תשבצים
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
