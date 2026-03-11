@@ -436,7 +436,7 @@ export default function SolvePage() {
   const colCount = crossword.layout_cols || gridData[0]?.length || 0
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header with status indicator */}
       <header className={[
         "border-b backdrop-blur-sm sticky top-0 z-50 transition-colors",
@@ -465,7 +465,7 @@ export default function SolvePage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-6">
+      <main className="max-w-6xl mx-auto px-6 py-6 flex-1">
         {/* Title */}
         <h1
           className="text-2xl font-bold text-center mb-6"
@@ -558,6 +558,14 @@ export default function SolvePage() {
           </div>
         </div>
       </main>
+      <footer className="text-center text-sm text-muted-foreground py-4 space-y-2">
+        <nav className="flex justify-center gap-4">
+          <Link to="/about" className="hover:underline">אודות</Link>
+          <Link to="/terms" className="hover:underline">תנאי שימוש</Link>
+          <Link to="/privacy" className="hover:underline">פרטיות</Link>
+        </nav>
+        <p>© 2026 כל הזכויות שמורות ליונתן ממן</p>
+      </footer>
     </div>
   )
 }
