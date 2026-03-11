@@ -69,10 +69,16 @@ export async function updateCrossword(id: string, data: Partial<Crossword>): Pro
 }
 
 export async function overwriteCrossword(id: string, crossword: Omit<Crossword, "id">): Promise<void> {
+  const user = auth.currentUser
   const docRef = doc(db, COLLECTION, id)
   await setDoc(docRef, {
     ...serializeForFirestore(crossword),
     updatedAt: Timestamp.now(),
+    // Preserve ownership — always stamp from current auth user if caller didn't provide
+    userId: crossword.userId || user?.uid,
+    userEmail: crossword.userEmail || user?.email,
+    userDisplayName: crossword.userDisplayName || user?.displayName || undefined,
+    userPhotoURL: crossword.userPhotoURL || user?.photoURL || undefined,
   })
 }
 
@@ -134,6 +140,8 @@ export async function repairMissingUserIds(): Promise<number> {
       await updateDoc(doc(db, COLLECTION, d.id), {
         userId: user.uid,
         userEmail: user.email,
+        userDisplayName: user.displayName || undefined,
+        userPhotoURL: user.photoURL || undefined,
       })
       fixed++
     }
