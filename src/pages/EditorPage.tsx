@@ -14,8 +14,49 @@ import { useAuth } from "@/hooks/useAuth"
 import { generateProposals } from "@/lib/layout-strategy"
 import { openPrintWindow } from "@/lib/print-crossword"
 import { useWalkthrough } from "@/hooks/useWalkthrough"
-import type { RawClue, Crossword, GeneratorResult, LayoutWord } from "@/types/crossword"
+import type { RawClue, NumberedClue, Crossword, GeneratorResult, LayoutWord } from "@/types/crossword"
+import { cleanAnswer } from "@/lib/crossword-generator"
 import defaultCluesUrl from "@/data/default-clues.txt?url"
+
+/** Sync updated definitions from raw_clues into numbered clues.
+ *  Uses layout_result to map split-word fragments back to raw clues via identifier.
+ *  Preserves "ראה" cross-references and "(יחד עם...)" suffixes. */
+function syncClueDefinitions(
+  numberedClues: NumberedClue[],
+  rawClues: RawClue[],
+  orientation: "across" | "down",
+  layoutResult?: LayoutWord[],
+): NumberedClue[] {
+  // Build lookup: cleaned answer (without spaces) → definition (for single-word matches)
+  const defByAnswer = new Map<string, string>()
+  for (const rc of rawClues) {
+    const key = cleanAnswer(rc.answer).replace(/ /g, "")
+    defByAnswer.set(key, rc.clue)
+  }
+
+  // Build lookup: grid position → definition (for split-word fragments via identifier)
+  const defByPosition = new Map<number, string>()
+  if (layoutResult) {
+    for (const w of layoutResult) {
+      if (w.orientation === orientation && w.identifier !== undefined && w.identifier < rawClues.length) {
+        defByPosition.set(w.position, rawClues[w.identifier].clue)
+      }
+    }
+  }
+
+  return numberedClues.map((nc) => {
+    // Skip cross-reference clues ("ראה 3 מאוזן")
+    if (nc.clue.startsWith("ראה ")) return nc
+    // Try direct answer match first, then position-based match via layout_result
+    const key = cleanAnswer(nc.answer).replace(/ /g, "")
+    const newDef = defByAnswer.get(key) ?? defByPosition.get(nc.number)
+    if (!newDef) return nc
+    // Preserve "(יחד עם...)" suffix if present
+    const suffixMatch = nc.clue.match(/(\s*\(יחד עם .+\))$/)
+    const suffix = suffixMatch ? suffixMatch[1] : ""
+    return { ...nc, clue: newDef + suffix }
+  })
+}
 
 function parseRawClues(text: string): RawClue[] {
   if (!text.trim()) return []
@@ -318,8 +359,8 @@ export default function EditorPage() {
         answers_hash: answersHash(rawClues),
         proposals_hash: proposalsHash,
         saved_proposals: proposals.length > 0 ? JSON.stringify({ proposals, activeIndex: activeProposalIndex }) : "",
-        clues_across: genResult?.clues_across || [],
-        clues_down: genResult?.clues_down || [],
+        clues_across: genResult ? syncClueDefinitions(genResult.clues_across, rawClues, "across", genResult.layout_result) : [],
+        clues_down: genResult ? syncClueDefinitions(genResult.clues_down, rawClues, "down", genResult.layout_result) : [],
         highlighted_cells: hCells,
         layout_result: genResult?.layout_result || [],
         layout_rows: genResult?.rows || 0,
@@ -353,6 +394,7 @@ export default function EditorPage() {
 
   const handlePrint = (separateClues = false) => {
     if (!generatorResult) return
+    const currentRawClues = parseRawClues(rawCluesText)
     const cw: Crossword = {
       title,
       topic,
@@ -361,9 +403,9 @@ export default function EditorPage() {
       difficulty,
       grid_size: generatorResult.cols,
       grid: generatorResult.grid,
-      raw_clues: parseRawClues(rawCluesText),
-      clues_across: generatorResult.clues_across,
-      clues_down: generatorResult.clues_down,
+      raw_clues: currentRawClues,
+      clues_across: syncClueDefinitions(generatorResult.clues_across, currentRawClues, "across", generatorResult.layout_result),
+      clues_down: syncClueDefinitions(generatorResult.clues_down, currentRawClues, "down", generatorResult.layout_result),
       highlighted_cells: highlightedCells,
       layout_result: generatorResult.layout_result,
       layout_rows: generatorResult.rows,
@@ -831,8 +873,8 @@ export default function EditorPage() {
                 </button>
                 {showClues && (
                   <CluesDisplay
-                    cluesAcross={generatorResult.clues_across}
-                    cluesDown={generatorResult.clues_down}
+                    cluesAcross={syncClueDefinitions(generatorResult.clues_across, rawClues, "across", generatorResult.layout_result)}
+                    cluesDown={syncClueDefinitions(generatorResult.clues_down, rawClues, "down", generatorResult.layout_result)}
                     focusedClueKeys={focusedClueKeys}
                   />
                 )}
