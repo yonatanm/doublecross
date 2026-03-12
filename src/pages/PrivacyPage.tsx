@@ -68,8 +68,8 @@ export default function PrivacyPage() {
             6. מחיקת מידע
           </h2>
           <p>
-            משתמשים יכולים למחוק את התשבצים שלהם דרך ממשק האתר. לבקשת מחיקת
-            חשבון מלאה, ניתן לפנות אלינו דרך עמוד הפרויקט ב-GitHub.
+            לבקשת מחיקת תשבצים או מחיקת חשבון מלאה, ניתן לפנות אלינו דרך{" "}
+            <a href="https://github.com/yonatanm/doublecross/issues" target="_blank" rel="noopener noreferrer" className="text-[#C8963E] hover:underline">עמוד הפרויקט ב-GitHub</a>.
           </p>
         </div>
 
@@ -78,7 +78,8 @@ export default function PrivacyPage() {
             7. יצירת קשר
           </h2>
           <p>
-            לשאלות בנושא פרטיות, ניתן לפנות דרך עמוד הפרויקט ב-GitHub.
+            לשאלות בנושא פרטיות, ניתן לפנות דרך{" "}
+            <a href="https://github.com/yonatanm/doublecross/issues" target="_blank" rel="noopener noreferrer" className="text-[#C8963E] hover:underline">עמוד הפרויקט ב-GitHub</a>.
           </p>
         </div>
       </section>
