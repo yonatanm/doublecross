@@ -5,6 +5,7 @@ import confetti from "canvas-confetti"
 import CrosswordGrid from "@/components/CrosswordGrid"
 import { getCrosswordFresh } from "@/lib/firestore"
 import type { Crossword, LayoutWord } from "@/types/crossword"
+import { usePageTitle } from "@/hooks/usePageTitle"
 
 // Hebrew final-letter normalization (for lenient validation)
 const FINAL_TO_NORMAL: Record<string, string> = {
@@ -62,6 +63,7 @@ export default function SolvePage() {
   const [focusedPos, setFocusedPos] = useState<string | null>(null)
   const [direction, setDirection] = useState<"across" | "down">("across")
   const [completed, setCompleted] = useState(false)
+  usePageTitle(crossword?.title ?? "פתרון תשבץ")
   const gridRef = useRef<HTMLDivElement>(null)
   const hiddenInputRef = useRef<HTMLInputElement>(null)
 

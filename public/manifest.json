@@ -1,0 +1,12 @@
+{
+  "name": "אחד מאוזן - בונה תשבצים",
+  "short_name": "אחד מאוזן",
+  "description": "כלי מקוון חינמי ליצירה ופתרון תשבצים בעברית",
+  "start_url": "/doublecross/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [{ "src": "cw.png", "sizes": "512x512", "type": "image/png" }]
+}

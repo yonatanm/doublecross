@@ -17,6 +17,7 @@ import { useWalkthrough } from "@/hooks/useWalkthrough"
 import type { RawClue, NumberedClue, Crossword, GeneratorResult, LayoutWord } from "@/types/crossword"
 import { cleanAnswer } from "@/lib/crossword-generator"
 import defaultCluesUrl from "@/data/default-clues.txt?url"
+import { usePageTitle } from "@/hooks/usePageTitle"
 
 /** Sync updated definitions from raw_clues into numbered clues.
  *  Uses layout_result to map split-word fragments back to raw clues via identifier.
@@ -105,6 +106,7 @@ export default function EditorPage() {
   const saveMutation = useSaveCrossword()
 
   const [title, setTitle] = useState("")
+  usePageTitle(title || "עורך תשבצים")
   const [topic, setTopic] = useState("")
   const [description, setDescription] = useState("")
   const [status, setStatus] = useState<Crossword["status"]>("draft")

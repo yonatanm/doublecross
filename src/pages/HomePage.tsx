@@ -11,6 +11,7 @@ import GuidedTour from "@/components/GuidedTour"
 import { useCrosswords } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { useWalkthrough } from "@/hooks/useWalkthrough"
+import { usePageTitle } from "@/hooks/usePageTitle"
 import { openPrintWindow } from "@/lib/print-crossword"
 import { getArchivedCrosswords, deleteCrosswordsByIds } from "@/lib/firestore"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
@@ -49,6 +50,7 @@ export default function HomePage() {
   const { isLoggedIn, isAdmin, login } = useAuth()
   const { data: crosswords, isLoading, error, refetch } = useCrosswords()
   const walkthrough = useWalkthrough("home")
+  usePageTitle("התשבצים שלי")
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("draft")
   const [searchQuery, setSearchQuery] = useState("")

@@ -1,4 +1,7 @@
+import { usePageTitle } from "@/hooks/usePageTitle"
+
 export default function PrivacyPage() {
+  usePageTitle("פרטיות")
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
