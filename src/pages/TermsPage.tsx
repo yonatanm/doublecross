@@ -49,6 +49,8 @@ export default function TermsPage() {
           <p>
             כל הזכויות באתר, לרבות עיצוב, קוד, וסימני מסחר, שמורות ליונתן ממן.
             התוכן שנוצר על ידי המשתמשים (תשבצים, הגדרות, תשובות) נשאר בבעלות יוצריו.
+            קוד המקור של הפרויקט זמין ב-<a href="https://github.com/yonatanm/doublecross" target="_blank" rel="noopener noreferrer" className="text-[#C8963E] hover:underline">GitHub</a>{" "}
+            והשימוש בו כפוף לתנאי רישיון MIT המפורטים שם.
           </p>
         </div>
 

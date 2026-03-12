@@ -33,11 +33,13 @@ export default function AboutPage() {
         </h2>
         <p>
           האתר פותח על ידי יונתן ממן ומוקדש באהבה לניסים ממן, שפתרון תשבצים וחיבור תשבצים הם המומחיות שלו.
-          הפרויקט הוא קוד פתוח וזמין ב-GitHub.
+          הפרויקט הוא קוד פתוח וזמין ב-<a href="https://github.com/yonatanm/doublecross" target="_blank" rel="noopener noreferrer" className="text-[#C8963E] hover:underline">GitHub</a>.
+          השימוש בקוד כפוף לרישיון MIT המפורט ב-Repository.
         </p>
 
         <p>
-          לשאלות, הצעות או דיווח על תקלות — ניתן לפנות דרך עמוד הפרויקט ב-GitHub.
+          לשאלות, הצעות או דיווח על תקלות — ניתן לפנות דרך{" "}
+          <a href="https://github.com/yonatanm/doublecross/issues" target="_blank" rel="noopener noreferrer" className="text-[#C8963E] hover:underline">עמוד הפרויקט ב-GitHub</a>.
         </p>
       </section>
     </div>
