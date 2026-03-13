@@ -35,7 +35,7 @@ export default function AboutPage() {
           מי מאחורי הפרויקט?
         </h2>
         <p>
-          האתר פותח על ידי יונתן ממן ומוקדש באהבה לניסים ממן, שפתרון תשבצים וחיבור תשבצים הם המומחיות שלו.
+          האתר פותח על ידי יונתן ממן ומוקדש באהבה לניסים ממן, שפתרון תשבצים וחיבור תשבצים הם המומחיות שלו — התשבצים של ניסו.
           הפרויקט הוא קוד פתוח וזמין ב-<a href="https://github.com/yonatanm/doublecross" target="_blank" rel="noopener noreferrer" className="text-[#C8963E] hover:underline">GitHub</a>.
           השימוש בקוד כפוף לרישיון MIT המפורט ב-Repository.
         </p>
