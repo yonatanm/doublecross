@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Grid3x3, Archive, Share2 } from "lucide-react"
+import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Grid3x3, Archive, Share2, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -635,6 +635,17 @@ export default function EditorPage() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {existingCrossword?.geekUrl && (
+              <a
+                href={existingCrossword.geekUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                המקור ב-geek.co.il
+              </a>
+            )}
             {/* Status toggle */}
             <div className="flex gap-0.5 h-9 items-center">
               {([

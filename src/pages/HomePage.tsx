@@ -17,13 +17,14 @@ import { getArchivedCrosswords, deleteCrosswordsByIds } from "@/lib/firestore"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import type { Crossword } from "@/types/crossword"
 
-type StatusFilter = "all" | "draft" | "published" | "archived"
+type StatusFilter = "all" | "draft" | "published" | "archived" | "geek"
 
 const FILTERS: { key: StatusFilter; label: string }[] = [
   { key: "all", label: "הכל" },
   { key: "draft", label: "טיוטות" },
   { key: "published", label: "מוכנים" },
   { key: "archived", label: "ארכיון" },
+  { key: "geek", label: "geek.co.il" },
 ]
 
 const STATUS_LABELS: Record<Crossword["status"], string> = {
@@ -77,15 +78,19 @@ export default function HomePage() {
   }
 
   const allItems = crosswords || []
+  const nonGeek = allItems.filter((cw) => !cw.source)
   const statusCounts: Record<StatusFilter, number> = {
-    all: allItems.length,
-    draft: allItems.filter((cw) => cw.status === "draft").length,
-    published: allItems.filter((cw) => cw.status === "published").length,
-    archived: allItems.filter((cw) => cw.status === "archived").length,
+    all: nonGeek.length,
+    draft: nonGeek.filter((cw) => cw.status === "draft").length,
+    published: nonGeek.filter((cw) => cw.status === "published").length,
+    archived: nonGeek.filter((cw) => cw.status === "archived").length,
+    geek: allItems.filter((cw) => cw.source === "geek").length,
   }
 
   const filtered = (crosswords || []).filter((cw: Crossword) => {
-    if (statusFilter !== "all" && cw.status !== statusFilter) return false
+    if (statusFilter === "geek") { if (cw.source !== "geek") return false }
+    else { if (cw.source === "geek") return false }
+    if (statusFilter !== "all" && statusFilter !== "geek" && cw.status !== statusFilter) return false
     if (searchQuery) {
       const q = searchQuery
       const inMeta = cw.title?.includes(q) || cw.topic?.includes(q) || cw.description?.includes(q)
@@ -107,24 +112,26 @@ export default function HomePage() {
         </h1>
         <div className="flex gap-2">
           {import.meta.env.DEV && (
-            <Button
-              variant="destructive"
-              size="sm"
-              className="gap-1.5 text-xs"
-              onClick={async () => {
-                const items = await getArchivedCrosswords(isAdmin)
-                if (items.length === 0) {
-                  toast("אין תשבצים בארכיון")
-                  return
-                }
-                setArchivedItems(items)
-                setSelectedForDeletion(new Set(items.map((c) => c.id!)))
-                setArchiveDialogOpen(true)
-              }}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              מחק ארכיון
-            </Button>
+            <>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={async () => {
+                  const items = await getArchivedCrosswords(isAdmin)
+                  if (items.length === 0) {
+                    toast("אין תשבצים בארכיון")
+                    return
+                  }
+                  setArchivedItems(items)
+                  setSelectedForDeletion(new Set(items.map((c) => c.id!)))
+                  setArchiveDialogOpen(true)
+                }}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                מחק ארכיון
+              </Button>
+            </>
           )}
           <Button onClick={() => navigate("/editor")} className="gap-2" data-tour="new-crossword">
             <Plus className="w-4 h-4" />

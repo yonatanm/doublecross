@@ -54,6 +54,9 @@ export interface Crossword {
   layout_result?: LayoutWord[]
   layout_rows?: number
   layout_cols?: number
+  source?: "geek"
+  geekId?: number
+  geekUrl?: string
 }
 
 export interface GeneratorResult {

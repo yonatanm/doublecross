@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Generated import data
+scripts/geek-data.json
+public/geek-ready.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
