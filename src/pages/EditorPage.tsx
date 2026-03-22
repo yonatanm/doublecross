@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Grid3x3, Archive, Share2, ExternalLink } from "lucide-react"
+import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Grid3x3, Archive, Share2, ExternalLink, RefreshCw, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -206,7 +206,7 @@ export default function EditorPage() {
         } catch { /* ignore bad data */ }
       }
 
-      if (!restored && existingCrossword.grid && existingCrossword.layout_result) {
+      if (!restored && existingCrossword.grid.length > 0 && existingCrossword.layout_result && existingCrossword.layout_result.length > 0) {
         const result: GeneratorResult = {
           grid: existingCrossword.grid,
           clues_across: existingCrossword.clues_across,
@@ -715,14 +715,7 @@ export default function EditorPage() {
 
           {/* Generate controls */}
           <div className="flex items-center gap-2 flex-wrap" data-tour="proposal-gallery">
-            <Button
-              onClick={generate}
-              disabled={!canGenerate || isGenerating}
-              className="gap-2"
-              data-tour="generate-btn"
-            >
-              {isGenerating ? "מייצר..." : "שבץ מילים"}
-            </Button>
+            {/* Generate button moved: "בנה תשבץ" in empty state, "החלף תבניות" in gallery */}
             {import.meta.env.DEV && !rawCluesText.trim() && (
               <Button
                 variant="ghost"
@@ -770,56 +763,72 @@ export default function EditorPage() {
           </div>
 
           {/* Thumbnail gallery strip */}
-          {proposals.length > 1 && (
-            <div className={`flex items-center gap-1 ${isGenerating ? "opacity-50 pointer-events-none" : ""}`}>
-              <button
-                onClick={() => scrollGallery("right")}
-                disabled={!canScrollRight}
-                className="shrink-0 p-1 rounded-full hover:bg-gray-100 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
+          {proposals.length > 0 && (
+            <div className={`space-y-2 ${isGenerating ? "opacity-50 pointer-events-none" : ""}`}>
+              <Button
+                onClick={generate}
+                disabled={!canGenerate || isGenerating}
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
               >
-                <ChevronsRight className="w-4 h-4 text-gray-500" />
-              </button>
-              <div
-                ref={galleryRef}
-                onScroll={updateGalleryScroll}
-                className="flex gap-2 overflow-x-auto py-1 flex-1 min-w-0"
-                style={{ scrollbarWidth: "none" }}
-              >
-                {proposals.map((p, i) => (
+                <RefreshCw className="w-3.5 h-3.5" />
+                {isGenerating ? "מייצר..." : "החלף תבניות"}
+              </Button>
+              <div className="flex items-center gap-1">
+                {proposals.length > 1 && (
                   <button
-                    key={i}
-                    onClick={() => setActiveProposalIndex(i)}
-                    className={`shrink-0 cursor-pointer rounded-md p-1.5 transition-all ${
-                      i === activeProposalIndex
-                        ? "ring-2 ring-[#C8963E] bg-amber-50"
-                        : "ring-1 ring-gray-200 hover:ring-gray-400"
-                    }`}
+                    onClick={() => scrollGallery("right")}
+                    disabled={!canScrollRight}
+                    className="shrink-0 p-1 rounded-full hover:bg-gray-100 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
                   >
-                    <CrosswordGrid
-                      grid={p.result.grid}
-                      cols={p.result.cols}
-                      rows={p.result.rows}
-                      layoutResult={p.result.layout_result}
-                      highlightedCells={p.highlightedCells}
-                      onCellClick={() => {}}
-                      interactive={false}
-                      showNumbers={false}
-                      showLetters={false}
-                      cellSize={6}
-                    />
-                    <div className="text-[10px] text-muted-foreground text-center mt-1">
-                      {Math.round(p.adjustedScore * 100)}%
-                    </div>
+                    <ChevronsRight className="w-4 h-4 text-gray-500" />
                   </button>
-                ))}
+                )}
+                <div
+                  ref={galleryRef}
+                  onScroll={updateGalleryScroll}
+                  className="flex gap-2 overflow-x-auto py-1 flex-1 min-w-0"
+                  style={{ scrollbarWidth: "none" }}
+                >
+                  {proposals.map((p, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveProposalIndex(i)}
+                      className={`shrink-0 cursor-pointer rounded-md p-1.5 transition-all ${
+                        i === activeProposalIndex
+                          ? "ring-2 ring-[#C8963E] bg-amber-50"
+                          : "ring-1 ring-gray-200 hover:ring-gray-400"
+                      }`}
+                    >
+                      <CrosswordGrid
+                        grid={p.result.grid}
+                        cols={p.result.cols}
+                        rows={p.result.rows}
+                        layoutResult={p.result.layout_result}
+                        highlightedCells={p.highlightedCells}
+                        onCellClick={() => {}}
+                        interactive={false}
+                        showNumbers={false}
+                        showLetters={false}
+                        cellSize={6}
+                      />
+                      <div className="text-[10px] text-muted-foreground text-center mt-1">
+                        {Math.round(p.adjustedScore * 100)}%
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {proposals.length > 1 && (
+                  <button
+                    onClick={() => scrollGallery("left")}
+                    disabled={!canScrollLeft}
+                    className="shrink-0 p-1 rounded-full hover:bg-gray-100 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
+                  >
+                    <ChevronsLeft className="w-4 h-4 text-gray-500" />
+                  </button>
+                )}
               </div>
-              <button
-                onClick={() => scrollGallery("left")}
-                disabled={!canScrollLeft}
-                className="shrink-0 p-1 rounded-full hover:bg-gray-100 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
-              >
-                <ChevronsLeft className="w-4 h-4 text-gray-500" />
-              </button>
             </div>
           )}
 
@@ -895,14 +904,20 @@ export default function EditorPage() {
             </>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-card border border-dashed rounded-lg">
-              <div className="text-4xl mb-3 opacity-20" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
-                #
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {rawClues.length === 0
-                  ? "יש להוסיף לפחות הגדרה אחת"
-                  : "לחצו \"שבץ מילים\" ליצירת התשבץ"}
-              </p>
+              {rawClues.length === 0 ? (
+                <p className="text-sm text-muted-foreground">יש להוסיף לפחות הגדרה אחת</p>
+              ) : (
+                <Button
+                  onClick={generate}
+                  disabled={!canGenerate || isGenerating}
+                  size="lg"
+                  className="gap-2"
+                  data-tour="generate-btn"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  {isGenerating ? "מייצר..." : "בנה תשבץ"}
+                </Button>
+              )}
             </div>
           )}
         </div>

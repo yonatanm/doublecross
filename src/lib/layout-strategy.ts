@@ -6,19 +6,21 @@ interface GenerateProposalsOptions {
   attemptsPerVariant?: number
   maxVariants?: number
   topK?: number
+  timeBudgetMs?: number
 }
 
 /**
  * Generate top-K ranked proposals from raw clues.
  * Explores both shuffle randomness AND input variants (split vs. join multi-word answers).
+ * Time-bounded: generates first proposal, measures cost, then fills remaining time budget.
  */
 export function generateProposals(
   rawClues: RawClue[],
   options?: GenerateProposalsOptions,
 ): RankedProposal[] {
-  const attemptsPerVariant = options?.attemptsPerVariant ?? 20
   const maxVariants = options?.maxVariants ?? 16
   const topK = options?.topK ?? 10
+  const timeBudgetMs = options?.timeBudgetMs ?? 5000
 
   // 1. Normalize Hebrew answers
   const cleaned = rawClues.map((c) => ({
@@ -40,14 +42,30 @@ export function generateProposals(
 
   const allResults: { result: ReturnType<typeof generateFromVariant>; label: string }[] = []
 
+  // Generate first attempt and measure time
+  const firstVariantClues = buildVariantClues(cleaned, multiWordIndices, 0)
+  const firstLabel = buildVariantLabel(cleaned, multiWordIndices, 0)
+  const t0 = performance.now()
+  const firstResult = generateFromVariant(firstVariantClues, 1)
+  const singleAttemptMs = performance.now() - t0
+  allResults.push({ result: firstResult, label: firstLabel })
+
+  // Calculate how many more attempts fit in the time budget
+  const attemptsPerVariant = options?.attemptsPerVariant ??
+    Math.max(1, Math.min(20, Math.floor((timeBudgetMs - singleAttemptMs) / (singleAttemptMs * totalVariants))))
+
+  const deadline = t0 + timeBudgetMs
+
   for (let mask = 0; mask < totalVariants; mask++) {
     const variantClues = buildVariantClues(cleaned, multiWordIndices, mask)
     const label = buildVariantLabel(cleaned, multiWordIndices, mask)
-    // Run each attempt separately so we collect diverse layouts for the gallery
-    for (let a = 0; a < attemptsPerVariant; a++) {
+    const startAttempt = (mask === 0) ? 1 : 0 // skip first attempt for mask 0 (already done)
+    for (let a = startAttempt; a < attemptsPerVariant; a++) {
+      if (performance.now() > deadline) break
       const result = generateFromVariant(variantClues, 1)
       allResults.push({ result, label })
     }
+    if (performance.now() > deadline) break
   }
 
   // 4. Deduplicate by grid fingerprint (keep higher-scoring)
