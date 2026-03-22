@@ -408,6 +408,9 @@ export default function EditorPage() {
         userEmail: existingCrossword?.userEmail,
         userDisplayName: existingCrossword?.userDisplayName,
         userPhotoURL: existingCrossword?.userPhotoURL,
+        source: existingCrossword?.source,
+        geekId: existingCrossword?.geekId,
+        geekUrl: existingCrossword?.geekUrl,
       }
 
       setAutoSaveStatus("saving")
