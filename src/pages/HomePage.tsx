@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Search, Printer, Trash2, Share2 } from "lucide-react"
+import { Plus, Search, Printer, Trash2, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -59,6 +59,7 @@ export default function HomePage() {
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
   const [archivedItems, setArchivedItems] = useState<Crossword[]>([])
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set())
+  const listRef = useRef<HTMLDivElement>(null)
 
   if (!isLoggedIn) {
     return (
@@ -101,6 +102,26 @@ export default function HomePage() {
   })
 
   const selected = filtered.find((cw) => cw.id === selectedId) || filtered[0] || null
+
+  function handleListKeyDown(e: React.KeyboardEvent) {
+    if (!filtered.length) return
+    const currentIdx = filtered.findIndex((cw) => cw.id === selectedId)
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      const next = Math.min(currentIdx + 1, filtered.length - 1)
+      setSelectedId(filtered[next].id || null)
+      listRef.current?.querySelectorAll("[data-cw-id]")[next]?.scrollIntoView({ block: "nearest" })
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      const prev = Math.max(currentIdx - 1, 0)
+      setSelectedId(filtered[prev].id || null)
+      listRef.current?.querySelectorAll("[data-cw-id]")[prev]?.scrollIntoView({ block: "nearest" })
+    } else if (e.key === "Enter" && selectedId) {
+      e.preventDefault()
+      navigate(`/editor?id=${selectedId}`)
+    }
+  }
 
   return (
     <div>
@@ -197,16 +218,22 @@ export default function HomePage() {
               <span>עדכון אחרון</span>
             </div>
             {/* List items */}
-            <div className="divide-y max-h-[calc(100vh-280px)] overflow-y-auto">
+            <div
+              ref={listRef}
+              tabIndex={0}
+              onKeyDown={handleListKeyDown}
+              className="divide-y max-h-[calc(100vh-280px)] overflow-y-auto outline-none focus:ring-2 focus:ring-[#C8963E]/30 rounded-b-lg"
+            >
               {filtered.map((cw: Crossword) => (
                 <div
                   key={cw.id}
+                  data-cw-id={cw.id}
                   className={[
                     "px-4 py-3 cursor-pointer transition-colors",
                     selected?.id === cw.id ? "bg-secondary" : "hover:bg-secondary/30",
                   ].join(" ")}
-                  onMouseEnter={() => setSelectedId(cw.id || null)}
-                  onClick={() => navigate(`/editor?id=${cw.id}`)}
+                  onClick={() => { setSelectedId(cw.id || null); listRef.current?.focus() }}
+                  onDoubleClick={() => navigate(`/editor?id=${cw.id}`)}
                 >
                   {/* Line 1: avatar, title, status, date, actions */}
                   <div className="flex items-center justify-between">
@@ -226,20 +253,14 @@ export default function HomePage() {
                       <span className="text-xs text-muted-foreground">
                         {formatDate(cw.updatedAt)}
                       </span>
-                      {cw.status !== "archived" && (
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            const url = `${window.location.origin}${import.meta.env.BASE_URL}?solve=${cw.id}`
-                            navigator.clipboard.writeText(url).then(() => toast.success("הקישור הועתק"))
-                          }}
-                          title="העתק קישור לפתרון"
-                        >
-                          <Share2 className="w-3 h-3" />
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/editor?id=${cw.id}`) }}
+                        title="עריכה"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon-xs"

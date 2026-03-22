@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { generateProposals } from "@/lib/layout-strategy"
 import { openPrintWindow } from "@/lib/print-crossword"
 import { useWalkthrough } from "@/hooks/useWalkthrough"
-import type { RawClue, NumberedClue, Crossword, GeneratorResult, LayoutWord } from "@/types/crossword"
+import type { RawClue, NumberedClue, Crossword, GeneratorResult, LayoutWord, CrosswordCell } from "@/types/crossword"
 import { cleanAnswer } from "@/lib/crossword-generator"
 import defaultCluesUrl from "@/data/default-clues.txt?url"
 import { usePageTitle } from "@/hooks/usePageTitle"
@@ -94,6 +94,39 @@ interface Proposal {
   highlightedCells: string[]
   adjustedScore: number
   variantLabel: string
+}
+
+/** Fallback: lay out each word horizontally when the engine fails to place anything. */
+function buildTrivialResult(rawClues: RawClue[]): GeneratorResult {
+  const cleaned = rawClues.map((c) => ({ clue: c.clue, answer: cleanAnswer(c.answer).replaceAll(" ", "") }))
+  const maxLen = Math.max(...cleaned.map((c) => c.answer.length))
+  const rows = cleaned.length
+  const cols = maxLen
+
+  const grid: CrosswordCell[][] = Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => ({ isBlocked: true }))
+  )
+  const clues_across: NumberedClue[] = []
+  const layout_result: LayoutWord[] = []
+
+  cleaned.forEach((c, row) => {
+    const len = c.answer.length
+    // Place word starting from the right (RTL-flipped: startx = cols - len + 1 in 1-indexed)
+    for (let i = 0; i < len; i++) {
+      grid[row][i] = { letter: c.answer[len - 1 - i], isBlocked: false, ...(i === 0 ? { number: row + 1 } : {}) }
+    }
+    clues_across.push({ number: row + 1, clue: c.clue, answer: c.answer, answerLength: `(${len})` })
+    layout_result.push({
+      clue: c.clue,
+      answer: c.answer,
+      startx: cols,
+      starty: row + 1,
+      position: row + 1,
+      orientation: "across",
+    })
+  })
+
+  return { grid, clues_across, clues_down: [], unplacedClues: [], layout_result, rows, cols }
 }
 
 export default function EditorPage() {
@@ -230,12 +263,16 @@ export default function EditorPage() {
 
   const generate = useCallback(() => {
     const rawClues = parseRawClues(rawCluesText)
-    if (rawClues.length < 2) return
+    if (rawClues.length < 1) return
 
     setIsGenerating(true)
     // Double rAF ensures the browser paints the spinner before blocking
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      const ranked = generateProposals(rawClues)
+      let ranked = generateProposals(rawClues)
+      // Fallback: if engine failed to place any words, build a trivial horizontal layout
+      if (ranked.length === 0 || ranked.every((p) => p.result.unplacedClues.length === rawClues.length)) {
+        ranked = [{ result: buildTrivialResult(rawClues), adjustedScore: 0, variantLabel: "fallback" }]
+      }
       const newProposals = ranked.map((p) => ({
         result: p.result,
         highlightedCells: [],
@@ -419,7 +456,7 @@ export default function EditorPage() {
   }
 
   const rawClues = parseRawClues(rawCluesText)
-  const canGenerate = rawClues.length >= 2 && title.trim().length > 0
+  const canGenerate = rawClues.length >= 1
 
   // Estimate whether clues overflow a single A4 page
   const printNeedsTwoPages = (() => {
