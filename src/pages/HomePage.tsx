@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Search, Printer, Trash2, Pencil } from "lucide-react"
+import { Plus, Search, Trash2, Pencil, Archive } from "lucide-react"
 import { toast } from "sonner"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -12,8 +12,7 @@ import { useCrosswords } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { useWalkthrough } from "@/hooks/useWalkthrough"
 import { usePageTitle } from "@/hooks/usePageTitle"
-import { openPrintWindow } from "@/lib/print-crossword"
-import { getArchivedCrosswords, deleteCrosswordsByIds } from "@/lib/firestore"
+import { getArchivedCrosswords, deleteCrosswordsByIds, archiveCrossword } from "@/lib/firestore"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import type { Crossword } from "@/types/crossword"
 
@@ -261,14 +260,20 @@ export default function HomePage() {
                       >
                         <Pencil className="w-3 h-3" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={(e) => { e.stopPropagation(); openPrintWindow(cw) }}
-                        title="הדפס"
-                      >
-                        <Printer className="w-3 h-3" />
-                      </Button>
+                      {cw.status !== "archived" && (
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={async (e) => {
+                            e.stopPropagation()
+                            await archiveCrossword(cw.id!)
+                            refetch()
+                          }}
+                          title="העבר לארכיון"
+                        >
+                          <Archive className="w-3 h-3" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   {/* Line 2: topic tag + description */}
