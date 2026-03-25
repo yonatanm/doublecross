@@ -38,14 +38,75 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   const fontSize = Math.max(10, Math.floor(cellSize * 0.45))
   const numFontSize = Math.max(4, Math.floor(cellSize * 0.22 * 2 * 0.75))
 
-  // Check if a blocked cell has letter cells on all 4 sides
-  const hasLetterAllSides = (r: number, c: number) => {
-    const has = (nr: number, nc: number) => {
-      const cell = grid[nr]?.[nc]
-      return cell && !cell.isBlocked && !!cell.letter
+  // Flood-fill from grid edges to find interior (enclosed) empty cells
+  const findInterior = () => {
+    const isEmpty = (r: number, c: number) => {
+      const cell = grid[r]?.[c]
+      return !cell || cell.isBlocked || !cell.letter
     }
-    return has(r - 1, c) && has(r + 1, c) && has(r, c - 1) && has(r, c + 1)
+    const exterior = new Set<string>()
+    const queue: [number, number][] = []
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if ((r === 0 || r === rows - 1 || c === 0 || c === cols - 1) && isEmpty(r, c)) {
+          const key = `${r},${c}`
+          if (!exterior.has(key)) {
+            exterior.add(key)
+            queue.push([r, c])
+          }
+        }
+      }
+    }
+    while (queue.length > 0) {
+      const [r, c] = queue.shift()!
+      for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const nr = r + dr, nc = c + dc
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+          const key = `${nr},${nc}`
+          if (!exterior.has(key) && isEmpty(nr, nc)) {
+            exterior.add(key)
+            queue.push([nr, nc])
+          }
+        }
+      }
+    }
+    const allInterior = new Set<string>()
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (isEmpty(r, c) && !exterior.has(`${r},${c}`)) {
+          allInterior.add(`${r},${c}`)
+        }
+      }
+    }
+    const visited = new Set<string>()
+    const result = new Set<string>()
+    for (const key of allInterior) {
+      if (visited.has(key)) continue
+      const component: string[] = []
+      const q: string[] = [key]
+      visited.add(key)
+      while (q.length > 0) {
+        const cur = q.shift()!
+        component.push(cur)
+        const [cr, cc] = cur.split(",").map(Number)
+        for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+          const nk = `${cr + dr},${cc + dc}`
+          if (allInterior.has(nk) && !visited.has(nk)) {
+            visited.add(nk)
+            q.push(nk)
+          }
+        }
+      }
+      if (component.length <= 6) {
+        for (const k of component) {
+          const [cr, cc] = k.split(",").map(Number)
+          result.add(`${cr}-${cc}`)
+        }
+      }
+    }
+    return result
   }
+  const interiorCells = findInterior()
 
   // Build grid HTML as a <table> with border-collapse for uniform single borders
   let gridHtml = ""
@@ -54,7 +115,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     for (let c = 0; c < cols; c++) {
       const cell = grid[r]?.[c]
       if (!cell || cell.isBlocked || !cell.letter) {
-        const cls = hasLetterAllSides(r, c) ? "blocked-interior" : "blocked"
+        const cls = interiorCells.has(`${r}-${c}`) ? "blocked-interior" : "blocked"
         gridHtml += `<td class="${cls}"></td>`
       } else {
         const pos = `${r}-${c}`
@@ -94,7 +155,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   // Build clues as a flat list of items, then split into two flowing columns
   // Build flat clues HTML — CSS columns will handle the 2-column flow
   const renderClueItems = (clues: typeof clues_across) =>
-    clues.map((c) => `<div class="clue"><b>${c.number}.</b> ${c.clue} ${c.answerLength}</div>`).join("")
+    clues.map((c) => `<div class="clue"><b>${c.number}. ${c.clue} ${c.answerLength.replace(/,(?!\s)/g, ", ")}</b></div>`).join("")
 
   // Calculate clues section height: page height minus grid, title area, gap, and bottom margin
   const gridActualHeightMm = rows * cellSizeMm
@@ -222,8 +283,9 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     }
     .clues h3 {
       font-family: 'Frank Ruhl Libre', serif;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 700;
+      text-decoration: underline;
       padding-bottom: 3px;
       margin-bottom: 4px;
       break-after: avoid;

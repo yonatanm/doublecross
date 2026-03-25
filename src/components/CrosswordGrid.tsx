@@ -1,13 +1,75 @@
 import type { CrosswordCell, LayoutWord } from "@/types/crossword"
 
-/** Check if a cell has letters in all 4 neighbors. */
-function hasLetterAllSides(grid: CrosswordCell[][], r: number, c: number, rows: number, cols: number): boolean {
-  const hasLetter = (nr: number, nc: number) => {
-    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) return false
-    const cell = grid[nr]?.[nc]
-    return cell && !cell.isBlocked && !!cell.letter
+/** Flood-fill from grid edges to find all interior (enclosed) empty cells. */
+function findInteriorCells(grid: CrosswordCell[][], rows: number, cols: number): Set<string> {
+  const isEmpty = (r: number, c: number) => {
+    const cell = grid[r]?.[c]
+    return !cell || cell.isBlocked || !cell.letter
   }
-  return hasLetter(r - 1, c) && hasLetter(r + 1, c) && hasLetter(r, c - 1) && hasLetter(r, c + 1)
+  // BFS from all edge empty cells to mark exterior
+  const exterior = new Set<string>()
+  const queue: [number, number][] = []
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if ((r === 0 || r === rows - 1 || c === 0 || c === cols - 1) && isEmpty(r, c)) {
+        const key = `${r},${c}`
+        if (!exterior.has(key)) {
+          exterior.add(key)
+          queue.push([r, c])
+        }
+      }
+    }
+  }
+  while (queue.length > 0) {
+    const [r, c] = queue.shift()!
+    for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const nr = r + dr, nc = c + dc
+      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+        const key = `${nr},${nc}`
+        if (!exterior.has(key) && isEmpty(nr, nc)) {
+          exterior.add(key)
+          queue.push([nr, nc])
+        }
+      }
+    }
+  }
+  // Find connected components of interior empty cells, keep only small ones (≤3 cells)
+  const allInterior = new Set<string>()
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (isEmpty(r, c) && !exterior.has(`${r},${c}`)) {
+        allInterior.add(`${r},${c}`)
+      }
+    }
+  }
+  // BFS to find connected components among interior cells
+  const visited = new Set<string>()
+  const result = new Set<string>()
+  for (const key of allInterior) {
+    if (visited.has(key)) continue
+    const component: string[] = []
+    const q: string[] = [key]
+    visited.add(key)
+    while (q.length > 0) {
+      const cur = q.shift()!
+      component.push(cur)
+      const [cr, cc] = cur.split(",").map(Number)
+      for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const nk = `${cr + dr},${cc + dc}`
+        if (allInterior.has(nk) && !visited.has(nk)) {
+          visited.add(nk)
+          q.push(nk)
+        }
+      }
+    }
+    if (component.length <= 6) {
+      for (const k of component) {
+        const [cr, cc] = k.split(",").map(Number)
+        result.add(`${cr}-${cc}`)
+      }
+    }
+  }
+  return result
 }
 
 interface CrosswordGridProps {
@@ -80,6 +142,8 @@ export default function CrosswordGrid({
     }
   }
 
+  const interiorCells = findInteriorCells(grid, rows, cols)
+
   return (
     <table
         className="crossword-grid"
@@ -99,9 +163,8 @@ export default function CrosswordGrid({
                 const label = findLabel(r, c)
 
                 if (cell.isBlocked || !cell.letter) {
-                  const isInterior = hasLetterAllSides(grid, r, c, rows, cols)
                   return (
-                    <td key={c} className={`crossword-cell ${isInterior ? "blocked-interior" : "blocked"}`} />
+                    <td key={c} className={`crossword-cell ${interiorCells.has(pos) ? "blocked-interior" : "blocked"}`} />
                   )
                 }
 

@@ -21,7 +21,7 @@ export default function CluesDisplay({ cluesAcross, cluesDown, focusedClueKeys }
             </span>
             <span>
               {c.clue}{" "}
-              <span className="text-muted-foreground">{c.answerLength}</span>
+              <span className="text-muted-foreground">{c.answerLength.replace(/,(?!\s)/g, ", ")}</span>
             </span>
           </div>
         )
