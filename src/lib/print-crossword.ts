@@ -8,6 +8,8 @@ interface PrintOptions {
 export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}) {
   const { largeFont = false } = options
   const separateClues = options.separateClues || largeFont
+  const isFrank = document.documentElement.classList.contains("font-frank")
+  const headingFont = isFrank ? "'Frank Ruhl Libre', serif" : "'David Libre', serif"
   const {
     title,
     description,
@@ -157,7 +159,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   // Build clues as a flat list of items, then split into two flowing columns
   // Build flat clues HTML — CSS columns will handle the 2-column flow
   const renderClueItems = (clues: typeof clues_across) =>
-    clues.map((c) => `<div class="clue"><b>${c.number}. ${c.clue} ${c.answerLength.replace(/,(?!\s)/g, ", ")}</b></div>`).join("")
+    clues.map((c) => `<div class="clue"><b>${c.number}. ${c.clue} <span dir="ltr">${c.answerLength.replace(/,(?!\s)/g, ", ")}</span></b></div>`).join("")
 
   // Calculate clues section height: page height minus grid, title area, gap, and bottom margin
   const gridActualHeightMm = rows * cellSizeMm
@@ -197,7 +199,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   <meta charset="UTF-8">
   <title>${title || "תשבץ"}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700&family=Heebo:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=David+Libre:wght@400;500;700&family=Frank+Ruhl+Libre:wght@400;700&family=Heebo:wght@400;500;600&display=swap');
     @page { size: A4; margin: 12mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -212,7 +214,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       color-adjust: exact !important;
     }
     h1 {
-      font-family: 'Frank Ruhl Libre', serif;
+      font-family: ${headingFont};
       font-size: 22px;
       margin-bottom: 4px;
       text-align: center;
@@ -238,7 +240,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       text-align: center;
       vertical-align: middle;
       position: relative;
-      font-family: 'Frank Ruhl Libre', serif;
+      font-family: ${headingFont};
       font-size: ${gridFontSize}px;
       font-weight: 500;
       padding: 0;
@@ -286,7 +288,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       padding-top: 24px;
     }
     .clues h3 {
-      font-family: 'Frank Ruhl Libre', serif;
+      font-family: ${headingFont};
       font-size: ${largeFont ? "22px" : "16px"};
       font-weight: 700;
       text-decoration: underline;

@@ -4,7 +4,7 @@ export default function AboutPage() {
   usePageTitle("אודות")
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+      <h1 className="text-3xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
         אודות
       </h1>
 
@@ -20,7 +20,7 @@ export default function AboutPage() {
           בדפדפן בלי צורך בהתקנה או הרשמה — פשוט לפתוח את הקישור ולהתחיל לפתור.
         </p>
 
-        <h2 className="text-xl font-semibold pt-2" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+        <h2 className="text-xl font-semibold pt-2" style={{ fontFamily: "var(--font-heading)" }}>
           איך זה עובד?
         </h2>
         <ul className="list-disc list-inside space-y-1 pr-2">
@@ -31,7 +31,7 @@ export default function AboutPage() {
           <li>אפשר גם להדפיס את התשבץ לפתרון על נייר</li>
         </ul>
 
-        <h2 className="text-xl font-semibold pt-2" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+        <h2 className="text-xl font-semibold pt-2" style={{ fontFamily: "var(--font-heading)" }}>
           מי מאחורי הפרויקט?
         </h2>
         <p>

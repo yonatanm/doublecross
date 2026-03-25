@@ -39,7 +39,7 @@ export default function CrosswordCard({ crossword, onEdit, onPrint, onArchive }:
     <Card className="group hover:shadow-md transition-shadow duration-200">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-base" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <CardTitle className="text-base" style={{ fontFamily: "var(--font-heading)" }}>
             {crossword.title || "ללא שם"}
           </CardTitle>
           <div className="flex gap-1.5">

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Heebo:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=David+Libre:wght@400;500;700&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Heebo:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -7,6 +7,10 @@
 
 html {
   overflow-y: scroll;
+  --font-heading: 'David Libre', serif;
+}
+html.font-frank {
+  --font-heading: 'Frank Ruhl Libre', serif;
 }
 
 @theme inline {
@@ -130,7 +134,7 @@ html {
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Frank Ruhl Libre', serif;
+    font-family: var(--font-heading);
   }
 }
 
@@ -146,7 +150,7 @@ html {
   position: relative;
   text-align: center;
   vertical-align: middle;
-  font-family: 'Frank Ruhl Libre', serif;
+  font-family: var(--font-heading);
   font-weight: 500;
   padding: 0;
   cursor: default;

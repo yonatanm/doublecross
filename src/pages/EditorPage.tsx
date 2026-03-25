@@ -627,7 +627,7 @@ export default function EditorPage() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="הזינו שם..."
               className="text-base"
-              style={{ fontFamily: "'Frank Ruhl Libre', serif" }}
+              style={{ fontFamily: "var(--font-heading)" }}
             />
           </div>
           <div>
@@ -916,7 +916,7 @@ export default function EditorPage() {
                 <div className="flex items-center gap-3 mb-3">
                   <h2
                     className="text-lg font-bold"
-                    style={{ fontFamily: "'Frank Ruhl Libre', serif" }}
+                    style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {title || "תצוגה מקדימה"}
                   </h2>

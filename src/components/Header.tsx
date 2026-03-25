@@ -1,5 +1,6 @@
+import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { LayoutGrid, LogIn, LogOut, HelpCircle } from "lucide-react"
+import { LayoutGrid, LogIn, LogOut, HelpCircle, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/hooks/useAuth"
@@ -7,6 +8,14 @@ import { useAuth } from "@/hooks/useAuth"
 export default function Header() {
   const { user, isLoggedIn, isAdmin, login, logout } = useAuth()
   const location = useLocation()
+  const [isFrank, setIsFrank] = useState(() => document.documentElement.classList.contains("font-frank"))
+
+  const toggleFont = () => {
+    const next = !isFrank
+    document.documentElement.classList.toggle("font-frank", next)
+    localStorage.setItem("font", next ? "frank" : "david")
+    setIsFrank(next)
+  }
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" || location.pathname === "" : location.pathname.startsWith(path)
@@ -18,7 +27,7 @@ export default function Header() {
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-3 group">
             <img src={import.meta.env.BASE_URL + "cw.png"} alt="לוגו" className="w-9 h-9 rounded" />
-            <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+            <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
               אחד מאוזן
             </span>
           </Link>
@@ -42,6 +51,16 @@ export default function Header() {
           {isAdmin && (
             <span className="text-[10px] text-muted-foreground font-mono">{__GIT_SHA__} · {__GIT_DATE__}</span>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={toggleFont}
+            title={isFrank ? "פונט: Frank Ruhl Libre" : "פונט: David Libre"}
+          >
+            <Type className="w-4 h-4" />
+            {isFrank ? "Frank" : "David"}
+          </Button>
           <Button
             variant="ghost"
             size="sm"

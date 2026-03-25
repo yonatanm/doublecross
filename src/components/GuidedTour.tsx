@@ -461,7 +461,7 @@ export default function GuidedTour({ page, open, onClose }: GuidedTourProps) {
           {/* Title */}
           <h3
             className="text-lg font-bold text-center"
-            style={{ fontFamily: "'Frank Ruhl Libre', serif" }}
+            style={{ fontFamily: "var(--font-heading)" }}
           >
             {current.title}
           </h3>

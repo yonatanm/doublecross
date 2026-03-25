@@ -4,7 +4,7 @@ export default function PrivacyPage() {
   usePageTitle("פרטיות")
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+      <h1 className="text-3xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
         מדיניות פרטיות
       </h1>
 
@@ -12,7 +12,7 @@ export default function PrivacyPage() {
 
       <section className="space-y-4 text-base leading-relaxed">
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             1. מידע שאנחנו אוספים
           </h2>
           <p>
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             2. כיצד אנו משתמשים במידע
           </h2>
           <ul className="list-disc list-inside space-y-1 pr-2">
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             3. אחסון מידע
           </h2>
           <p>
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             4. אחסון מקומי
           </h2>
           <p>
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             5. עוגיות (Cookies)
           </h2>
           <p>
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             6. מחיקת מידע
           </h2>
           <p>
@@ -77,7 +77,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             7. יצירת קשר
           </h2>
           <p>

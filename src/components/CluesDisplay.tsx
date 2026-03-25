@@ -21,7 +21,7 @@ export default function CluesDisplay({ cluesAcross, cluesDown, focusedClueKeys }
             </span>
             <span>
               {c.clue}{" "}
-              <span className="text-muted-foreground">{c.answerLength.replace(/,(?!\s)/g, ", ")}</span>
+              <span className="text-muted-foreground" dir="ltr">{c.answerLength.replace(/,(?!\s)/g, ", ")}</span>
             </span>
           </div>
         )
@@ -32,13 +32,13 @@ export default function CluesDisplay({ cluesAcross, cluesDown, focusedClueKeys }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div>
-        <h3 className="text-lg font-bold mb-3 pb-2 border-b border-border/60" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+        <h3 className="text-lg font-bold mb-3 pb-2 border-b border-border/60" style={{ fontFamily: "var(--font-heading)" }}>
           מאוזן
         </h3>
         {renderClueList(cluesAcross, "across")}
       </div>
       <div>
-        <h3 className="text-lg font-bold mb-3 pb-2 border-b border-border/60" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+        <h3 className="text-lg font-bold mb-3 pb-2 border-b border-border/60" style={{ fontFamily: "var(--font-heading)" }}>
           מאונך
         </h3>
         {renderClueList(cluesDown, "down")}

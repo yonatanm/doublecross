@@ -4,7 +4,7 @@ export default function TermsPage() {
   usePageTitle("תנאי שימוש")
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+      <h1 className="text-3xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
         תנאי שימוש
       </h1>
 
@@ -12,7 +12,7 @@ export default function TermsPage() {
 
       <section className="space-y-4 text-base leading-relaxed">
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             1. כללי
           </h2>
           <p>
@@ -22,7 +22,7 @@ export default function TermsPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             2. השירות
           </h2>
           <p>
@@ -32,7 +32,7 @@ export default function TermsPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             3. תוכן משתמשים
           </h2>
           <p>
@@ -46,7 +46,7 @@ export default function TermsPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             4. קניין רוחני
           </h2>
           <p>
@@ -58,7 +58,7 @@ export default function TermsPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             5. הגבלת אחריות
           </h2>
           <p>
@@ -69,7 +69,7 @@ export default function TermsPage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
             6. שינויים בתנאים
           </h2>
           <p>

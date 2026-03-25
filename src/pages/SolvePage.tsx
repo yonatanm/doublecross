@@ -447,7 +447,7 @@ export default function SolvePage() {
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img src={import.meta.env.BASE_URL + "cw.png"} alt="לוגו" className="w-8 h-8 rounded" />
-            <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+            <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
               אחד מאוזן
             </span>
           </Link>
@@ -471,7 +471,7 @@ export default function SolvePage() {
         {/* Title */}
         <h1
           className="text-2xl font-bold text-center mb-6"
-          style={{ fontFamily: "'Frank Ruhl Libre', serif" }}
+          style={{ fontFamily: "var(--font-heading)" }}
         >
           {crossword.title}
         </h1>
@@ -618,7 +618,7 @@ function SolveClues({
     <div>
       <h3
         className="text-lg font-bold mb-3 pb-2 border-b border-border/60"
-        style={{ fontFamily: "'Frank Ruhl Libre', serif" }}
+        style={{ fontFamily: "var(--font-heading)" }}
       >
         {title}
       </h3>
@@ -642,7 +642,7 @@ function SolveClues({
               </span>
               <span>
                 {c.clue}{" "}
-                <span className="text-muted-foreground">{c.answerLength.replace(/,(?!\s)/g, ", ")}</span>
+                <span className="text-muted-foreground" dir="ltr">{c.answerLength.replace(/,(?!\s)/g, ", ")}</span>
               </span>
             </div>
           )

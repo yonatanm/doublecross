@@ -64,7 +64,7 @@ export default function HomePage() {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <img src={import.meta.env.BASE_URL + "cw.png"} alt="לוגו" className="w-20 h-20 rounded-2xl mb-6" />
-        <h1 className="text-3xl font-bold mb-3" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+        <h1 className="text-3xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)" }}>
           אחד מאוזן
         </h1>
         <p className="text-muted-foreground mb-8 max-w-md">
@@ -127,7 +127,7 @@ export default function HomePage() {
       <GuidedTour page="home" open={walkthrough.isOpen} onClose={walkthrough.close} />
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
           התשבצים שלי
         </h1>
         <div className="flex gap-2">
@@ -302,7 +302,7 @@ export default function HomePage() {
               <>
                 <h2
                   className="text-xl font-bold mb-4"
-                  style={{ fontFamily: "'Frank Ruhl Libre', serif" }}
+                  style={{ fontFamily: "var(--font-heading)" }}
                 >
                   {selected.title}
                 </h2>
