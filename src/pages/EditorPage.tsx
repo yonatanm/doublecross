@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Grid3x3, Archive, Share2, ExternalLink, RefreshCw, Sparkles } from "lucide-react"
+import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Grid3x3, Archive, Share2, ExternalLink, RefreshCw, Sparkles, Glasses, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import ClueEditor from "@/components/ClueEditor"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 import CrosswordGrid from "@/components/CrosswordGrid"
 import CluesDisplay from "@/components/CluesDisplay"
@@ -434,7 +435,7 @@ export default function EditorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, topic, description, status, difficulty, rawCluesText, proposals, activeProposalIndex, isGenerating])
 
-  const handlePrint = (separateClues = false) => {
+  const handlePrint = (separateClues = false, largeFont = false) => {
     if (!generatorResult) return
     const currentRawClues = parseRawClues(rawCluesText)
     const cw: Crossword = {
@@ -455,7 +456,7 @@ export default function EditorPage() {
       createdAt: existingCrossword?.createdAt,
       updatedAt: existingCrossword?.updatedAt,
     }
-    openPrintWindow(cw, { separateClues })
+    openPrintWindow(cw, { separateClues, largeFont })
   }
 
   const rawClues = parseRawClues(rawCluesText)
@@ -469,7 +470,7 @@ export default function EditorPage() {
     const cellMm = Math.min((273 * 0.72) / gr, 186 / gc, 7) * 0.95
     const gridH = gr * cellMm * 3.78
     const headerH = 60
-    const clueLineH = 15 // 11px font * 1.35 line-height
+    const clueLineH = 20 // 13px bold font * 1.5 line-height
     const cluesH = Math.max(ca?.length ?? 0, cd?.length ?? 0) * clueLineH + 24
     return gridH + headerH + cluesH + 30 > pageH
   })()
@@ -721,10 +722,25 @@ export default function EditorPage() {
                 משחק
               </Button>
             )}
-            <Button variant="outline" onClick={() => handlePrint(printNeedsTwoPages)} disabled={!generatorResult} className="gap-2" data-tour="print-area">
-              <Printer className="w-4 h-4" />
-              הדפס{printNeedsTwoPages ? " (2 עמודים)" : ""}
-            </Button>
+            <div className="inline-flex rounded-md" data-tour="print-area">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={!generatorResult} className="px-1.5 rounded-l-none border-l-0">
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handlePrint(true, true)}>
+                    <Glasses className="w-4 h-4 ml-2" />
+                    כבדי ראייה
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button variant="outline" onClick={() => handlePrint(printNeedsTwoPages)} disabled={!generatorResult} className="gap-2 rounded-r-none">
+                <Printer className="w-4 h-4" />
+                הדפס{printNeedsTwoPages ? " (2 עמודים)" : ""}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

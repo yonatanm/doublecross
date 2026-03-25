@@ -2,10 +2,12 @@ import type { Crossword } from "@/types/crossword"
 
 interface PrintOptions {
   separateClues?: boolean
+  largeFont?: boolean
 }
 
 export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}) {
-  const { separateClues = false } = options
+  const { largeFont = false } = options
+  const separateClues = options.separateClues || largeFont
   const {
     title,
     description,
@@ -170,10 +172,11 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   let gridFontSize = fontSize
   let gridNumFontSize = numFontSize
   if (separateClues) {
-    const fullGridHeightMm = pageHeightMm * 0.88
+    const fullGridHeightMm = pageHeightMm * (largeFont ? 0.92 : 0.88)
     const fullCellFromHeight = fullGridHeightMm / rows
     const fullCellFromWidth = gridWidthMm / cols
-    const fullCellSizeMm = Math.min(fullCellFromHeight, fullCellFromWidth, maxCellMm) * 0.95
+    const largeFontMaxCellMm = largeFont ? 10 : maxCellMm
+    const fullCellSizeMm = Math.min(fullCellFromHeight, fullCellFromWidth, largeFontMaxCellMm) * 0.95
     gridCellSize = Math.floor(fullCellSizeMm * 3.78)
     gridFontSize = Math.max(10, Math.floor(gridCellSize * 0.45))
     gridNumFontSize = Math.max(4, Math.floor(gridCellSize * 0.22 * 2 * 0.75))
@@ -265,9 +268,10 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     }
     .clues {
       column-count: 2;
-      column-gap: 16px;
+      column-gap: ${largeFont ? "24px" : "16px"};
       column-fill: auto;
-      height: ${cluesHeightMm}mm;
+      ${largeFont ? "" : `height: ${cluesHeightMm}mm;`}
+      overflow: hidden;
       margin-top: ${gridCellSize}px;
     }
     .clues-page {
@@ -283,11 +287,11 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     }
     .clues h3 {
       font-family: 'Frank Ruhl Libre', serif;
-      font-size: 16px;
+      font-size: ${largeFont ? "22px" : "16px"};
       font-weight: 700;
       text-decoration: underline;
-      padding-bottom: 3px;
-      margin-bottom: 4px;
+      padding-bottom: ${largeFont ? "6px" : "3px"};
+      margin-bottom: ${largeFont ? "8px" : "4px"};
       break-after: avoid;
     }
     .clues h3:first-child {
@@ -297,9 +301,9 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       margin: 12px 0 4px;
     }
     .clue {
-      font-size: 13px;
-      line-height: 1.5;
-      margin-bottom: 2px;
+      font-size: ${largeFont ? "20px" : "13px"};
+      line-height: ${largeFont ? "1.7" : "1.5"};
+      margin-bottom: ${largeFont ? "4px" : "2px"};
       break-inside: avoid;
     }
     @media print {
