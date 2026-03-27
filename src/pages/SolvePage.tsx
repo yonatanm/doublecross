@@ -642,7 +642,7 @@ function SolveClues({
               </span>
               <span>
                 {c.clue}{" "}
-                <span className="text-muted-foreground" dir="ltr">{c.answerLength.replace(/,(?!\s)/g, ", ")}</span>
+                <span className="text-muted-foreground whitespace-nowrap" dir="ltr">{c.answerLength.replace(/,(?!\s)/g, ", ")}</span>
               </span>
             </div>
           )

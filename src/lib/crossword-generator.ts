@@ -11,11 +11,10 @@ const FINAL_LETTERS: Record<string, string> = {
 }
 
 export function cleanAnswer(answer: string): string {
+  // Normalize: collapse runs of spaces/underscores into the appropriate single separator
   const noDblSpaces = answer
-    .split(" ")
-    .map((w) => w.trim())
-    .filter((w) => w.length > 0)
-    .join(" ")
+    .replace(/[ _]+/g, (match) => (match.includes("_") ? "_" : " "))
+    .trim()
   return noDblSpaces
     .split("")
     .map((ch) => FINAL_LETTERS[ch] || ch)
@@ -23,8 +22,8 @@ export function cleanAnswer(answer: string): string {
 }
 
 function formatAnswerLength(answer: string): string {
-  const words = answer.split(/[ _]/).reverse()
-  if (words.length === 1) return `(${words[0].length})`
+  const words = answer.split(/[ _]+/).filter((w) => w.length > 0).reverse()
+  if (words.length <= 1) return `(${(words[0] || "").length})`
   return `(${words.map((w) => w.length).join(", ")})`
 }
 

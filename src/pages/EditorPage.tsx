@@ -652,6 +652,11 @@ export default function EditorPage() {
 
         <div className="flex flex-col items-end gap-1 ms-auto">
           <div className="flex items-center gap-2 text-xs h-5">
+            {existingCrossword?.updatedAt && (
+              <span className="text-muted-foreground text-[11px]">
+                עודכן {(() => { const d = new Date((existingCrossword.updatedAt as {seconds: number}).seconds * 1000); return `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")} ${d.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" })}` })()}
+              </span>
+            )}
             {/* Unplaced clues warning */}
             {hasUnplaced && (
               <>
@@ -920,9 +925,6 @@ export default function EditorPage() {
                   >
                     {title || "תצוגה מקדימה"}
                   </h2>
-                  <span className="text-xs text-muted-foreground">
-                    לחצו על תא כדי לסמן רמז
-                  </span>
                 </div>
                 <div className="bg-card border rounded-lg p-4 inline-block max-w-full" data-tour="crossword-grid">
                   <CrosswordGrid
