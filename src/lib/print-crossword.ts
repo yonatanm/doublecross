@@ -26,15 +26,15 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
 
   // A4 portrait usable area (mm) with ~12mm margins
   const pageWidthMm = 186
-  const pageHeightMm = 273
+  const pageHeightMm = 263
   // Grid gets ~75% of page height, rest for title + clues
-  const gridHeightMm = pageHeightMm * 0.72
+  const gridHeightMm = pageHeightMm * 0.65
   const gridWidthMm = pageWidthMm
 
   // Cell size limited by whichever dimension is tighter
   const cellFromHeight = gridHeightMm / rows
   const cellFromWidth = gridWidthMm / cols
-  const maxCellMm = 7
+  const maxCellMm = 6.5
   const cellSizeMm = Math.min(cellFromHeight, cellFromWidth, maxCellMm) * 0.95
   // Convert mm to px (96dpi: 1mm ≈ 3.78px)
   const cellSize = Math.floor(cellSizeMm * 3.78)
@@ -160,12 +160,6 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   const renderClueItems = (clues: typeof clues_across) =>
     clues.map((c) => `<div class="clue"><b>${c.number}. ${c.clue} <span dir="ltr" style="white-space:nowrap">${c.answerLength.replace(/,(?!\s)/g, ", ")}</span></b></div>`).join("")
 
-  // Calculate clues section height: page height minus grid, title area, gap, and bottom margin
-  const gridActualHeightMm = rows * cellSizeMm
-  const titleAreaMm = 14 // title + subtitle + spacing
-  const gapMm = cellSizeMm // gap between grid and clues
-  const bottomMarginMm = 10
-  const cluesHeightMm = Math.floor(pageHeightMm - gridActualHeightMm - titleAreaMm - gapMm - bottomMarginMm)
 
   // When separateClues is true, grid fills the page and clues go on page 2
   // Recalculate cell size for separate mode — grid can use ~90% of page height
@@ -185,11 +179,16 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
 
   const cluesSection = `<div class="clues${separateClues ? " clues-page" : ""}">
     ${separateClues ? `<h1>${title || ""}</h1>` : ""}
-    <h3>מאוזן</h3>
-    ${renderClueItems(clues_across || [])}
-    <div class="clue-sep"></div>
-    <h3>מאונך</h3>
-    ${renderClueItems(clues_down || [])}
+    <div class="clues-grid">
+      <div class="clues-col">
+        <h3>מאוזן</h3>
+        ${renderClueItems(clues_across || [])}
+      </div>
+      <div class="clues-col">
+        <h3>מאונך</h3>
+        ${renderClueItems(clues_down || [])}
+      </div>
+    </div>
   </div>`
 
   const html = `<!DOCTYPE html>
@@ -268,11 +267,6 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       color: #1A1A1A;
     }
     .clues {
-      column-count: 2;
-      column-gap: ${largeFont ? "24px" : "16px"};
-      column-fill: auto;
-      ${largeFont ? "" : `height: ${cluesHeightMm}mm;`}
-      overflow: hidden;
       margin-top: ${gridCellSize}px;
     }
     .clues-page {
@@ -280,11 +274,12 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       padding-top: 12px;
     }
     .clues-page h1 {
-      column-span: all;
       margin-bottom: 8px;
     }
-    .clues {
-      padding-top: 24px;
+    .clues-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: ${largeFont ? "24px" : "16px"};
     }
     .clues h3 {
       font-family: ${headingFont};
@@ -293,13 +288,6 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
       text-decoration: underline;
       padding-bottom: ${largeFont ? "6px" : "3px"};
       margin-bottom: ${largeFont ? "8px" : "4px"};
-      break-after: avoid;
-    }
-    .clues h3:first-child {
-      margin-top: -24px;
-    }
-    .clue-sep {
-      margin: 12px 0 4px;
     }
     .clue {
       font-size: ${largeFont ? "20px" : "13px"};
