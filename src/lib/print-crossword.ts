@@ -174,7 +174,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     const fullCellSizeMm = Math.min(fullCellFromHeight, fullCellFromWidth, largeFontMaxCellMm) * 0.95
     gridCellSize = Math.floor(fullCellSizeMm * 3.78)
     gridFontSize = Math.max(10, Math.floor(gridCellSize * 0.45))
-    gridNumFontSize = Math.max(4, Math.floor(gridCellSize * 0.22 * 2 * 0.75))
+    gridNumFontSize = Math.max(6, Math.floor(gridCellSize * 0.38))
   }
 
   const cluesSection = `<div class="clues${separateClues ? " clues-page" : ""}">
@@ -255,12 +255,12 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     }
     .grid td.hint {
       font-weight: 700;
-      font-size: ${Math.floor(gridCellSize * 0.7)}px;
+      font-size: ${Math.floor(gridCellSize * (largeFont ? 0.55 : 0.7))}px;
     }
     .num {
       position: absolute;
-      top: 1px;
-      right: 2px;
+      top: 0px;
+      right: 1px;
       font-size: ${gridNumFontSize}px;
       font-family: 'Heebo', sans-serif;
       font-weight: 700;
