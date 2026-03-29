@@ -39,7 +39,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   // Convert mm to px (96dpi: 1mm ≈ 3.78px)
   const cellSize = Math.floor(cellSizeMm * 3.78)
   const fontSize = Math.max(10, Math.floor(cellSize * 0.45))
-  const numFontSize = Math.max(4, Math.floor(cellSize * 0.22 * 2 * 0.75))
+  const numFontSize = Math.max(5, Math.floor(cellSize * 0.38))
 
   // Flood-fill from grid edges to find interior (enclosed) empty cells
   const findInterior = () => {
