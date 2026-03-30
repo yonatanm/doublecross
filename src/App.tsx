@@ -35,7 +35,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthContext.Provider value={authValue}>
         <Toaster dir="rtl" position="top-center" richColors />
-        <BrowserRouter basename="/doublecross/">
+        <BrowserRouter basename="/">
           <Routes>
             {/* Solve page has its own minimal header */}
             <Route path="/solve/:id" element={<SolvePage />} />

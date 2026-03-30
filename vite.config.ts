@@ -8,7 +8,7 @@ const gitSha = execSync('git rev-parse --short HEAD').toString().trim()
 const gitDate = execSync('git log -1 --format=%cI').toString().trim()
 
 export default defineConfig({
-  base: '/doublecross/',
+  base: '/',
   plugins: [react(), tailwindcss()],
   define: {
     __GIT_SHA__: JSON.stringify(gitSha),
