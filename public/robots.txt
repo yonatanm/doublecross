@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://yonatanm.github.io/doublecross/sitemap.xml
+Sitemap: https://tashbetzim.co.il/sitemap.xml
