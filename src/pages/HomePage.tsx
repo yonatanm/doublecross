@@ -78,18 +78,19 @@ export default function HomePage() {
   }
 
   const allItems = crosswords || []
-  const nonGeek = allItems.filter((cw) => !cw.source)
+  const nonGeek = allItems.filter((cw) => !cw.source || (cw.source === "geek" && cw.status === "archived"))
   const statusCounts: Record<StatusFilter, number> = {
     all: nonGeek.length,
     draft: nonGeek.filter((cw) => cw.status === "draft").length,
     published: nonGeek.filter((cw) => cw.status === "published").length,
     archived: nonGeek.filter((cw) => cw.status === "archived").length,
-    geek: allItems.filter((cw) => cw.source === "geek").length,
+    geek: allItems.filter((cw) => cw.source === "geek" && cw.status !== "archived").length,
   }
 
   const filtered = (crosswords || []).filter((cw: Crossword) => {
-    if (statusFilter === "geek") { if (cw.source !== "geek") return false }
-    else { if (cw.source === "geek") return false }
+    const isGeek = cw.source === "geek" && cw.status !== "archived"
+    if (statusFilter === "geek") { if (!isGeek) return false }
+    else { if (isGeek) return false }
     if (statusFilter !== "all" && statusFilter !== "geek" && cw.status !== statusFilter) return false
     if (searchQuery) {
       const q = searchQuery
