@@ -13,7 +13,7 @@ A Hebrew RTL crossword puzzle builder and solver web app. Users create crossword
 - **Vite 6** + **React 19** + **TypeScript 5.8**
 - **Tailwind CSS v4** + **shadcn/ui** (components in `src/components/ui/`)
 - **Firebase v12** modular SDK (NOT compat) — auth + Firestore
-- **react-router-dom v7** — routing with `basename="/doublecross/"`
+- **react-router-dom v7** — routing with `basename="/"`
 - **@tanstack/react-query v5** — data fetching/caching
 - **layout-engine** — inline crossword placement engine (in `src/lib/layout-engine.ts`, ported from crossword-layout-generator)
 - **lucide-react** — icons
@@ -22,7 +22,7 @@ A Hebrew RTL crossword puzzle builder and solver web app. Users create crossword
 
 ## Architecture
 - `@/` import alias maps to `./src/*` (configured in tsconfig + vite.config)
-- `base: '/doublecross/'` in vite.config.ts for GitHub Pages
+- `base: '/'` in vite.config.ts (custom domain tashbetzim.co.il)
 - `dir="rtl"` on `<html>` — all UI is right-to-left Hebrew
 - Firebase config loaded from `.env.local` via `VITE_FIREBASE_*` env vars
 - Firestore collection name: `"crossword"` — complex fields (grid, clues, layout_result) are stored as JSON strings to avoid Firestore's nested array limitation
@@ -72,7 +72,7 @@ docs/
 - **Share flow**: published crosswords show a share icon button (copies `?solve=ID` URL to clipboard with toast) in both EditorPage and HomePage list items
 
 ## Deployment
-- **Live URL**: https://yonatanm.github.io/doublecross/
+- **Live URL**: https://tashbetzim.co.il/
 - **GitHub Pages** via Actions workflow: `.github/workflows/deploy.yml`
 - Triggers on push to `master` (or manual `workflow_dispatch`)
 - Build job: checkout → setup node 20 → `npm ci` → inject env from secrets → `npm run build` → upload `dist/` as pages artifact
@@ -84,7 +84,7 @@ docs/
   - `VITE_FIREBASE_STORAGE_BUCKET`
   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
   - `VITE_FIREBASE_APP_ID`
-- Firebase Console must have `yonatanm.github.io` in Authentication → Authorized domains
+- Firebase Console must have `tashbetzim.co.il` in Authentication → Authorized domains
 
 ## Don't
 - Don't use Firebase compat SDK — use modular imports only
