@@ -37,7 +37,7 @@ function serializeForFirestore(crossword: Omit<Crossword, "id">) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fixSplitClueJoin(clue: string): string {
-  return clue.replace(/\(יחד עם (.+?) ו(\d)/g, "(יחד עם $1\u00A0ו-$2")
+  return clue.replace(/ ?ו(\d)/g, "\u00A0ו-$1")
 }
 
 function deserializeFromFirestore(data: any): Crossword {

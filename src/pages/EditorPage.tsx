@@ -231,6 +231,12 @@ export default function EditorPage() {
           // Support both new format { proposals, activeIndex } and legacy array format
           const parsed: Proposal[] = Array.isArray(blob) ? blob : blob.proposals
           const savedIdx: number = Array.isArray(blob) ? 0 : (blob.activeIndex ?? 0)
+          // Fix legacy split-clue join format (ו13 → ו-13)
+          for (const p of parsed) {
+            for (const clues of [p.result.clues_across, p.result.clues_down]) {
+              if (Array.isArray(clues)) clues.forEach((c) => { if (c.clue) c.clue = c.clue.replace(/ ?ו(\d)/g, "\u00A0ו-$1") })
+            }
+          }
           if (parsed.length > 0) {
             setProposals(parsed)
             setActiveProposalIndex(Math.min(savedIdx, parsed.length - 1))
