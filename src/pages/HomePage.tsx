@@ -78,24 +78,28 @@ export default function HomePage() {
   }
 
   const allItems = crosswords || []
-  const nonGeek = allItems.filter((cw) => !cw.source || (cw.source === "geek" && cw.status === "archived"))
+  const isActiveGeek = (cw: Crossword) => cw.source === "geek" && cw.status !== "archived"
+  const nonGeek = allItems.filter((cw) => !isActiveGeek(cw))
   const statusCounts: Record<StatusFilter, number> = {
-    all: nonGeek.length,
+    all: nonGeek.filter((cw) => cw.status !== "archived").length,
     draft: nonGeek.filter((cw) => cw.status === "draft").length,
     published: nonGeek.filter((cw) => cw.status === "published").length,
     archived: nonGeek.filter((cw) => cw.status === "archived").length,
-    geek: allItems.filter((cw) => cw.source === "geek" && cw.status !== "archived").length,
+    geek: allItems.filter(isActiveGeek).length,
   }
 
   const filtered = (crosswords || []).filter((cw: Crossword) => {
-    const isGeek = cw.source === "geek" && cw.status !== "archived"
-    if (statusFilter === "geek") { if (!isGeek) return false }
-    else { if (isGeek) return false }
-    if (statusFilter !== "all" && statusFilter !== "geek" && cw.status !== statusFilter) return false
+    if (statusFilter === "geek") { if (!isActiveGeek(cw)) return false }
+    else { if (isActiveGeek(cw)) return false }
+    // Status filtering: search ignores tab but excludes archived; no search applies tab filter
+    if (statusFilter === "all" || searchQuery) {
+      if (statusFilter !== "archived" && cw.status === "archived") return false
+    } else if (statusFilter !== "geek") {
+      if (cw.status !== statusFilter) return false
+    }
     if (searchQuery) {
-      const q = searchQuery
-      const inMeta = cw.title?.includes(q) || cw.topic?.includes(q) || cw.description?.includes(q)
-      const inClues = cw.raw_clues?.some((rc) => rc.answer.includes(q) || rc.clue.includes(q))
+      const inMeta = cw.title?.includes(searchQuery) || cw.topic?.includes(searchQuery) || cw.description?.includes(searchQuery)
+      const inClues = cw.raw_clues?.some((rc) => rc.answer.includes(searchQuery) || rc.clue.includes(searchQuery))
       if (!inMeta && !inClues) return false
     }
     return true
