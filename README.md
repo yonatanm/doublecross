@@ -1,54 +1,57 @@
-# React + TypeScript + Vite
+# תשבצים — Tashbetzim
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**A free, open-source Hebrew crossword builder and solver.**
 
-Currently, two official plugins are available:
+Live at **[tashbetzim.co.il](https://tashbetzim.co.il/)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+Build Hebrew crosswords from scratch — type your clues and answers, auto-generate a grid, tweak it, print it, or share a link so anyone can solve it online. No login required to solve. No ads. No tracking. Just crosswords.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## What can you do with it?
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- Write clue-answer pairs and generate a crossword grid automatically
+- Pick from multiple layout proposals ranked by quality
+- Highlight hint cells to help solvers
+- Print to A4 — grid + clues, or grid and clues on separate pages
+- Publish and share a solve link (works great in WhatsApp, Telegram, etc.)
+- Solve published crosswords with keyboard-driven Hebrew input
+- Confetti when you finish :)
+
+## Tech
+
+React + TypeScript + Vite, styled with Tailwind CSS and shadcn/ui. Firebase for auth and storage. Fully client-side — hosted on GitHub Pages.
+
+## Getting started
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+You'll need a `.env.local` with your own Firebase config:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
 ```
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+```
+
+Other commands:
+
+| Command | What it does |
+|---------|-------------|
+| `npm run build` | Type-check + production build |
+| `npm run lint` | ESLint |
+| `npm run preview` | Preview the production build locally |
+
+## Contributing
+
+PRs and issues are welcome! This is a side project built with care — if you have ideas for making Hebrew crosswords better, I'd love to hear them.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
