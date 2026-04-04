@@ -308,7 +308,7 @@ export function buildGeneratorResult(
     if (d === sorted[0]) {
       // First fragment: show definition + references to all other fragments
       const refs = sorted.slice(1).map(s => `${s.position} ${orientationLabel(s.orientation)}`)
-      return `${d.clue} (יחד עם ${refs.join(" ו\u00A0-\u00A0")})`
+      return `${d.clue} (יחד עם ${refs.join("\u00A0ו-")})`
     } else {
       // Later fragments: "see" the first fragment
       const first = sorted[0]

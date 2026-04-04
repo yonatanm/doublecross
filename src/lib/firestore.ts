@@ -36,12 +36,19 @@ function serializeForFirestore(crossword: Omit<Crossword, "id">) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fixSplitClueJoin(clue: string): string {
+  return clue.replace(/\(יחד עם (.+?) ו(\d)/g, "(יחד עם $1\u00A0ו-$2")
+}
+
 function deserializeFromFirestore(data: any): Crossword {
   if (typeof data.grid === "string") data.grid = JSON.parse(data.grid)
   if (typeof data.layout_result === "string") data.layout_result = JSON.parse(data.layout_result)
   if (typeof data.clues_across === "string") data.clues_across = JSON.parse(data.clues_across)
   if (typeof data.clues_down === "string") data.clues_down = JSON.parse(data.clues_down)
   if (typeof data.raw_clues === "string") data.raw_clues = JSON.parse(data.raw_clues)
+  for (const clues of [data.clues_across, data.clues_down]) {
+    if (Array.isArray(clues)) clues.forEach((c: any) => { if (c.clue) c.clue = fixSplitClueJoin(c.clue) })
+  }
   return data as Crossword
 }
 
