@@ -85,6 +85,14 @@ docs/
   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
   - `VITE_FIREBASE_APP_ID`
 - Firebase Console must have `tashbetzim.co.il` in Authentication → Authorized domains
+- **Firestore rules** are version-controlled in `firestore.rules` (`firebase.json` points to it). Rules are **not** auto-deployed via CI — after editing `firestore.rules`, deploy manually:
+  ```bash
+  # One-time setup:
+  npm install -g firebase-tools
+  firebase login
+  # Deploy rules:
+  firebase deploy --only firestore:rules --project doublecross-e30cb
+  ```
 
 ## Don't
 - Don't use Firebase compat SDK — use modular imports only

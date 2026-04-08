@@ -47,6 +47,17 @@ Other commands:
 | `npm run build` | Type-check + production build |
 | `npm run lint` | ESLint |
 | `npm run preview` | Preview the production build locally |
+| `firebase deploy --only firestore:rules --project doublecross-e30cb` | Deploy Firestore security rules |
+
+## Firestore rules
+
+Security rules live in `firestore.rules` and are deployed manually (not via CI). To deploy after editing:
+
+```bash
+npm install -g firebase-tools   # one-time
+firebase login                  # one-time
+firebase deploy --only firestore:rules --project doublecross-e30cb
+```
 
 ## Contributing
 
