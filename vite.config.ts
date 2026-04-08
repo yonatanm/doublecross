@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import sri from 'vite-plugin-sri-gen'
 import path from 'path'
 import { execSync } from 'child_process'
 
@@ -9,7 +10,7 @@ const gitDate = execSync('git log -1 --format=%cI').toString().trim()
 
 export default defineConfig({
   base: '/',
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), sri()],
   define: {
     __GIT_SHA__: JSON.stringify(gitSha),
     __GIT_DATE__: JSON.stringify(gitDate),

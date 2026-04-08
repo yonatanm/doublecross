@@ -78,14 +78,19 @@ export async function updateCrossword(id: string, data: Partial<Crossword>): Pro
 export async function overwriteCrossword(id: string, crossword: Omit<Crossword, "id">): Promise<void> {
   const user = auth.currentUser
   const docRef = doc(db, COLLECTION, id)
+  const serialized = serializeForFirestore(crossword)
+  // Strip caller-supplied ownership fields — always use current auth user
+  delete serialized.userId
+  delete serialized.userEmail
+  delete serialized.userDisplayName
+  delete serialized.userPhotoURL
   await setDoc(docRef, {
-    ...serializeForFirestore(crossword),
+    ...serialized,
     updatedAt: Timestamp.now(),
-    // Preserve ownership — always stamp from current auth user if caller didn't provide
-    userId: crossword.userId || user?.uid,
-    userEmail: crossword.userEmail || user?.email,
-    userDisplayName: crossword.userDisplayName || user?.displayName || undefined,
-    userPhotoURL: crossword.userPhotoURL || user?.photoURL || undefined,
+    userId: user?.uid,
+    userEmail: user?.email,
+    userDisplayName: user?.displayName || undefined,
+    userPhotoURL: user?.photoURL || undefined,
   })
 }
 

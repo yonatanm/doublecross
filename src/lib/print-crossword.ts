@@ -1,5 +1,12 @@
 import type { Crossword } from "@/types/crossword"
 
+/** Escape user content for safe HTML interpolation (prevent XSS) */
+function escapeHtml(s: string): string {
+  const div = document.createElement("div")
+  div.textContent = s
+  return div.innerHTML
+}
+
 interface PrintOptions {
   separateClues?: boolean
   largeFont?: boolean
@@ -149,7 +156,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   }
 
   const subParts: string[] = []
-  if (description) subParts.push(description)
+  if (description) subParts.push(escapeHtml(description))
   if (updatedAt) subParts.push(`שונה לאחרונה: ${fmtDate(updatedAt)}`)
   const sublineHtml = subParts.length > 0
     ? `<div class="subline">${subParts.join("  ·  ")}</div>`
@@ -158,7 +165,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   // Build clues as a flat list of items, then split into two flowing columns
   // Build flat clues HTML — CSS columns will handle the 2-column flow
   const renderClueItems = (clues: typeof clues_across) =>
-    clues.map((c) => `<div class="clue"><b>${c.number}. ${c.clue} <span dir="ltr" style="white-space:nowrap">${c.answerLength.replace(/,(?!\s)/g, ", ")}</span></b></div>`).join("")
+    clues.map((c) => `<div class="clue"><b>${c.number}. ${escapeHtml(c.clue)} <span dir="ltr" style="white-space:nowrap">${escapeHtml(c.answerLength.replace(/,(?!\s)/g, ", "))}</span></b></div>`).join("")
 
 
   // When separateClues is true, grid fills the page and clues go on page 2
@@ -178,7 +185,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   }
 
   const cluesSection = `<div class="clues${separateClues ? " clues-page" : ""}">
-    ${separateClues ? `<h1>${title || ""}</h1>` : ""}
+    ${separateClues ? `<h1>${escapeHtml(title || "")}</h1>` : ""}
     <div class="clues-grid">
       <div class="clues-col">
         <h3>מאוזן</h3>
@@ -195,7 +202,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>${title || "תשבץ"}</title>
+  <title>${escapeHtml(title || "תשבץ")}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700&family=Heebo:wght@400;500;600&display=swap');
     @page { size: A4; margin: 12mm; }
@@ -302,7 +309,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   </style>
 </head>
 <body>
-  <h1>${title || ""}</h1>
+  <h1>${escapeHtml(title || "")}</h1>
   ${sublineHtml}
   <div class="grid-container">
     <table class="grid">${gridHtml}</table>
