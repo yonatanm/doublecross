@@ -140,27 +140,6 @@ export async function archiveCrossword(id: string): Promise<void> {
   await updateCrossword(id, { status: "archived" })
 }
 
-/** One-time repair: patch documents missing userId with current user */
-export async function repairMissingUserIds(): Promise<number> {
-  const user = auth.currentUser
-  if (!user) return 0
-  const snapshot = await getDocs(collection(db, COLLECTION))
-  let fixed = 0
-  for (const d of snapshot.docs) {
-    const data = d.data()
-    if (!data.userId) {
-      await updateDoc(doc(db, COLLECTION, d.id), {
-        userId: user.uid,
-        userEmail: user.email,
-        userDisplayName: user.displayName || undefined,
-        userPhotoURL: user.photoURL || undefined,
-      })
-      fixed++
-    }
-  }
-  return fixed
-}
-
 /** Fetch archived crosswords for review before deletion. Admin sees all, regular user sees own. */
 export async function getArchivedCrosswords(isAdmin = false): Promise<Crossword[]> {
   const user = auth.currentUser

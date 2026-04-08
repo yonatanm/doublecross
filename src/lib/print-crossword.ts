@@ -134,10 +134,10 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
           (d) => d.starty === r + 1 && d.startx === c + 1
         )
         const label = word?.position
-        const letter = isHighlighted && cell.letter ? cell.letter : ""
+        const letter = isHighlighted && cell.letter ? escapeHtml(cell.letter) : ""
         gridHtml += `<td class="cell${isHighlighted ? " hint" : ""}">
           ${letter}
-          ${label != null ? `<span class="num">${label}</span>` : ""}
+          ${label != null ? `<span class="num">${escapeHtml(String(label))}</span>` : ""}
         </td>`
       }
     }
@@ -202,6 +202,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'unsafe-inline';">
   <title>${escapeHtml(title || "תשבץ")}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700&family=Heebo:wght@400;500;600&display=swap');
