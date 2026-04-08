@@ -149,13 +149,15 @@ Firebase API keys are intentionally public (they identify the project, not grant
 
 ## Executive Summary
 
-V1 fixed the critical issues well. This V2 audit found a **residual XSS** in the same print function (missed fields), a **missing CSP on the print window** that amplifies it, and several Firestore rule gaps. The rules are solid overall but have one meaningful hole in the update path.
+V1 fixed the critical issues well. This V2 audit found a **residual XSS** in the same print function (missed fields), a **missing CSP on the print window** that amplifies it, and several Firestore rule gaps. The rules are solid overall but had one meaningful hole in the update path (now fixed).
 
-| Severity | Found |
-|----------|-------|
-| High     | 2     |
-| Medium   | 5     |
-| Low      | 3     |
+| Severity | Found | Fixed |
+|----------|-------|-------|
+| High     | 2     | 2     |
+| Medium   | 5     | 4     |
+| Low      | 3     | 1     |
+
+**Remaining open:** M1 (admin email in bundle — no fix without backend), L1 (GitHub Actions not SHA-pinned), L3 (hardcoded admin email in rules — no alternative).
 
 ---
 
@@ -229,7 +231,7 @@ The admin email `yonatanm@gmail.com` is visible to anyone who inspects the produ
 
 ---
 
-### ~~M2. Firestore Update Rule Doesn't Enforce `userId` Preservation~~ — FIXED (in repo, needs deploy)
+### ~~M2. Firestore Update Rule Doesn't Enforce `userId` Preservation~~ — FIXED
 
 **File:** Firestore security rules (not in repo — currently in Firebase Console only)
 

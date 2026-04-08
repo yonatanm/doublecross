@@ -79,18 +79,14 @@ export async function overwriteCrossword(id: string, crossword: Omit<Crossword, 
   const user = auth.currentUser
   const docRef = doc(db, COLLECTION, id)
   const serialized = serializeForFirestore(crossword)
-  // Strip caller-supplied ownership fields — always use current auth user
-  delete serialized.userId
-  delete serialized.userEmail
-  delete serialized.userDisplayName
-  delete serialized.userPhotoURL
+  // Preserve original owner from caller (existingCrossword), fall back to current user for safety
   await setDoc(docRef, {
     ...serialized,
     updatedAt: Timestamp.now(),
-    userId: user?.uid,
-    userEmail: user?.email,
-    userDisplayName: user?.displayName || undefined,
-    userPhotoURL: user?.photoURL || undefined,
+    userId: serialized.userId || user?.uid,
+    userEmail: serialized.userEmail || user?.email,
+    userDisplayName: serialized.userDisplayName || user?.displayName || undefined,
+    userPhotoURL: serialized.userPhotoURL || user?.photoURL || undefined,
   })
 }
 
