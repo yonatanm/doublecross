@@ -3,8 +3,9 @@ import type { User } from "firebase/auth"
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth"
 import { auth, googleProvider } from "@/lib/firebase"
 
-// Must match the UID in Firestore security rules isAdmin()
-const ADMIN_UID = "ksor1EBFKWRAd7whHqX1t2PJDX32"
+// Must match the email in Firestore security rules isAdmin().
+// This is a UI-only gate; actual authorization is enforced by Firestore rules.
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || ""
 
 export interface AuthContextValue {
   user: User | null
@@ -44,7 +45,7 @@ export function useAuthProvider(): AuthContextValue {
     await signOut(auth)
   }, [])
 
-  return { user, isLoggedIn: !!user, isAdmin: user?.uid === ADMIN_UID, loading, login, logout }
+  return { user, isLoggedIn: !!user, isAdmin: user?.email === ADMIN_EMAIL, loading, login, logout }
 }
 
 export function useAuth() {

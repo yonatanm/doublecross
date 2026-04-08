@@ -78,14 +78,19 @@ export async function updateCrossword(id: string, data: Partial<Crossword>): Pro
 export async function overwriteCrossword(id: string, crossword: Omit<Crossword, "id">): Promise<void> {
   const user = auth.currentUser
   const docRef = doc(db, COLLECTION, id)
+  const serialized = serializeForFirestore(crossword)
+  // Strip caller-supplied ownership fields — always use current auth user
+  delete serialized.userId
+  delete serialized.userEmail
+  delete serialized.userDisplayName
+  delete serialized.userPhotoURL
   await setDoc(docRef, {
-    ...serializeForFirestore(crossword),
+    ...serialized,
     updatedAt: Timestamp.now(),
-    // Preserve ownership — always stamp from current auth user if caller didn't provide
-    userId: crossword.userId || user?.uid,
-    userEmail: crossword.userEmail || user?.email,
-    userDisplayName: crossword.userDisplayName || user?.displayName || undefined,
-    userPhotoURL: crossword.userPhotoURL || user?.photoURL || undefined,
+    userId: user?.uid,
+    userEmail: user?.email,
+    userDisplayName: user?.displayName || undefined,
+    userPhotoURL: user?.photoURL || undefined,
   })
 }
 
@@ -133,27 +138,6 @@ export async function getAllCrosswords(): Promise<Crossword[]> {
 
 export async function archiveCrossword(id: string): Promise<void> {
   await updateCrossword(id, { status: "archived" })
-}
-
-/** One-time repair: patch documents missing userId with current user */
-export async function repairMissingUserIds(): Promise<number> {
-  const user = auth.currentUser
-  if (!user) return 0
-  const snapshot = await getDocs(collection(db, COLLECTION))
-  let fixed = 0
-  for (const d of snapshot.docs) {
-    const data = d.data()
-    if (!data.userId) {
-      await updateDoc(doc(db, COLLECTION, d.id), {
-        userId: user.uid,
-        userEmail: user.email,
-        userDisplayName: user.displayName || undefined,
-        userPhotoURL: user.photoURL || undefined,
-      })
-      fixed++
-    }
-  }
-  return fixed
 }
 
 /** Fetch archived crosswords for review before deletion. Admin sees all, regular user sees own. */
