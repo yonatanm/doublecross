@@ -13,8 +13,8 @@ service cloud.firestore {
     }
 
     match /crossword/{docId} {
-      // Anyone can read published crosswords (solve page)
-      allow read: if resource.data.status == "published";
+      // Anyone can read published or draft crosswords (solve page works for both)
+      allow read: if resource.data.status in ["published", "draft"];
 
       // Owners and admin can read their own drafts
       allow read: if isOwner() || isAdmin();
