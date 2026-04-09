@@ -41,7 +41,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   // Cell size limited by whichever dimension is tighter
   const cellFromHeight = gridHeightMm / rows
   const cellFromWidth = gridWidthMm / cols
-  const maxCellMm = 6.5
+  const maxCellMm = 7.8
   const cellSizeMm = Math.min(cellFromHeight, cellFromWidth, maxCellMm) * 0.95
   // Convert mm to px (96dpi: 1mm ≈ 3.78px)
   const cellSize = Math.floor(cellSizeMm * 3.78)
