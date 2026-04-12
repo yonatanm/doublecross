@@ -562,9 +562,9 @@ export default function SolvePage() {
       </main>
       <footer className="text-center text-sm text-muted-foreground py-4 space-y-2">
         <nav className="flex justify-center gap-4">
-          <Link to="/about" className="hover:underline">אודות</Link>
-          <Link to="/terms" className="hover:underline">תנאי שימוש</Link>
-          <Link to="/privacy" className="hover:underline">פרטיות</Link>
+          <Link to="/about/" className="hover:underline">אודות</Link>
+          <Link to="/terms/" className="hover:underline">תנאי שימוש</Link>
+          <Link to="/privacy/" className="hover:underline">פרטיות</Link>
         </nav>
         <p>© 2026 כל הזכויות שמורות ליונתן ממן</p>
       </footer>
