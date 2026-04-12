@@ -50,7 +50,7 @@ export default function HomePage() {
   const { isLoggedIn, isAdmin, login } = useAuth()
   const { data: crosswords, isLoading, error, refetch } = useCrosswords()
   const walkthrough = useWalkthrough("home")
-  usePageTitle("התשבצים שלי")
+  usePageTitle("אחד מאוזן: בנו תשבצים בעברית, שתפו עם חברים ופתרו אונליין")
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("draft")
   const [searchQuery, setSearchQuery] = useState("")
