@@ -171,6 +171,7 @@ function removeIncompleteSplits(
 export function buildGeneratorResult(
   engineResult: LayoutEngineResult,
   variantClues: VariantClue[],
+  allowIslands = false,
 ): GeneratorResult {
   // Build variant lookup early — used for split enforcement and metadata attachment
   const variantMap = new Map<string, VariantClue>()
@@ -192,18 +193,20 @@ export function buildGeneratorResult(
     (d) => d.startx && d.startx > 0 && d.starty && d.starty > 0 && d.orientation !== "none"
   ) as LayoutWord[]
 
-  // 1b. Enforce single connected component — no islands.
-  // Keep only the largest connected cluster; move the rest to unplaced.
-  result = removeIslands(result, unplacedClues, variantMap)
+  // 1b. Enforce single connected component — no islands (unless allowIslands)
+  if (!allowIslands) {
+    result = removeIslands(result, unplacedClues, variantMap)
+  }
 
   // 1c. Enforce split completeness: if a multi-word answer was split,
   // ALL its fragments must be placed. Remove partially-placed splits.
-  // (Runs after island removal so orphaned fragments from removed islands are caught.)
   result = removeIncompleteSplits(result, variantClues, unplacedClues, variantMap)
 
-  // 1d. Re-check islands: removing incomplete splits may have broken a bridge word
-  // that connected two components, creating new islands.
-  result = removeIslands(result, unplacedClues, variantMap)
+  // 1d. Re-check islands (unless allowIslands): removing incomplete splits may
+  // have broken a bridge word that connected two components.
+  if (!allowIslands) {
+    result = removeIslands(result, unplacedClues, variantMap)
+  }
 
   const cols: number = engineResult.cols
   const rows: number = engineResult.rows
@@ -354,9 +357,10 @@ export function buildGeneratorResult(
 export function generateFromVariant(
   variantClues: VariantClue[],
   attempts: number,
+  allowIslands = false,
 ): GeneratorResult {
   const engineInput = variantClues.map((vc) => ({ clue: vc.clue, answer: vc.answer }))
   const engineResult = generateLayout(engineInput, { attempts })
-  return buildGeneratorResult(engineResult, variantClues)
+  return buildGeneratorResult(engineResult, variantClues, allowIslands)
 }
 

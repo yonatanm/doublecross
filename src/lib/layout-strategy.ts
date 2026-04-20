@@ -7,6 +7,7 @@ interface GenerateProposalsOptions {
   maxVariants?: number
   topK?: number
   timeBudgetMs?: number
+  allowIslands?: boolean
 }
 
 /**
@@ -21,6 +22,7 @@ export function generateProposals(
   const maxVariants = options?.maxVariants ?? 16
   const topK = options?.topK ?? 10
   const timeBudgetMs = options?.timeBudgetMs ?? 5000
+  const allowIslands = options?.allowIslands ?? false
 
   // 1. Normalize Hebrew answers
   const cleaned = rawClues.map((c) => ({
@@ -46,7 +48,7 @@ export function generateProposals(
   const firstVariantClues = buildVariantClues(cleaned, multiWordIndices, 0)
   const firstLabel = buildVariantLabel(cleaned, multiWordIndices, 0)
   const t0 = performance.now()
-  const firstResult = generateFromVariant(firstVariantClues, 1)
+  const firstResult = generateFromVariant(firstVariantClues, 1, allowIslands)
   const singleAttemptMs = performance.now() - t0
   allResults.push({ result: firstResult, label: firstLabel })
 
@@ -62,7 +64,7 @@ export function generateProposals(
     const startAttempt = (mask === 0) ? 1 : 0 // skip first attempt for mask 0 (already done)
     for (let a = startAttempt; a < attemptsPerVariant; a++) {
       if (performance.now() > deadline) break
-      const result = generateFromVariant(variantClues, 1)
+      const result = generateFromVariant(variantClues, 1, allowIslands)
       allResults.push({ result, label })
     }
     if (performance.now() > deadline) break

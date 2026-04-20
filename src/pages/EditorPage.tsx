@@ -268,14 +268,16 @@ export default function EditorPage() {
     }
   }, [existingCrossword])
 
-  const generate = useCallback(() => {
+  const [allowIslands, setAllowIslands] = useState(false)
+
+  const generate = useCallback((islands = allowIslands) => {
     const rawClues = parseRawClues(rawCluesText)
     if (rawClues.length < 1) return
 
     setIsGenerating(true)
     // Double rAF ensures the browser paints the spinner before blocking
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      let ranked = generateProposals(rawClues)
+      let ranked = generateProposals(rawClues, { allowIslands: islands })
       // Fallback: if engine failed to place any words, build a trivial horizontal layout
       if (ranked.length === 0 || ranked.every((p) => p.result.unplacedClues.length === rawClues.length)) {
         ranked = [{ result: buildTrivialResult(rawClues), adjustedScore: 0, variantLabel: "fallback" }]
@@ -293,7 +295,7 @@ export default function EditorPage() {
       proposalsCache.set(hash, { proposals: newProposals, activeIndex: 0 })
       setIsGenerating(false)
     }))
-  }, [rawCluesText])
+  }, [rawCluesText, allowIslands])
 
   // Stash proposals when answers change, restore on undo (hash returns to a stashed value)
   const stashedHashes = useRef(new Set<string>())
@@ -833,16 +835,32 @@ export default function EditorPage() {
           {/* Thumbnail gallery strip */}
           {proposals.length > 0 && (
             <div className={`space-y-2 ${isGenerating ? "opacity-50 pointer-events-none" : ""}`}>
-              <Button
-                onClick={generate}
-                disabled={!canGenerate || isGenerating}
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                {isGenerating ? "מייצר..." : "החלף תבניות"}
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => generate()}
+                  disabled={!canGenerate || isGenerating}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  {isGenerating ? "מייצר..." : "החלף תבניות"}
+                </Button>
+                {proposals.some((p) => p.result.unplacedClues.length > 1) && (
+                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={allowIslands}
+                      onChange={(e) => {
+                        setAllowIslands(e.target.checked)
+                        generate(e.target.checked)
+                      }}
+                      className="cursor-pointer"
+                    />
+                    אפשר איים
+                  </label>
+                )}
+              </div>
               <div className="flex items-center gap-1">
                 {proposals.length > 1 && (
                   <button
@@ -973,7 +991,7 @@ export default function EditorPage() {
                 <p className="text-sm text-muted-foreground">יש להוסיף לפחות הגדרה אחת</p>
               ) : (
                 <Button
-                  onClick={generate}
+                  onClick={() => generate()}
                   disabled={!canGenerate || isGenerating}
                   size="lg"
                   className="gap-2"
