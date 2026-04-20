@@ -1,7 +1,9 @@
 import { usePageTitle } from "@/hooks/usePageTitle"
+import { useCanonicalUrl } from "@/hooks/useCanonicalUrl"
 
 export default function AboutPage() {
   usePageTitle("אודות")
+  useCanonicalUrl("/about/")
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>

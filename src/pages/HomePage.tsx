@@ -12,6 +12,7 @@ import { useCrosswords } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { useWalkthrough } from "@/hooks/useWalkthrough"
 import { usePageTitle } from "@/hooks/usePageTitle"
+import { useCanonicalUrl } from "@/hooks/useCanonicalUrl"
 import { getArchivedCrosswords, deleteCrosswordsByIds, archiveCrossword } from "@/lib/firestore"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import type { Crossword } from "@/types/crossword"
@@ -51,6 +52,7 @@ export default function HomePage() {
   const { data: crosswords, isLoading, error, refetch } = useCrosswords()
   const walkthrough = useWalkthrough("home")
   usePageTitle("אחד מאוזן: בנו תשבצים בעברית, שתפו עם חברים ופתרו אונליין")
+  useCanonicalUrl("/")
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("draft")
   const [searchQuery, setSearchQuery] = useState("")
