@@ -24,7 +24,7 @@ export function cleanAnswer(answer: string): string {
 function formatAnswerLength(answer: string): string {
   const words = answer.split(/[ _]+/).filter((w) => w.length > 0).reverse()
   if (words.length <= 1) return `(${(words[0] || "").length})`
-  return `(${words.map((w) => w.length).join(", ")})`
+  return `(${words.map((w) => w.length).join(",")})`
 }
 
 /**

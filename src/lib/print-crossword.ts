@@ -165,7 +165,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   // Build clues as a flat list of items, then split into two flowing columns
   // Build flat clues HTML — CSS columns will handle the 2-column flow
   const renderClueItems = (clues: typeof clues_across) =>
-    clues.map((c) => `<div class="clue"><b>${c.number}. ${escapeHtml(c.clue)} <span dir="ltr" style="white-space:nowrap">${escapeHtml(c.answerLength.replace(/,(?!\s)/g, ", "))}</span></b></div>`).join("")
+    clues.map((c) => `<div class="clue"><b>${c.number}. ${escapeHtml(c.clue)} <span dir="ltr" style="white-space:nowrap">${escapeHtml(c.answerLength.replace(/,\s*/g, ","))}</span></b></div>`).join("")
 
 
   // When separateClues is true, grid fills the page and clues go on page 2
