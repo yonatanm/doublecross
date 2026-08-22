@@ -24,21 +24,23 @@ React + TypeScript + Vite, styled with Tailwind CSS and shadcn/ui. Firebase for 
 
 ## Getting started
 
+create `.env.local` in the repo root with your real Firebase project values (from Firebase Console → Project Settings → General → Your apps → SDK setup and config):
+
+```
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_ADMIN_EMAIL=<YOUR_EMAIL>
+```
+
 ```bash
 npm install
 npm run dev
 ```
 
-You'll need a `.env.local` with your own Firebase config:
-
-```
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=...
-VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_STORAGE_BUCKET=...
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
-```
 
 Other commands:
 
