@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Pencil, Grid3x3, Archive, Share2, ExternalLink, RefreshCw, Sparkles, Glasses, ChevronDown } from "lucide-react"
+import { Check, Loader2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, AlertTriangle, Printer, Eye, EyeOff, Archive, Share2, ExternalLink, RefreshCw, Sparkles, Glasses, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,12 +9,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from "@/components/ui/label"
 import CrosswordGrid from "@/components/CrosswordGrid"
 import CluesDisplay from "@/components/CluesDisplay"
-import GuidedTour from "@/components/GuidedTour"
 import { useCrossword, useCrosswords, useSaveCrossword } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
 import { generateProposals } from "@/lib/layout-strategy"
 import { openPrintWindow } from "@/lib/print-crossword"
-import { useWalkthrough } from "@/hooks/useWalkthrough"
 import type { RawClue, NumberedClue, Crossword, GeneratorResult, LayoutWord, CrosswordCell } from "@/types/crossword"
 import { cleanAnswer } from "@/lib/crossword-generator"
 import defaultCluesUrl from "@/data/default-clues.txt?url"
@@ -177,7 +175,6 @@ export default function EditorPage() {
   }).current
   const [isGenerating, setIsGenerating] = useState(false)
   const [showClues, setShowClues] = useState(false)
-  const walkthrough = useWalkthrough("editor")
   const [focusedCells, setFocusedCells] = useState<string[][]>([])
   const [focusedClueKeys, setFocusedClueKeys] = useState<Set<string>>(new Set())
 
@@ -622,7 +619,6 @@ export default function EditorPage() {
 
   return (
     <div className="space-y-6">
-      <GuidedTour page="editor" open={walkthrough.isOpen} onClose={walkthrough.close} />
       {/* Editor Header */}
       <div className="flex items-end gap-3 flex-wrap">
         <div className="flex items-end gap-3 min-w-0 flex-wrap">

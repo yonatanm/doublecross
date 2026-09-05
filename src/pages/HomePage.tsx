@@ -1,16 +1,14 @@
 import { useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Search, Trash2, Pencil, Archive } from "lucide-react"
+import { Plus, Search, Trash2, Archive } from "lucide-react"
 import { toast } from "sonner"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import CrosswordGrid from "@/components/CrosswordGrid"
-import GuidedTour from "@/components/GuidedTour"
 import { useCrosswords } from "@/hooks/useCrosswords"
 import { useAuth } from "@/hooks/useAuth"
-import { useWalkthrough } from "@/hooks/useWalkthrough"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { useCanonicalUrl } from "@/hooks/useCanonicalUrl"
 import { getArchivedCrosswords, deleteCrosswordsByIds, archiveCrossword } from "@/lib/firestore"
@@ -48,7 +46,6 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { isLoggedIn, isAdmin, login } = useAuth()
   const { data: crosswords, isLoading, error, refetch } = useCrosswords()
-  const walkthrough = useWalkthrough("home")
   usePageTitle("אחד מאוזן: בנו תשבצים בעברית, שתפו עם חברים ופתרו אונליין")
   useCanonicalUrl("/")
 
@@ -128,7 +125,6 @@ export default function HomePage() {
 
   return (
     <div>
-      <GuidedTour page="home" open={walkthrough.isOpen} onClose={walkthrough.close} />
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
