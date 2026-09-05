@@ -701,27 +701,15 @@ export default function EditorPage() {
                 המקור ב-geek.co.il
               </a>
             )}
-            {/* Status toggle */}
-            <div className="flex gap-0.5 h-9 items-center">
-              {([
-                { value: "draft", label: "טיוטה", Icon: Pencil },
-                { value: "published", label: "מוכן", Icon: Grid3x3 },
-                { value: "archived", label: "ארכיון", Icon: Archive },
-              ] as const).map(({ value, label, Icon }) => (
-                <button
-                  key={value}
-                  onClick={() => setStatus(value)}
-                  className={`flex items-center gap-1 px-2.5 h-8 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                    status === value
-                      ? "bg-secondary text-foreground border border-border"
-                      : "text-muted-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
+            {status !== "archived" && (
+              <button
+                onClick={() => setStatus("archived")}
+                className="flex items-center gap-1 px-2.5 h-8 rounded-md text-xs font-medium transition-colors cursor-pointer text-muted-foreground hover:bg-secondary/50"
+              >
+                <Archive className="w-3.5 h-3.5" />
+                ארכיון
+              </button>
+            )}
             {status !== "archived" && docIdRef.current && (
               <Button
                 variant="outline"

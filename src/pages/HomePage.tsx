@@ -17,12 +17,10 @@ import { getArchivedCrosswords, deleteCrosswordsByIds, archiveCrossword } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import type { Crossword } from "@/types/crossword"
 
-type StatusFilter = "all" | "draft" | "published" | "archived" | "geek"
+type StatusFilter = "all" | "archived" | "geek"
 
 const FILTERS: { key: StatusFilter; label: string }[] = [
-  { key: "all", label: "הכל" },
-  { key: "draft", label: "טיוטות" },
-  { key: "published", label: "מוכנים" },
+  { key: "all", label: "תשבצים" },
   { key: "archived", label: "ארכיון" },
   { key: "geek", label: "geek.co.il" },
 ]
@@ -54,7 +52,7 @@ export default function HomePage() {
   usePageTitle("אחד מאוזן: בנו תשבצים בעברית, שתפו עם חברים ופתרו אונליין")
   useCanonicalUrl("/")
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("draft")
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
@@ -84,8 +82,6 @@ export default function HomePage() {
   const nonGeek = allItems.filter((cw) => !isActiveGeek(cw))
   const statusCounts: Record<StatusFilter, number> = {
     all: nonGeek.filter((cw) => cw.status !== "archived").length,
-    draft: nonGeek.filter((cw) => cw.status === "draft").length,
-    published: nonGeek.filter((cw) => cw.status === "published").length,
     archived: nonGeek.filter((cw) => cw.status === "archived").length,
     geek: allItems.filter(isActiveGeek).length,
   }
@@ -93,12 +89,13 @@ export default function HomePage() {
   const filtered = (crosswords || []).filter((cw: Crossword) => {
     if (statusFilter === "geek") { if (!isActiveGeek(cw)) return false }
     else { if (isActiveGeek(cw)) return false }
-    // Status filtering: search ignores tab but excludes archived; no search applies tab filter
-    if (statusFilter === "all" || searchQuery) {
-      if (statusFilter !== "archived" && cw.status === "archived") return false
-    } else if (statusFilter !== "geek") {
-      if (cw.status !== statusFilter) return false
+
+    if (statusFilter === "archived") {
+      if (cw.status !== "archived") return false
+    } else if (cw.status === "archived") {
+      return false
     }
+
     if (searchQuery) {
       const inMeta = cw.title?.includes(searchQuery) || cw.topic?.includes(searchQuery) || cw.description?.includes(searchQuery)
       const inClues = cw.raw_clues?.some((rc) => rc.answer.includes(searchQuery) || rc.clue.includes(searchQuery))
@@ -259,14 +256,6 @@ export default function HomePage() {
                       <span className="text-xs text-muted-foreground">
                         {formatDate(cw.updatedAt)}
                       </span>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/editor?id=${cw.id}`) }}
-                        title="עריכה"
-                      >
-                        <Pencil className="w-3 h-3" />
-                      </Button>
                       {cw.status !== "archived" && (
                         <Button
                           variant="ghost"
