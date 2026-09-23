@@ -114,18 +114,24 @@ export default function ClueEditor({
       )}
       <div className="flex gap-1 mb-1">
         <Button
-          variant={isBold ? "secondary" : "outline"}
+          variant="outline"
           size="sm"
-          className={isBold ? "bg-[#f0f0f0] border-primary" : ""}
+          className={cn(
+            isBold ? "bg-primary/10 text-primary" : "bg-transparent",
+            "focus-visible:ring-0",
+          )}
           onClick={() => document.execCommand('bold', false, undefined)}
           title="Bold (Ctrl+B)"
         >
           <Bold className="w-4 h-4" />
         </Button>
         <Button
-          variant={isUnderline ? "secondary" : "outline"}
+          variant="outline"
           size="sm"
-          className={isUnderline ? "bg-[#f0f0f0] border-primary" : ""}
+          className={cn(
+            isUnderline ? "bg-primary/10 text-primary" : "bg-transparent",
+            "focus-visible:ring-0",
+          )}
           onClick={() => document.execCommand('underline', false, undefined)}
           title="Underline (Ctrl+U)"
         >

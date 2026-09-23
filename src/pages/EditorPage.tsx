@@ -751,9 +751,9 @@ export default function EditorPage() {
               <Label className="text-sm font-medium">
                 הגדרות ({rawClues.length})
               </Label>
-              <span className="text-xs text-muted-foreground">
-                פורמט: תשובה-הגדרה (שורה לכל הגדרה)
-              </span>
+            </div>
+            <div className="text-xs text-muted-foreground mb-1">
+              פורמט: תשובה-הגדרה — Ctrl+B / Ctrl+U
             </div>
             <div data-tour="clues-textarea">
               <ClueEditor
