@@ -1,4 +1,5 @@
 import type { NumberedClue } from "@/types/crossword"
+import { renderClueHtml } from "@/lib/clue-format"
 
 interface CluesDisplayProps {
   cluesAcross: NumberedClue[]
@@ -20,7 +21,7 @@ export default function CluesDisplay({ cluesAcross, cluesDown, focusedClueKeys }
               {c.number}.
             </span>
             <span>
-              {c.clue}{" "}
+              {renderClueHtml(c.clue)}{" "}
               <span className="text-muted-foreground whitespace-nowrap" dir="ltr">{c.answerLength.replace(/,\s*/g, ",")}</span>
             </span>
           </div>

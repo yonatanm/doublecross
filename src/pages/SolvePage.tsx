@@ -5,6 +5,7 @@ import confetti from "canvas-confetti"
 import CrosswordGrid from "@/components/CrosswordGrid"
 import { getCrosswordFresh } from "@/lib/firestore"
 import type { Crossword, LayoutWord } from "@/types/crossword"
+import { renderClueHtml } from "@/lib/clue-format"
 import { usePageTitle } from "@/hooks/usePageTitle"
 
 // Hebrew final-letter normalization (for lenient validation)
@@ -641,7 +642,7 @@ function SolveClues({
                 {c.number}.
               </span>
               <span>
-                {c.clue}{" "}
+                {renderClueHtml(c.clue)}{" "}
                 <span className="text-muted-foreground whitespace-nowrap" dir="ltr">{c.answerLength.replace(/,\s*/g, ",")}</span>
               </span>
             </div>

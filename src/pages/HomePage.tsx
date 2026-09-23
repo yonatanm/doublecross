@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import { stripHtml } from "@/lib/clue-format"
 import { useNavigate } from "react-router-dom"
 import { Plus, Search, Trash2, Archive } from "lucide-react"
 import { toast } from "sonner"
@@ -95,7 +96,7 @@ export default function HomePage() {
 
     if (searchQuery) {
       const inMeta = cw.title?.includes(searchQuery) || cw.topic?.includes(searchQuery) || cw.description?.includes(searchQuery)
-      const inClues = cw.raw_clues?.some((rc) => rc.answer.includes(searchQuery) || rc.clue.includes(searchQuery))
+      const inClues = cw.raw_clues?.some((rc) => rc.answer.includes(searchQuery) || stripHtml(rc.clue).includes(searchQuery))
       if (!inMeta && !inClues) return false
     }
     return true

@@ -11,8 +11,10 @@ const FINAL_LETTERS: Record<string, string> = {
 }
 
 export function cleanAnswer(answer: string): string {
+  // Strip any whitelisted HTML formatting before normalizing
+  const noHtml = answer.replace(/<[^>]*>/g, '')
   // Normalize: collapse runs of spaces/underscores into the appropriate single separator
-  const noDblSpaces = answer
+  const noDblSpaces = noHtml
     .replace(/[ _]+/g, (match) => (match.includes("_") ? "_" : " "))
     .trim()
   return noDblSpaces
