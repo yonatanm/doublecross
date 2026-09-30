@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom"
 import { Loader2, PartyPopper, AlertCircle } from "lucide-react"
 import confetti from "canvas-confetti"
 import CrosswordGrid from "@/components/CrosswordGrid"
+import MarkedText from "@/components/MarkedText"
 import { getCrosswordFresh } from "@/lib/firestore"
 import type { Crossword, LayoutWord } from "@/types/crossword"
 import { usePageTitle } from "@/hooks/usePageTitle"
@@ -641,7 +642,7 @@ function SolveClues({
                 {c.number}.
               </span>
               <span>
-                {c.clue}{" "}
+                <MarkedText text={c.clue} />{" "}
                 <span className="text-muted-foreground whitespace-nowrap" dir="ltr">{c.answerLength.replace(/,\s*/g, ",")}</span>
               </span>
             </div>
