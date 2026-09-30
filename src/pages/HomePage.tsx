@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { usePageTitle } from "@/hooks/usePageTitle"
 import { useCanonicalUrl } from "@/hooks/useCanonicalUrl"
 import { getArchivedCrosswords, deleteCrosswordsByIds, archiveCrossword } from "@/lib/firestore"
+import { stripClueMarkup } from "@/lib/clue-markup"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import type { Crossword } from "@/types/crossword"
 
@@ -95,7 +96,7 @@ export default function HomePage() {
 
     if (searchQuery) {
       const inMeta = cw.title?.includes(searchQuery) || cw.topic?.includes(searchQuery) || cw.description?.includes(searchQuery)
-      const inClues = cw.raw_clues?.some((rc) => rc.answer.includes(searchQuery) || rc.clue.includes(searchQuery))
+      const inClues = cw.raw_clues?.some((rc) => rc.answer.includes(searchQuery) || stripClueMarkup(rc.clue).includes(searchQuery))
       if (!inMeta && !inClues) return false
     }
     return true

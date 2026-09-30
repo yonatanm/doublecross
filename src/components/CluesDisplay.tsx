@@ -1,4 +1,5 @@
 import type { NumberedClue } from "@/types/crossword"
+import MarkedText from "@/components/MarkedText"
 
 interface CluesDisplayProps {
   cluesAcross: NumberedClue[]
@@ -20,7 +21,7 @@ export default function CluesDisplay({ cluesAcross, cluesDown, focusedClueKeys }
               {c.number}.
             </span>
             <span>
-              {c.clue}{" "}
+              <MarkedText text={c.clue} />{" "}
               <span className="text-muted-foreground whitespace-nowrap" dir="ltr">{c.answerLength.replace(/,\s*/g, ",")}</span>
             </span>
           </div>

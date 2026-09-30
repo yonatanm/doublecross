@@ -1,4 +1,5 @@
 import type { Crossword } from "@/types/crossword"
+import { clueMarkupToHtml } from "@/lib/clue-markup"
 
 /** Escape user content for safe HTML interpolation (prevent XSS) */
 function escapeHtml(s: string): string {
@@ -165,7 +166,7 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
   // Build clues as a flat list of items, then split into two flowing columns
   // Build flat clues HTML — CSS columns will handle the 2-column flow
   const renderClueItems = (clues: typeof clues_across) =>
-    clues.map((c) => `<div class="clue"><b>${c.number}. ${escapeHtml(c.clue)} <span dir="ltr" style="white-space:nowrap">${escapeHtml(c.answerLength.replace(/,\s*/g, ","))}</span></b></div>`).join("")
+    clues.map((c) => `<div class="clue"><b>${c.number}.</b> ${clueMarkupToHtml(c.clue)} <span dir="ltr" style="white-space:nowrap">${escapeHtml(c.answerLength.replace(/,\s*/g, ","))}</span></div>`).join("")
 
 
   // When separateClues is true, grid fills the page and clues go on page 2
@@ -208,6 +209,8 @@ export function openPrintWindow(crossword: Crossword, options: PrintOptions = {}
     @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700&family=Heebo:wght@400;500;600&display=swap');
     @page { size: A4; margin: 12mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Prevent bold/underline glyph-run bleed into adjacent RTL text (Chromium) */
+    b, u { unicode-bidi: isolate; }
     body {
       font-family: 'Heebo', sans-serif;
       width: 186mm;
