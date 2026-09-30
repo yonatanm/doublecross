@@ -15,48 +15,9 @@ import { generateProposals } from "@/lib/layout-strategy"
 import { openPrintWindow } from "@/lib/print-crossword"
 import type { RawClue, NumberedClue, Crossword, GeneratorResult, LayoutWord, CrosswordCell } from "@/types/crossword"
 import { cleanAnswer } from "@/lib/crossword-generator"
+import { syncClueDefinitions } from "@/lib/clue-definitions"
 import defaultCluesUrl from "@/data/default-clues.txt?url"
 import { usePageTitle } from "@/hooks/usePageTitle"
-
-/** Sync updated definitions from raw_clues into numbered clues.
- *  Uses layout_result to map split-word fragments back to raw clues via identifier.
- *  Preserves "ראה" cross-references and "(יחד עם...)" suffixes. */
-function syncClueDefinitions(
-  numberedClues: NumberedClue[],
-  rawClues: RawClue[],
-  orientation: "across" | "down",
-  layoutResult?: LayoutWord[],
-): NumberedClue[] {
-  // Build lookup: cleaned answer (without spaces) → definition (for single-word matches)
-  const defByAnswer = new Map<string, string>()
-  for (const rc of rawClues) {
-    const key = cleanAnswer(rc.answer).replace(/ /g, "")
-    defByAnswer.set(key, rc.clue)
-  }
-
-  // Build lookup: grid position → definition (for split-word fragments via identifier)
-  const defByPosition = new Map<number, string>()
-  if (layoutResult) {
-    for (const w of layoutResult) {
-      if (w.orientation === orientation && w.identifier !== undefined && w.identifier < rawClues.length) {
-        defByPosition.set(w.position, rawClues[w.identifier].clue)
-      }
-    }
-  }
-
-  return numberedClues.map((nc) => {
-    // Skip cross-reference clues ("ראה 3 מאוזן")
-    if (nc.clue.startsWith("ראה ")) return nc
-    // Try direct answer match first, then position-based match via layout_result
-    const key = cleanAnswer(nc.answer).replace(/ /g, "")
-    const newDef = defByAnswer.get(key) ?? defByPosition.get(nc.number)
-    if (!newDef) return nc
-    // Preserve "(יחד עם...)" suffix if present
-    const suffixMatch = nc.clue.match(/(\s*\(יחד עם .+\))$/)
-    const suffix = suffixMatch ? suffixMatch[1] : ""
-    return { ...nc, clue: newDef + suffix }
-  })
-}
 
 function parseRawClues(text: string): RawClue[] {
   if (!text.trim()) return []

@@ -71,6 +71,7 @@ docs/
 - **Clue inline marks** (`src/lib/clue-markup.ts`): definitions support `**bold**` and `__underline__` marks, stored inline in the clue string (plain-text safe, persists in Firestore JSON as-is). ClueEditor renders them WYSIWYG (Ctrl+B/Ctrl+U + toolbar buttons; marks restricted to the clue region after the `answer-` dash — answers stay plain-bold). All renderers (`MarkedText` component, print via `clueMarkupToHtml()`) parse segments — never raw innerHTML. Print clue text is normal weight so bold marks are visible; only the clue number is bold
 - **Auto-save**: triggers on first valid clue row (line with `-` separator). No title required — generates fallback date-based title (`תשבץ-DD-MM-YYYY`) if title is empty. Debounced at 1.5s
 - **Share flow**: published crosswords show a share icon button (copies `?solve=ID` URL to clipboard with toast) in both EditorPage and HomePage list items
+- **Definition sync** (`src/lib/clue-definitions.ts`): `syncClueDefinitions()` re-syncs numbered-clue text from the textarea after edits. Match strategy: unique answers match by answer text (robust to line reordering); duplicate answers match by grid position via `layout_result` identifier (so two clues with the same answer each keep their own definition)
 
 ## Deployment
 - **Live URL**: https://tashbetzim.co.il/
