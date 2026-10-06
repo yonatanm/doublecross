@@ -406,7 +406,13 @@ function findTextPosition(lineEl: Element, charOffset: number): { node: Node; of
     }
     return null
   }
-  return find(lineEl)
+  const position = find(lineEl)
+  if (position) return position
+  if (lineEl.textContent) return null
+  const breakIndex = Array.from(lineEl.childNodes).findIndex(
+    (node) => node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName === "BR",
+  )
+  return { node: lineEl, offset: breakIndex < 0 ? lineEl.childNodes.length : breakIndex }
 }
 
 function extractText(el: HTMLElement): string {
